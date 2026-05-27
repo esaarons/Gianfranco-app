@@ -1,0 +1,55 @@
+import { create } from 'zustand'
+import type { CartItem } from '@/types'
+
+interface OrderStore {
+  tableId: string | null
+  tableCode: string | null
+  items: CartItem[]
+  setTable: (id: string, code: string) => void
+  addItem: (item: CartItem) => void
+  updateItemQty: (productId: string, delta: number) => void
+  removeItem: (productId: string) => void
+  clearCart: () => void
+  total: () => number
+}
+
+export const useOrderStore = create<OrderStore>((set, get) => ({
+  tableId: null,
+  tableCode: null,
+  items: [],
+
+  setTable: (id, code) => set({ tableId: id, tableCode: code, items: [] }),
+
+  addItem: (item) => {
+    const existing = get().items.find((i) => i.productId === item.productId)
+    if (existing) {
+      set((s) => ({
+        items: s.items.map((i) =>
+          i.productId === item.productId ? { ...i, quantity: i.quantity + item.quantity } : i
+        ),
+      }))
+    } else {
+      set((s) => ({ items: [...s.items, item] }))
+    }
+  },
+
+  updateItemQty: (productId, delta) => {
+    set((s) => ({
+      items: s.items
+        .map((i) => (i.productId === productId ? { ...i, quantity: i.quantity + delta } : i))
+        .filter((i) => i.quantity > 0),
+    }))
+  },
+
+  removeItem: (productId) =>
+    set((s) => ({ items: s.items.filter((i) => i.productId !== productId) })),
+
+  clearCart: () => set({ tableId: null, tableCode: null, items: [] }),
+
+  total: () => {
+    return get().items.reduce((sum, item) => {
+      const modTotal = item.modifiers.reduce((m, mod) => m + mod.price, 0)
+      return sum + (item.unitPrice + modTotal) * item.quantity
+    }, 0)
+  },
+}))

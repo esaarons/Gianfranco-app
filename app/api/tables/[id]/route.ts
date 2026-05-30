@@ -21,11 +21,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json(data)
   }
 
-  // Join tables — set parent_table_id on child
+  // Join tables — set parent_table_id on child and mark it occupied
   if (body.action === 'join' && body.parentId) {
     const { data, error } = await supabase
       .from('tables')
-      .update({ parent_table_id: body.parentId })
+      .update({ parent_table_id: body.parentId, status: 'occupied' })
       .eq('id', id)
       .select()
       .single()
@@ -49,6 +49,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   // Move order to another table
   if (body.action === 'move' && body.targetTableId && body.orderId) {
+    // Reject if target table already has an open order
+    const { data: conflict } = await supabase
+      .from('orders')
+      .select('id')
+      .eq('table_id', body.targetTableId)
+      .eq('status', 'open')
+      .single()
+
+    if (conflict) {
+      return NextResponse.json({ error: 'La mesa destino ya tiene un pedido abierto' }, { status: 409 })
+    }
+
     const { error } = await supabase
       .from('orders')
       .update({ table_id: body.targetTableId })

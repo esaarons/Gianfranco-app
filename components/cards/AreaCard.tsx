@@ -1,8 +1,7 @@
 'use client'
 
 import { useUpdateCardStatus } from '@/hooks/useCards'
-import { CARD_STATUS_CONFIG } from '@/lib/constants'
-import { formatPrice, formatTime } from '@/lib/utils'
+import { formatTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import type { AreaCard } from '@/types'
@@ -12,106 +11,126 @@ interface AreaCardProps {
   myAreaType: 'bar' | 'kitchen'
 }
 
+const STATUS_STYLES = {
+  pending: {
+    card:      'bg-white border-[#E8E4DC]',
+    stripe:    'bg-[#E08A50]',
+    label:     'PENDIENTE',
+    labelBg:   'bg-[#E08A50]/12 text-[#A05A28]',
+    dotAnim:   'dot-pulse-amber',
+    dot:       'bg-[#E08A50]',
+    textTitle: 'text-[#252525]',
+  },
+  received: {
+    card:      'bg-white border-[#E8E4DC]',
+    stripe:    'bg-[#6D9EEB]',
+    label:     'PREPARANDO',
+    labelBg:   'bg-[#6D9EEB]/12 text-[#2A5FA0]',
+    dotAnim:   '',
+    dot:       'bg-[#6D9EEB]',
+    textTitle: 'text-[#252525]',
+  },
+  delivered: {
+    card:      'bg-[#F9F7F3] border-[#E8E4DC]',
+    stripe:    'bg-[#9DAA7D]',
+    label:     'LISTO',
+    labelBg:   'bg-[#9DAA7D]/12 text-[#4A6B3A]',
+    dotAnim:   '',
+    dot:       'bg-[#9DAA7D]',
+    textTitle: 'text-[#3A3630]/70',
+  },
+}
+
+// Elapsed time since card was created
+function elapsed(ts: string): string {
+  const diff = Math.floor((Date.now() - new Date(ts).getTime()) / 60000)
+  if (diff < 1)  return 'ahora'
+  if (diff < 60) return `${diff}m`
+  return `${Math.floor(diff / 60)}h ${diff % 60}m`
+}
+
 export function AreaCardComponent({ card, myAreaType }: AreaCardProps) {
-  const updateStatus = useUpdateCardStatus()
-  const statusConfig = CARD_STATUS_CONFIG[card.status]
+  const updateStatus = useUpdateCardStatus(card.area_id)
+  const st = STATUS_STYLES[card.status]
 
-  const order = card.order
-  const tableCode = order?.table?.code ?? null
+  const order      = card.order
+  const tableCode  = order?.table?.code ?? null
+  const isTakeaway = order?.type === 'takeaway'
+  const isTask     = !order && !isTakeaway
 
-  // Split items by area
-  const myItems = order?.items?.filter((i) => i.area?.type === myAreaType) ?? []
+  const myItems    = order?.items?.filter((i) => i.area?.type === myAreaType) ?? []
   const otherItems = order?.items?.filter((i) => i.area?.type !== myAreaType) ?? []
-  const otherAreaLabel = myAreaType === 'bar' ? 'COCINA' : 'BARRA / SERVICIO'
-  const myAreaLabel = myAreaType === 'bar' ? 'BEBIDAS / TU ÁREA' : 'COMIDA / TU ÁREA'
+  const myLabel    = myAreaType === 'bar' ? 'Tu área · Barra' : 'Tu área · Cocina'
+  const otherLabel = myAreaType === 'bar' ? 'Cocina' : 'Barra'
 
-  // Delivery/task card (no order)
-  const isTask = !order
-
-  function handleReceive() {
-    if (card.status !== 'pending') return
+  function handle(status: 'received' | 'delivered') {
     updateStatus.mutate(
-      { id: card.id, status: 'received' },
+      { id: card.id, status },
       {
-        onSuccess: () => toast.success('Pedido recibido'),
-        onError: () => toast.error('Error'),
-      }
-    )
-  }
-
-  function handleDeliver() {
-    if (card.status === 'delivered') return
-    updateStatus.mutate(
-      { id: card.id, status: 'delivered' },
-      {
-        onSuccess: () => toast.success('Pedido entregado'),
-        onError: () => toast.error('Error'),
+        onSuccess: () => toast.success(status === 'received' ? 'Recibido ✓' : 'Listo ✓'),
+        onError:   () => toast.error('Error al actualizar'),
       }
     )
   }
 
   return (
-    <div
-      className={cn(
-        'rounded-2xl border-2 overflow-hidden shadow-sm transition-opacity',
-        card.status === 'delivered' && 'opacity-60',
-        card.status === 'pending' && 'border-orange-300 bg-orange-50',
-        card.status === 'received' && 'border-blue-300 bg-blue-50',
-        card.status === 'delivered' && 'border-emerald-300 bg-emerald-50',
-      )}
-    >
-      {/* Card header */}
-      <div className={cn(
-        'px-4 py-3 flex items-center justify-between',
-        card.status === 'pending' && 'bg-orange-500',
-        card.status === 'received' && 'bg-blue-500',
-        card.status === 'delivered' && 'bg-emerald-500',
-      )}>
-        <div>
-          <h3 className="text-white font-bold text-lg leading-none">
-            {isTask ? (card.title ?? 'Tarea') : `PEDIDO MESA ${tableCode}`}
-          </h3>
-          <p className="text-white/70 text-xs mt-0.5">
-            {formatTime(card.created_at)}
-          </p>
+    <div className={cn(
+      'rounded-2xl border overflow-hidden fade-scale-in transition-all duration-300 card-shadow',
+      st.card,
+      card.status === 'delivered' && 'opacity-55'
+    )}>
+
+      {/* Colored left stripe + header */}
+      <div className="flex items-stretch">
+        <div className={cn('w-1 shrink-0', st.stripe)} />
+        <div className="flex-1 px-3.5 py-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className={cn('w-2 h-2 rounded-full shrink-0', st.dot, st.dotAnim)} />
+            <div>
+              <h3 className={cn('font-bold text-[15px] leading-none tracking-tight', st.textTitle)}>
+                {isTakeaway ? '🥡 Para llevar' : isTask ? (card.title ?? 'Tarea') : `Mesa ${tableCode}`}
+              </h3>
+              <p className="text-[#8A8278] text-[11px] mt-0.5 font-medium">
+                {isTask ? 'Delivery / Tarea' : elapsed(card.created_at)}
+              </p>
+            </div>
+          </div>
+          <span className={cn('text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wider', st.labelBg)}>
+            {st.label}
+          </span>
         </div>
-        <span className={cn(
-          'text-xs font-bold px-2 py-1 rounded-full bg-white/20 text-white'
-        )}>
-          {statusConfig.label.toUpperCase()}
-        </span>
       </div>
 
-      {/* Card body */}
-      <div className="p-4 space-y-3">
+      {/* Divider */}
+      <div className="h-px bg-[#F0EDE8] mx-3.5" />
+
+      {/* Body */}
+      <div className="px-3.5 py-3 space-y-3">
         {isTask ? (
-          <div>
-            {card.notes && <p className="text-sm text-stone-600">{card.notes}</p>}
+          <div className="space-y-1">
+            {card.notes && <p className="text-sm text-[#3A3630]">{card.notes}</p>}
             {card.assignee && (
-              <p className="text-xs text-stone-500 mt-1">Asignado: {card.assignee.name}</p>
+              <p className="text-xs text-[#8A8278]">Asignado: <span className="text-[#3A3630] font-medium">{card.assignee.name}</span></p>
             )}
           </div>
         ) : (
           <>
-            {/* My area items — highlighted */}
             {myItems.length > 0 && (
               <div>
-                <p className="text-xs font-bold text-stone-500 uppercase tracking-wide mb-1.5">
-                  {myAreaLabel}
-                </p>
-                <ul className="space-y-1">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#8A8278] mb-2">{myLabel}</p>
+                <ul className="space-y-2">
                   {myItems.map((item) => (
-                    <li key={item.id} className="flex items-start gap-2">
-                      <span className="font-bold text-stone-800 w-5 text-sm shrink-0">{item.quantity}×</span>
-                      <div className="flex-1">
-                        <span className="text-sm font-semibold text-stone-800">{item.product?.name}</span>
+                    <li key={item.id} className="flex items-start gap-2.5">
+                      <span className="text-sm font-bold text-[#8A8278] w-6 shrink-0">{item.quantity}×</span>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-semibold text-[#252525]">{item.product?.name}</span>
                         {item.modifiers && item.modifiers.length > 0 && (
-                          <span className="text-xs text-stone-500 ml-1">
-                            ({item.modifiers.map((m) => m.modifier?.name).join(', ')})
+                          <span className="text-xs text-[#8A8278] ml-1.5">
+                            {item.modifiers.map((m) => m.modifier?.name).join(' · ')}
                           </span>
                         )}
                         {item.notes && (
-                          <p className="text-xs text-amber-600 italic">"{item.notes}"</p>
+                          <p className="text-xs text-[#E08A50] italic mt-0.5">"{item.notes}"</p>
                         )}
                       </div>
                     </li>
@@ -120,17 +139,14 @@ export function AreaCardComponent({ card, myAreaType }: AreaCardProps) {
               </div>
             )}
 
-            {/* Other area items — dimmed */}
             {otherItems.length > 0 && (
-              <div className="opacity-50">
-                <p className="text-xs font-bold text-stone-400 uppercase tracking-wide mb-1.5">
-                  {otherAreaLabel}
-                </p>
+              <div className="opacity-35 mt-1">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#8A8278] mb-1.5">{otherLabel}</p>
                 <ul className="space-y-1">
                   {otherItems.map((item) => (
-                    <li key={item.id} className="flex items-center gap-2">
-                      <span className="text-stone-400 w-5 text-sm shrink-0">{item.quantity}×</span>
-                      <span className="text-sm text-stone-400">{item.product?.name}</span>
+                    <li key={item.id} className="flex items-center gap-2.5">
+                      <span className="text-xs text-[#8A8278] w-6 shrink-0">{item.quantity}×</span>
+                      <span className="text-xs text-[#3A3630]">{item.product?.name}</span>
                     </li>
                   ))}
                 </ul>
@@ -140,29 +156,29 @@ export function AreaCardComponent({ card, myAreaType }: AreaCardProps) {
         )}
       </div>
 
-      {/* Action buttons */}
+      {/* Actions */}
       {card.status !== 'delivered' && (
-        <div className="px-4 pb-4 flex gap-2">
+        <div className="px-3.5 pb-3.5 flex gap-2">
           {card.status === 'pending' && (
             <button
-              onClick={handleReceive}
+              onClick={() => handle('received')}
               disabled={updateStatus.isPending}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl text-sm min-h-[44px] transition-colors"
+              className="flex-1 bg-[#F9F7F3] border border-[#E8E4DC] text-[#3A3630] font-bold py-2.5 rounded-xl text-sm btn-primary hover:bg-[#F0EDE8] transition-colors"
             >
-              Recibido
+              Recibir
             </button>
           )}
           <button
-            onClick={handleDeliver}
-            disabled={updateStatus.isPending}
+            onClick={() => handle('delivered')}
+            disabled={updateStatus.isPending || card.status === 'pending'}
             className={cn(
-              'flex-1 font-bold py-3 rounded-xl text-sm min-h-[44px] transition-colors text-white',
+              'flex-1 font-bold py-2.5 rounded-xl text-sm transition-all',
               card.status === 'received'
-                ? 'bg-emerald-500 hover:bg-emerald-600'
-                : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                ? 'bg-[#0F3A43] text-white btn-primary'
+                : 'bg-[#F0EDE8] text-[#B0AB9F] cursor-not-allowed'
             )}
           >
-            Entregado
+            Listo ✓
           </button>
         </div>
       )}

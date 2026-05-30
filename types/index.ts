@@ -1,7 +1,24 @@
 // ─── Roles & Areas ───────────────────────────────────────────────────────────
 
-export type UserRole = 'admin' | 'salon' | 'bar' | 'kitchen'
-export type AreaType = 'bar' | 'kitchen'
+// Roles legacy (bar, kitchen, salon) mantenidos para compatibilidad con DB existente
+export type UserRole =
+  | 'admin'
+  | 'encargado'
+  | 'barista'
+  | 'servicio'
+  | 'caja'
+  | 'delivery'
+  | 'salon'     // legacy
+  | 'bar'       // legacy
+  | 'kitchen'   // legacy
+
+export type AreaType = 'bar' | 'kitchen' | 'salon' | 'delivery' | 'admin'
+
+export interface Area {
+  id: string
+  name: string
+  type: AreaType
+}
 
 export interface User {
   id: string
@@ -11,12 +28,8 @@ export interface User {
   pin?: string
   active: boolean
   created_at: string
-}
-
-export interface Area {
-  id: string
-  name: string
-  type: AreaType
+  last_login?: string | null
+  areas?: Area[]
 }
 
 // ─── Tables ──────────────────────────────────────────────────────────────────
@@ -54,6 +67,7 @@ export interface Product {
   active: boolean
   is_favorite: boolean
   sort_order: number
+  image_url?: string | null
   category?: Category
   primary_area?: Area
 }
@@ -68,7 +82,7 @@ export interface Modifier {
 
 // ─── Orders ──────────────────────────────────────────────────────────────────
 
-export type OrderType = 'table' | 'delivery' | 'task'
+export type OrderType = 'table' | 'delivery' | 'takeaway' | 'task'
 export type OrderStatus = 'open' | 'in_progress' | 'closed' | 'cancelled'
 
 export interface Order {
@@ -148,4 +162,55 @@ export interface CartItem {
 export interface AuthSession {
   user: User
   token: string
+}
+
+// ─── Activity Logs ───────────────────────────────────────────────────────────
+
+export type LogAction =
+  | 'login' | 'logout'
+  | 'order_created' | 'order_modified' | 'order_closed' | 'order_cancelled'
+  | 'item_added' | 'item_removed' | 'item_modified'
+  | 'card_status_changed'
+  | 'table_opened' | 'table_freed' | 'table_joined' | 'table_moved'
+  | 'product_created' | 'product_modified'
+  | 'user_created' | 'user_modified'
+  | 'reservation_created' | 'reservation_modified' | 'reservation_cancelled'
+
+export interface ActivityLog {
+  id: string
+  user_id: string | null
+  action: LogAction
+  area_id?: string | null
+  table_id?: string | null
+  order_id?: string | null
+  product_id?: string | null
+  old_state?: string | null
+  new_state?: string | null
+  metadata?: Record<string, unknown> | null
+  created_at: string
+  user?: User
+  area?: Area
+}
+
+// ─── Reservations ────────────────────────────────────────────────────────────
+
+export type ReservationStatus =
+  | 'pending' | 'confirmed' | 'in_progress' | 'finished' | 'cancelled' | 'no_show'
+
+export interface Reservation {
+  id: string
+  customer_name: string
+  customer_phone?: string | null
+  date: string
+  start_time: string
+  end_time: string
+  party_size: number
+  zone?: TableZone
+  menu_type?: 'brunch' | 'simple' | null
+  status: ReservationStatus
+  notes?: string | null
+  created_by?: string | null
+  created_at: string
+  tables?: Table[]
+  creator?: User
 }

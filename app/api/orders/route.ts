@@ -9,6 +9,9 @@ export async function GET(req: NextRequest) {
   const tableId = searchParams.get('tableId')
   const status = searchParams.get('status') ?? 'open'
 
+  const from = searchParams.get('from')
+  const to   = searchParams.get('to')
+
   let query = supabase
     .from('orders')
     .select(`
@@ -25,6 +28,8 @@ export async function GET(req: NextRequest) {
     .order('created_at', { ascending: false })
 
   if (tableId) query = query.eq('table_id', tableId)
+  if (from)    query = query.gte('created_at', from)
+  if (to)      query = query.lte('created_at', to)
 
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -100,27 +105,30 @@ export async function POST(req: NextRequest) {
     orderId = newOrder.id
   }
 
-  // Insert order items
-  const orderItemsData = items.map((item) => ({
-    order_id: orderId,
-    product_id: item.productId,
-    quantity: item.quantity,
-    unit_price: item.unitPrice,
-    area_id: item.areaId,
-    notes: item.notes ?? null,
-  }))
+  // Insert order items one-by-one to guarantee ID alignment with modifier insertion
+  const insertedItemIds: string[] = []
+  for (const item of items) {
+    const { data: dbItem, error: itemError } = await supabase
+      .from('order_items')
+      .insert({
+        order_id: orderId,
+        product_id: item.productId,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        area_id: item.areaId,
+        notes: item.notes ?? null,
+      })
+      .select('id')
+      .single()
 
-  const { data: insertedItems, error: itemsError } = await supabase
-    .from('order_items')
-    .insert(orderItemsData)
-    .select()
+    if (itemError) return NextResponse.json({ error: itemError.message }, { status: 500 })
+    insertedItemIds.push(dbItem.id)
+  }
 
-  if (itemsError) return NextResponse.json({ error: itemsError.message }, { status: 500 })
-
-  // Insert modifiers
-  const modifiersToInsert = insertedItems.flatMap((dbItem, idx) =>
+  // Insert modifiers — IDs are now correctly aligned with items
+  const modifiersToInsert = insertedItemIds.flatMap((orderItemId, idx) =>
     items[idx].modifiers.map((mod) => ({
-      order_item_id: dbItem.id,
+      order_item_id: orderItemId,
       modifier_id: mod.modifierId,
       price: mod.price,
     }))
@@ -130,24 +138,32 @@ export async function POST(req: NextRequest) {
     await supabase.from('order_item_modifiers').insert(modifiersToInsert)
   }
 
-  // Create area cards — group items by area
+  // Create or wake up area cards — group items by area
   const areaIds = [...new Set(items.map((i) => i.areaId))]
 
   for (const areaId of areaIds) {
     const { data: existingCard } = await supabase
       .from('area_cards')
-      .select('id')
+      .select('id, status')
       .eq('order_id', orderId)
       .eq('area_id', areaId)
-      .single()
+      .maybeSingle()
 
     if (!existingCard) {
+      // First time this area gets items for this order
       await supabase.from('area_cards').insert({
         order_id: orderId,
         area_id: areaId,
         status: 'pending',
       })
+    } else if (existingCard.status === 'received' || existingCard.status === 'delivered') {
+      // New items added to an already in-progress or completed card — reset to pending
+      await supabase
+        .from('area_cards')
+        .update({ status: 'pending', received_at: null, delivered_at: null })
+        .eq('id', existingCard.id)
     }
+    // If already pending, the Realtime UPDATE on order_items triggers a refetch in bar/kitchen
   }
 
   // Update order total if adding to existing order

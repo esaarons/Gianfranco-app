@@ -1,8 +1,7 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { verifyToken } from '@/lib/auth'
-import { ROLE_CONFIG } from '@/lib/constants'
-import type { UserRole } from '@/types'
+import { homeRouteFromAreas } from '@/lib/constants'
 
 export default async function HomePage() {
   const cookieStore = await cookies()
@@ -13,6 +12,5 @@ export default async function HomePage() {
   const payload = await verifyToken(token)
   if (!payload) redirect('/login')
 
-  const { homeRoute } = ROLE_CONFIG[payload.role as UserRole]
-  redirect(homeRoute)
+  redirect(homeRouteFromAreas(payload.role, payload.areaIds ?? []))
 }

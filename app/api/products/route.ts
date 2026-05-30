@@ -1,18 +1,23 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+  const all = searchParams.get('all') === 'true'
+
   const supabase = await createClient()
-  const { data, error } = await supabase
+  let query = supabase
     .from('products')
     .select(`
       *,
       category:categories(id, name, sort_order),
       primary_area:areas(id, name, type)
     `)
-    .eq('active', true)
     .order('sort_order')
 
+  if (!all) query = query.eq('active', true)
+
+  const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)
 }

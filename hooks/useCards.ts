@@ -6,6 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 import { useSound } from '@/hooks/useSound'
 import type { AreaCard, CardStatus } from '@/types'
 
+// Re-export for convenience
+export type { CardStatus }
+
 export function useAreaCards(areaId: string) {
   const queryClient = useQueryClient()
   const { playOrderAlert } = useSound()
@@ -36,12 +39,12 @@ export function useAreaCards(areaId: string) {
           if (!knownIds.current.has(newCard.id)) {
             knownIds.current.add(newCard.id)
             queryClient.invalidateQueries({ queryKey: ['cards', areaId] })
-            // We'll get table code after refetch — play generic alert immediately
-            playOrderAlert(null, 'table')
+            // Only alert for genuinely new pending cards, not manual delivery tasks
+            if (newCard.status === 'pending') playOrderAlert(null, 'table')
           }
         }
       )
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'area_cards' }, () => {
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'area_cards', filter: `area_id=eq.${areaId}` }, () => {
         queryClient.invalidateQueries({ queryKey: ['cards', areaId] })
       })
       .subscribe()
@@ -52,7 +55,7 @@ export function useAreaCards(areaId: string) {
   return query
 }
 
-export function useUpdateCardStatus() {
+export function useUpdateCardStatus(areaId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -65,6 +68,6 @@ export function useUpdateCardStatus() {
       if (!res.ok) throw new Error('Error actualizando tarjeta')
       return res.json()
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cards'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cards', areaId] }),
   })
 }

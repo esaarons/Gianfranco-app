@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatPrice(amount: number): string {
-  return new Intl.NumberFormat('es-PA', { style: 'currency', currency: 'USD' }).format(amount)
+  return `S/ ${amount.toFixed(2)}`
 }
 
 export function formatTime(iso: string): string {

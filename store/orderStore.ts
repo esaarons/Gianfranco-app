@@ -1,14 +1,19 @@
 import { create } from 'zustand'
 import type { CartItem } from '@/types'
 
+// Unique key per cart line: same product with different modifiers → different lines
+export function cartKey(item: CartItem): string {
+  return `${item.productId}:${item.modifiers.map((m) => m.modifierId).sort().join(',')}`
+}
+
 interface OrderStore {
   tableId: string | null
   tableCode: string | null
   items: CartItem[]
   setTable: (id: string, code: string) => void
   addItem: (item: CartItem) => void
-  updateItemQty: (productId: string, delta: number) => void
-  removeItem: (productId: string) => void
+  updateItemQty: (key: string, delta: number) => void
+  removeItem: (key: string) => void
   clearCart: () => void
   total: () => number
 }
@@ -21,11 +26,12 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   setTable: (id, code) => set({ tableId: id, tableCode: code, items: [] }),
 
   addItem: (item) => {
-    const existing = get().items.find((i) => i.productId === item.productId)
+    const key = cartKey(item)
+    const existing = get().items.find((i) => cartKey(i) === key)
     if (existing) {
       set((s) => ({
         items: s.items.map((i) =>
-          i.productId === item.productId ? { ...i, quantity: i.quantity + item.quantity } : i
+          cartKey(i) === key ? { ...i, quantity: i.quantity + item.quantity } : i
         ),
       }))
     } else {
@@ -33,16 +39,16 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     }
   },
 
-  updateItemQty: (productId, delta) => {
+  updateItemQty: (key, delta) => {
     set((s) => ({
       items: s.items
-        .map((i) => (i.productId === productId ? { ...i, quantity: i.quantity + delta } : i))
+        .map((i) => (cartKey(i) === key ? { ...i, quantity: i.quantity + delta } : i))
         .filter((i) => i.quantity > 0),
     }))
   },
 
-  removeItem: (productId) =>
-    set((s) => ({ items: s.items.filter((i) => i.productId !== productId) })),
+  removeItem: (key) =>
+    set((s) => ({ items: s.items.filter((i) => cartKey(i) !== key) })),
 
   clearCart: () => set({ tableId: null, tableCode: null, items: [] }),
 

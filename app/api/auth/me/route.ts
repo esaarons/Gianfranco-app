@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
+import type { Area } from '@/types'
 
 export async function GET(req: NextRequest) {
   const token = req.cookies.get('gf_session')?.value
@@ -18,5 +19,18 @@ export async function GET(req: NextRequest) {
 
   if (!user) return NextResponse.json({ user: null }, { status: 401 })
 
-  return NextResponse.json({ user })
+  let areas: Area[] = []
+  try {
+    const { data: ua } = await supabase
+      .from('user_areas')
+      .select('areas(id, name, type)')
+      .eq('user_id', user.id)
+    areas = ((ua ?? []) as unknown as { areas: Area | null }[])
+      .map((r) => r.areas)
+      .filter((a): a is Area => a !== null)
+  } catch {
+    // user_areas not yet migrated
+  }
+
+  return NextResponse.json({ user: { ...user, areas } })
 }

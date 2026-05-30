@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken } from '@/lib/auth'
+import { jwtVerify } from 'jose'
 
-const PUBLIC_PATHS = ['/login', '/api/auth/login']
+// Inline secret to avoid shared-module issues in Edge runtime
+const secret = new TextEncoder().encode(
+  process.env.JWT_SECRET ?? 'gianfranco-dev-secret-change-in-production'
+)
+
+// Routes that never require a session
+const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/auth/logout']
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -10,25 +16,23 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next()
   }
 
-  if (pathname.startsWith('/api/')) {
-    const token = req.cookies.get('gf_session')?.value
-    if (!token) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    const payload = await verifyToken(token)
-    if (!payload) return NextResponse.json({ error: 'Sesión inválida' }, { status: 401 })
-    return NextResponse.next()
-  }
-
   const token = req.cookies.get('gf_session')?.value
+  const isApi = pathname.startsWith('/api/')
+
   if (!token) {
-    return NextResponse.redirect(new URL('/login', req.url))
+    return isApi
+      ? NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+      : NextResponse.redirect(new URL('/login', req.url))
   }
 
-  const payload = await verifyToken(token)
-  if (!payload) {
-    return NextResponse.redirect(new URL('/login', req.url))
+  try {
+    await jwtVerify(token, secret)
+    return NextResponse.next()
+  } catch {
+    return isApi
+      ? NextResponse.json({ error: 'Sesión inválida' }, { status: 401 })
+      : NextResponse.redirect(new URL('/login', req.url))
   }
-
-  return NextResponse.next()
 }
 
 export const config = {

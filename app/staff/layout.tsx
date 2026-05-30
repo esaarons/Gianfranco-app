@@ -1,11 +1,11 @@
-import { Navbar } from '@/components/layout/Navbar'
+import { BottomNav } from '@/components/layout/BottomNav'
 import { AuthProvider } from '@/components/layout/AuthProvider'
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <Navbar />
-      <main className="pt-14 min-h-screen">{children}</main>
+      <main className="pb-16 min-h-screen">{children}</main>
+      <BottomNav />
     </AuthProvider>
   )
 }

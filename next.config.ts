@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  devIndicators: false,
   experimental: {
     // Needed for Supabase SSR cookie handling
   },

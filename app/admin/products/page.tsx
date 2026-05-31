@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { formatPrice, cn } from '@/lib/utils'
+import { useSetting, useUpdateSetting } from '@/hooks/useSetting'
 import { toast } from 'sonner'
 import type { Product, Category, Area } from '@/types'
 
@@ -14,6 +15,7 @@ const CAT_ICON: Record<string, string> = {
   'Sandwiches': '🥪', 'Quiche': '🥧', 'Ensaladas': '🥗',
   'Pastas': '🍝', 'Pastas / Ensaladas': '🍝', 'Pizzas': '🍕',
   'Postres': '🍰', 'Smoothie Bowls': '🫐', 'Vitrina': '🥐',
+  'Desayunos': '🍳', 'Infusiones': '🫖', 'Helados': '🍦',
 }
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
@@ -427,6 +429,9 @@ export default function AdminProductsPage() {
         </div>
       )}
 
+      {/* Breakfast settings (shown when Desayunos is selected) */}
+      {effectiveCategory === 'Desayunos' && <BreakfastSettings />}
+
       {/* Product list */}
       <div className="px-4 pb-10 space-y-2">
         {isLoading ? (
@@ -555,6 +560,55 @@ function ProductRow({
           }}
         />
       </button>
+    </div>
+  )
+}
+
+// ── Breakfast settings panel ──────────────────────────────────────────────────
+function BreakfastSettings() {
+  const { data: cutoff } = useSetting('breakfast_cutoff')
+  const update = useUpdateSetting()
+  const [draft, setDraft] = useState<string | null>(null)
+
+  const value  = draft ?? (cutoff ?? '11:30')
+  const saving = update.isPending
+
+  async function save() {
+    if (!draft || draft === cutoff) { setDraft(null); return }
+    try {
+      await update.mutateAsync({ key: 'breakfast_cutoff', value: draft })
+      toast.success(`Hora límite actualizada: ${draft}`)
+      setDraft(null)
+    } catch {
+      toast.error('Error al guardar')
+    }
+  }
+
+  return (
+    <div className="mx-4 mb-4 bg-white border border-[#E8E4DC] rounded-2xl px-4 py-3.5">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[#252525] text-sm font-bold">Hora límite de desayunos</p>
+          <p className="text-[#8A8278] text-xs mt-0.5">Desayunos no disponibles después de esta hora</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="time"
+            value={value}
+            onChange={(e) => setDraft(e.target.value)}
+            className="border border-[#E8E4DC] rounded-xl px-3 py-2 text-sm font-bold text-[#252525] focus:border-[#0F3A43] outline-none bg-[#F6F2EA]"
+          />
+          {draft && draft !== cutoff && (
+            <button
+              onClick={save}
+              disabled={saving}
+              className="bg-[#0F3A43] text-white font-bold px-4 py-2 rounded-xl text-xs btn-primary disabled:opacity-50"
+            >
+              {saving ? '…' : 'Guardar'}
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

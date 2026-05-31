@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ProductSearch } from '@/components/orders/ProductSearch'
 import { ModifierSheet } from '@/components/orders/ModifierSheet'
+import { BreakfastSheet } from '@/components/orders/BreakfastSheet'
+import { IceCreamSheet } from '@/components/orders/IceCreamSheet'
 import { OrderSummary } from '@/components/orders/OrderSummary'
 import { FreeItemSheet, buildFreeCartItem } from '@/components/orders/FreeItemSheet'
 import { useOrderStore } from '@/store/orderStore'
@@ -20,8 +22,10 @@ export default function OrderPage() {
     guests, activeGuest, addGuest, setActiveGuest,
   } = useOrderStore()
 
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
-  const [showFreeItem,    setShowFreeItem]    = useState(false)
+  const [selectedProduct,   setSelectedProduct]   = useState<Product | null>(null)
+  const [selectedBreakfast, setSelectedBreakfast] = useState<Product | null>(null)
+  const [selectedIceCream,  setSelectedIceCream]  = useState<Product | null>(null)
+  const [showFreeItem,      setShowFreeItem]       = useState(false)
   const [showGuestInput,  setShowGuestInput]  = useState(false)
   const [guestDraft,      setGuestDraft]      = useState('')
   const [submitting,      setSubmitting]      = useState(false)
@@ -178,7 +182,11 @@ export default function OrderPage() {
 
       {/* Product selector */}
       <div className="flex-1 overflow-hidden flex flex-col">
-        <ProductSearch onSelect={(p) => setSelectedProduct(p)} />
+        <ProductSearch onSelect={(p) => {
+          if (p.product_type === 'breakfast')  setSelectedBreakfast(p)
+          else if (p.product_type === 'ice_cream') setSelectedIceCream(p)
+          else setSelectedProduct(p)
+        }} />
       </div>
 
       {/* Pedido Libre button — sits above the order summary */}
@@ -217,6 +225,44 @@ export default function OrderPage() {
               toast.success(`${selectedProduct.name} agregado${activeGuest ? ` — ${activeGuest}` : ''}`)
             }}
             onClose={() => setSelectedProduct(null)}
+          />
+        </div>
+      )}
+
+      {/* Breakfast combo overlay */}
+      {selectedBreakfast && (
+        <div className="absolute inset-0 z-20">
+          <BreakfastSheet
+            product={selectedBreakfast}
+            onClose={() => {
+              setBadgeKey(k => k + 1)
+              toast.success(`${selectedBreakfast.name} agregado${activeGuest ? ` — ${activeGuest}` : ''}`)
+              setSelectedBreakfast(null)
+            }}
+          />
+        </div>
+      )}
+
+      {/* Ice cream overlay */}
+      {selectedIceCream && (
+        <div className="absolute inset-0 z-20">
+          <IceCreamSheet
+            product={selectedIceCream}
+            onAdd={(qty, mods, notes) => {
+              addItem({
+                productId:   selectedIceCream.id,
+                productName: selectedIceCream.name,
+                quantity:    qty,
+                unitPrice:   selectedIceCream.price,
+                areaId:      selectedIceCream.primary_area_id,
+                areaType:    selectedIceCream.primary_area?.type ?? 'bar',
+                notes:       notes || undefined,
+                modifiers:   mods,
+              })
+              setBadgeKey(k => k + 1)
+              toast.success(`${selectedIceCream.name} agregado${activeGuest ? ` — ${activeGuest}` : ''}`)
+            }}
+            onClose={() => setSelectedIceCream(null)}
           />
         </div>
       )}

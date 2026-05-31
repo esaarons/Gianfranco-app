@@ -141,8 +141,12 @@ export async function POST(req: NextRequest) {
   }
 
   // Create or wake up area cards — group items by area.
-  // Free items (no product) are informational and don't generate separate cards.
-  const areaIds = [...new Set(items.filter(i => i.productId !== FREE_ITEM).map((i) => i.areaId))]
+  // Standard FREE_ITEM (water, extras) are informational; bar_included combo items DO need cards.
+  const areaIds = [...new Set(
+    items
+      .filter(i => i.productId !== FREE_ITEM || i.comboRole === 'bar_included')
+      .map((i) => i.areaId)
+  )]
 
   for (const areaId of areaIds) {
     const { data: existingCard } = await supabase

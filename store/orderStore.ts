@@ -1,12 +1,13 @@
 import { create } from 'zustand'
 import type { CartItem } from '@/types'
 
-// Unique key per cart line: same product + same modifiers + same notes + same guest → same line
+// Unique key per cart line: same product + same modifiers + same notes + same guest + same combo → same line
 export function cartKey(item: CartItem): string {
   const mods  = item.modifiers.map((m) => m.modifierId).sort().join(',')
   const note  = item.notes?.trim() ?? ''
   const guest = item.guestName?.trim() ?? ''
-  return `${item.productId}:${mods}:${note}:${guest}`
+  const combo = item.comboKey ?? ''
+  return `${item.productId}:${mods}:${note}:${guest}:${combo}`
 }
 
 interface OrderStore {
@@ -20,6 +21,7 @@ interface OrderStore {
   addItem:        (item: CartItem) => void
   updateItemQty:  (key: string, delta: number) => void
   removeItem:     (key: string) => void
+  removeCombo:    (comboKey: string) => void
   clearCart:      () => void
   total:          () => number
 
@@ -64,6 +66,9 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
 
   removeItem: (key) =>
     set((s) => ({ items: s.items.filter((i) => cartKey(i) !== key) })),
+
+  removeCombo: (comboKey) =>
+    set((s) => ({ items: s.items.filter((i) => i.comboKey !== comboKey) })),
 
   clearCart: () => set({ tableId: null, tableCode: null, items: [], guests: [], activeGuest: null }),
 

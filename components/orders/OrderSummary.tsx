@@ -23,6 +23,41 @@ function groupByGuest(items: CartItem[]): Map<string, CartItem[]> {
   return map
 }
 
+// ── Combo row: main item + bar_included sub-items ─────────────────────────────
+function ComboRow({ main, children, onRemove }: {
+  main: CartItem
+  children: CartItem[]
+  onRemove: () => void
+}) {
+  const total = main.unitPrice + main.modifiers.reduce((s, m) => s + m.price, 0)
+  return (
+    <div className="fade-in">
+      {/* Main item row */}
+      <div className="flex items-start gap-2">
+        <span className="w-5 text-center text-[10px] font-bold text-[#C46F4E]/70 mt-1 shrink-0">🍳</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-white/90 leading-snug">{main.productName}</p>
+          {children.length > 0 && (
+            <div className="mt-1 space-y-0.5">
+              {children.map((c, i) => (
+                <p key={i} className="text-[10px] text-white/35 leading-snug">
+                  ↳ {c.productName}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+        <span className="text-sm font-semibold text-white/80 shrink-0 mt-0.5">{formatPrice(total)}</span>
+        <button
+          onClick={onRemove}
+          className="w-6 h-6 flex items-center justify-center rounded-full text-white/25 hover:bg-white/10 hover:text-[#C46F4E] transition-all text-base shrink-0 press-scale mt-0.5"
+        >×</button>
+      </div>
+    </div>
+  )
+}
+
+// ── Standard item row ─────────────────────────────────────────────────────────
 function ItemRow({ item, onQty, onRemove }: {
   item: CartItem
   onQty: (delta: number) => void
@@ -76,13 +111,72 @@ function ItemRow({ item, onQty, onRemove }: {
   )
 }
 
+// ── Render items list (handles combos + guests) ───────────────────────────────
+function ItemsList({ items, onQty, onRemove, onRemoveCombo }: {
+  items: CartItem[]
+  onQty: (key: string, delta: number) => void
+  onRemove: (key: string) => void
+  onRemoveCombo: (comboKey: string) => void
+}) {
+  // Build ordered display: combos as one group, standalone items individually.
+  const seenCombos = new Set<string>()
+  const comboMap = new Map<string, { main: CartItem; children: CartItem[] }>()
+
+  for (const item of items) {
+    if (item.comboKey) {
+      if (!comboMap.has(item.comboKey)) comboMap.set(item.comboKey, { main: item, children: [] })
+      const g = comboMap.get(item.comboKey)!
+      if (item.comboRole === 'main') g.main = item
+      else g.children.push(item)
+    }
+  }
+
+  return (
+    <>
+      {items.map((item) => {
+        // Skip bar_included — rendered inside ComboRow
+        if (item.comboRole === 'bar_included') return null
+
+        if (item.comboKey) {
+          if (seenCombos.has(item.comboKey)) return null
+          seenCombos.add(item.comboKey)
+          const group = comboMap.get(item.comboKey)!
+          return (
+            <ComboRow
+              key={item.comboKey}
+              main={group.main}
+              children={group.children}
+              onRemove={() => onRemoveCombo(item.comboKey!)}
+            />
+          )
+        }
+
+        const key = cartKey(item)
+        return (
+          <ItemRow
+            key={key}
+            item={item}
+            onQty={(d) => onQty(key, d)}
+            onRemove={() => onRemove(key)}
+          />
+        )
+      })}
+    </>
+  )
+}
+
 export function OrderSummary({ onSubmit, submitting, label }: OrderSummaryProps) {
-  const { items, tableCode, guests, updateItemQty, removeItem, total } = useOrderStore()
+  const { items, tableCode, guests, updateItemQty, removeItem, removeCombo, total } = useOrderStore()
 
   if (!items.length) return null
 
   const hasGuests = guests.length > 0
   const grouped   = hasGuests ? groupByGuest(items) : null
+
+  // Count visible lines (combos count as 1)
+  const seenCombos = new Set(items.filter(i => i.comboKey).map(i => i.comboKey!))
+  const standaloneCount = items.filter(i => !i.comboKey).length
+  const lineCount = standaloneCount + seenCombos.size
 
   return (
     <div
@@ -96,39 +190,28 @@ export function OrderSummary({ onSubmit, submitting, label }: OrderSummaryProps)
           // ── Grouped by guest ──────────────────────────────────────────────
           [...grouped.entries()].map(([guest, gItems]) => (
             <div key={guest || '__none__'}>
-              {/* Guest header */}
               <div className="flex items-center gap-2 mb-1.5 mt-1 first:mt-0">
                 <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">
                   {guest || 'Sin asignar'}
                 </span>
                 <div className="flex-1 h-px bg-white/8" />
               </div>
-              {gItems.map((item) => {
-                const key = cartKey(item)
-                return (
-                  <ItemRow
-                    key={key}
-                    item={item}
-                    onQty={(d) => updateItemQty(key, d)}
-                    onRemove={() => removeItem(key)}
-                  />
-                )
-              })}
+              <ItemsList
+                items={gItems}
+                onQty={updateItemQty}
+                onRemove={removeItem}
+                onRemoveCombo={removeCombo}
+              />
             </div>
           ))
         ) : (
           // ── Flat list (no guests) ─────────────────────────────────────────
-          items.map((item) => {
-            const key = cartKey(item)
-            return (
-              <ItemRow
-                key={key}
-                item={item}
-                onQty={(d) => updateItemQty(key, d)}
-                onRemove={() => removeItem(key)}
-              />
-            )
-          })
+          <ItemsList
+            items={items}
+            onQty={updateItemQty}
+            onRemove={removeItem}
+            onRemoveCombo={removeCombo}
+          />
         )}
       </div>
 
@@ -138,7 +221,7 @@ export function OrderSummary({ onSubmit, submitting, label }: OrderSummaryProps)
           <p className="text-xs text-white/30 font-medium truncate">
             {tableCode ? `Mesa ${tableCode}` : 'Para llevar'}
             {hasGuests && ` · ${guests.length} personas`}
-            {!hasGuests && ` · ${items.length} producto${items.length > 1 ? 's' : ''}`}
+            {!hasGuests && ` · ${lineCount} producto${lineCount > 1 ? 's' : ''}`}
           </p>
           <p className="text-xl font-bold text-white tracking-tight leading-tight">{formatPrice(total())}</p>
         </div>

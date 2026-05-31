@@ -30,6 +30,9 @@ const CATEGORY_GROUPS: Record<string, string[]> = {
   'Pastas':           ['kitchen_extra'],
   'Pizzas':           ['kitchen_extra'],
   'Smoothie Bowls':   ['kitchen_extra', 'bowl_extra'],
+  // New categories
+  'Infusiones':       [],
+  'Helados':          [],   // handled by IceCreamSheet — no modifiers here
 }
 
 const GROUP_LABELS: Record<string, string> = {
@@ -53,6 +56,7 @@ const CAT_ICON: Record<string, string> = {
   'Sandwiches': '🥪', 'Quiche': '🥧', 'Ensaladas': '🥗',
   'Pastas': '🍝', 'Pizzas': '🍕', 'Postres': '🍰',
   'Smoothie Bowls': '🫐', 'Vitrina': '🥐',
+  'Infusiones': '🫖', 'Helados': '🍦',
 }
 
 export function ModifierSheet({ product, onAdd, onClose }: ModifierSheetProps) {

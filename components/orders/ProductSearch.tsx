@@ -2,9 +2,16 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useProducts } from '@/hooks/useProducts'
+import { useSetting } from '@/hooks/useSetting'
 import { formatPrice } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import type { Product } from '@/types'
+
+function isBreakfastAvailable(cutoff: string | null | undefined): boolean {
+  const [h, m] = (cutoff ?? '11:30').split(':').map(Number)
+  const now = new Date()
+  return now.getHours() * 60 + now.getMinutes() <= h * 60 + m
+}
 
 // ── Sub-group definitions ─────────────────────────────────────────────────────
 const SUBGROUPS: Record<string, Array<{ label: string; match: (name: string) => boolean }>> = {
@@ -51,6 +58,9 @@ const CAT_CONFIG: Record<string, { icon: string; tint: string; chipColor: string
   'Vitrina':            { icon: '🥐', tint: 'rgba(139,96,32,0.35)', chipColor: '#8B6020' },
   'Café':               { icon: '☕', tint: 'rgba(139,96,64,0.35)',  chipColor: '#8B6040' },
   'Bebidas Frías':      { icon: '🧊', tint: 'rgba(46,107,138,0.35)', chipColor: '#2E6B8A' },
+  'Desayunos':          { icon: '🍳', tint: 'rgba(196,111,78,0.35)', chipColor: '#C46F4E' },
+  'Infusiones':         { icon: '🫖', tint: 'rgba(61,107,64,0.35)',  chipColor: '#3D6B40' },
+  'Helados':            { icon: '🍦', tint: 'rgba(94,74,122,0.35)',  chipColor: '#5E4A7A' },
 }
 const DEFAULT_CFG = { icon: '•', tint: 'rgba(107,124,133,0.25)', chipColor: '#6B7C85' }
 
@@ -59,10 +69,13 @@ interface ProductSearchProps {
 }
 
 export function ProductSearch({ onSelect }: ProductSearchProps) {
-  const { data: products = [] } = useProducts()
-  const [query, setQuery]               = useState('')
+  const { data: products = [] }          = useProducts()
+  const { data: breakfastCutoff }        = useSetting('breakfast_cutoff')
+  const [query, setQuery]                = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const chipRef = useRef<HTMLDivElement>(null)
+
+  const breakfastAvailable = isBreakfastAvailable(breakfastCutoff)
 
   const categories = useMemo(() => {
     const map = new Map<string, { name: string; sortOrder: number }>()
@@ -190,6 +203,8 @@ export function ProductSearch({ onSelect }: ProductSearchProps) {
           <div className="space-y-2">
             {filtered.map((p) => <ProductRow key={p.id} product={p} onSelect={onSelect} />)}
           </div>
+        ) : effectiveCategory === 'Desayunos' && !breakfastAvailable ? (
+          <BreakfastUnavailable cutoff={breakfastCutoff ?? '11:30'} />
         ) : (
           <CategoryGrid
             products={filtered}
@@ -316,6 +331,17 @@ function ProductCard({ product, onSelect, isFav }: {
         style={{ background: `linear-gradient(to right, transparent, ${cfg.chipColor}, transparent)` }}
       />
     </button>
+  )
+}
+
+// ── Breakfast unavailable state ───────────────────────────────────────────────
+function BreakfastUnavailable({ cutoff }: { cutoff: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <p className="text-5xl mb-4 opacity-50">🍳</p>
+      <p className="text-white/50 font-bold text-base mb-1">Desayunos no disponibles</p>
+      <p className="text-white/25 text-sm">El servicio de desayunos es hasta las {cutoff} am</p>
+    </div>
   )
 }
 

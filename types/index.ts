@@ -68,6 +68,7 @@ export interface Product {
   is_favorite: boolean
   sort_order: number
   image_url?: string | null
+  product_type?: 'standard' | 'breakfast' | 'ice_cream'
   category?: Category
   primary_area?: Area
 }
@@ -151,6 +152,8 @@ export interface CartItem {
   areaType: AreaType
   notes?: string
   guestName?: string    // per-person ordering — UI-only, not persisted
+  comboKey?: string     // UUID linking all items from the same combo (e.g. breakfast)
+  comboRole?: 'main' | 'bar_included'  // main = priced item; bar_included = $0 bar component
   modifiers: Array<{
     modifierId: string
     name: string

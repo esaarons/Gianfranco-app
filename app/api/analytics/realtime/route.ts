@@ -49,7 +49,7 @@ export async function GET() {
 
   // Table metrics
   const occupiedTables = tables.filter(t => t.status === 'occupied')
-  const totalTables    = tables.filter(t => t.status !== 'cleaning' || true).length
+  const totalTables    = tables.length
 
   // Match orders to tables to get cycle time
   let longestTableMin = 0

@@ -141,6 +141,7 @@ export default function ShiftHistoryPage() {
     queryKey: ['shifts'],
     queryFn: async () => {
       const res = await fetch('/api/shifts')
+      if (!res.ok) return []
       return res.json()
     },
     staleTime: 60_000,

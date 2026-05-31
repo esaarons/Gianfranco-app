@@ -89,9 +89,10 @@ function StaffRow({ rank, name, cards, reaction }: { rank: number; name: string;
 // ── shift summary panel ───────────────────────────────────────────────────────
 
 function ShiftSummaryPanel({ summary, startedAt }: { summary: ShiftSummary; startedAt: string }) {
-  const maxCards = summary.hourly_load.length
-    ? Math.max(...summary.hourly_load.map(h => h.cards))
-    : 1
+  const loads    = summary.hourly_load  ?? []
+  const byArea   = summary.by_area      ?? []
+  const byStaff  = summary.by_staff     ?? []
+  const maxCards = loads.length ? Math.max(...loads.map(h => h.cards)) : 1
 
   return (
     <div className="space-y-6">
@@ -106,10 +107,10 @@ function ShiftSummaryPanel({ summary, startedAt }: { summary: ShiftSummary; star
       </div>
 
       {/* By area */}
-      {summary.by_area.length > 0 && (
+      {byArea.length > 0 && (
         <div className="rounded-xl border bg-white p-4">
           <p className="text-xs font-semibold uppercase text-muted-foreground mb-3">Por área</p>
-          {summary.by_area.map(a => (
+          {byArea.map(a => (
             <div key={a.area_id} className="py-2 border-b last:border-0">
               <p className="text-sm font-medium capitalize">{a.area_name}</p>
               <div className="flex gap-4 mt-1">
@@ -123,11 +124,11 @@ function ShiftSummaryPanel({ summary, startedAt }: { summary: ShiftSummary; star
       )}
 
       {/* Heatmap */}
-      {summary.hourly_load.length > 0 && (
+      {loads.length > 0 && (
         <div className="rounded-xl border bg-white p-4">
           <p className="text-xs font-semibold uppercase text-muted-foreground mb-4">Carga por hora</p>
           <div className="flex gap-2 items-end overflow-x-auto pb-1">
-            {summary.hourly_load.map(h => (
+            {loads.map(h => (
               <HourlyBar key={h.hour} hour={h.hour} cards={h.cards} maxCards={maxCards} />
             ))}
           </div>
@@ -135,10 +136,10 @@ function ShiftSummaryPanel({ summary, startedAt }: { summary: ShiftSummary; star
       )}
 
       {/* Staff leaderboard */}
-      {summary.by_staff.length > 0 && (
+      {byStaff.length > 0 && (
         <div className="rounded-xl border bg-white p-4">
           <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Equipo — T. reacción</p>
-          {summary.by_staff.map((s, i) => (
+          {byStaff.map((s, i) => (
             <StaffRow key={s.user_id} rank={i + 1} name={s.name} cards={s.cards_handled} reaction={s.avg_reaction_min} />
           ))}
         </div>
@@ -154,12 +155,16 @@ export default function OperationsPage() {
   const { data: kpis } = useRealtimeKPIs(30_000)
   const [showCloseModal, setShowCloseModal] = useState(false)
 
-  const { data: shiftAnalytics } = useQuery({
+  const { data: shiftAnalytics } = useQuery<ShiftSummary | null>({
     queryKey: ['analytics', 'shift', shift?.started_at],
     queryFn: async () => {
       if (!shift) return null
       const res = await fetch(`/api/analytics/shift?from=${shift.started_at}`)
-      return res.json()
+      if (!res.ok) return null
+      const json = await res.json()
+      // Guard against error response objects
+      if (!Array.isArray(json?.by_area)) return null
+      return json as ShiftSummary
     },
     enabled: !!shift,
     staleTime: 60_000,

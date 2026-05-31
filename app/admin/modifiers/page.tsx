@@ -28,6 +28,7 @@ function useAllModifiers() {
     queryKey: ['modifiers-admin'],
     queryFn: async () => {
       const res = await fetch('/api/modifiers?all=true')
+      if (!res.ok) throw new Error('Error cargando modificadores')
       return res.json()
     },
     staleTime: 30000,

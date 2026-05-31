@@ -36,6 +36,7 @@ function useCategories() {
     queryKey: ['categories'],
     queryFn: async () => {
       const res = await fetch('/api/categories')
+      if (!res.ok) throw new Error('Error cargando categorías')
       return res.json()
     },
     staleTime: 300000,
@@ -47,6 +48,7 @@ function useAreas() {
     queryKey: ['areas'],
     queryFn: async () => {
       const res = await fetch('/api/areas')
+      if (!res.ok) throw new Error('Error cargando áreas')
       return res.json()
     },
     staleTime: 300000,

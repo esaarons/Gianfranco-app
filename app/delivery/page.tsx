@@ -24,6 +24,7 @@ export default function DeliveryPage() {
     queryKey: ['delivery-cards'],
     queryFn: async () => {
       const res = await fetch(`/api/cards?areaId=${AREA_IDS.DELIVERY}`)
+      if (!res.ok) return []
       return res.json()
     },
     refetchInterval: 20000,

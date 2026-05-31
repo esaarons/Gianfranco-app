@@ -67,6 +67,7 @@ export function TableMap() {
     queryKey: ['orders', 'open'],
     queryFn: async () => {
       const res = await fetch('/api/orders?status=open')
+      if (!res.ok) return []
       return res.json()
     },
     refetchInterval: 15000,

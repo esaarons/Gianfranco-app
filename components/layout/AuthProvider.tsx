@@ -21,7 +21,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setChecked(true))
   }, [setUser, router])
 
-  if (!checked || !user) return null
+  if (!checked || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#F7F5F0]">
+        <div className="w-8 h-8 border-2 border-[#E7E1D8] border-t-[#1E3541] rounded-full animate-spin" />
+      </div>
+    )
+  }
 
   return <>{children}</>
 }

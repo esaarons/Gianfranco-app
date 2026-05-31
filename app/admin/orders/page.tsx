@@ -159,6 +159,7 @@ export default function OrderHistoryPage() {
     queryKey: ['orders-history', period],
     queryFn: async () => {
       const res = await fetch(`/api/orders?status=closed&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
+      if (!res.ok) return []
       return res.json()
     },
   })

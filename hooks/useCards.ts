@@ -24,6 +24,8 @@ export function useAreaCards(areaId: string) {
       data.forEach((c) => knownIds.current.add(c.id))
       return data
     },
+    refetchInterval: 30_000, // fallback poll if realtime disconnects
+    staleTime: 15_000,
   })
 
   // Realtime: listen for new area_cards

@@ -94,8 +94,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
   }
 
+  // Lookup user names for the staff that handled cards
+  const staffIds = Object.keys(staffMap)
+  let userNames: Record<string, string> = {}
+  if (staffIds.length > 0) {
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, name')
+      .in('id', staffIds)
+    for (const u of users ?? []) userNames[u.id] = u.name
+  }
+
   const by_staff = Object.values(staffMap).map(s => ({
     user_id:          s.user_id,
+    name:             userNames[s.user_id] ?? 'Desconocido',
     cards_handled:    s.deliveries.length,
     avg_reaction_min: avg(s.reactions),
   }))

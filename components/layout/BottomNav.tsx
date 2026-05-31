@@ -18,7 +18,9 @@ function usePendingCount(areaId: string | null) {
     queryKey: ['cards', areaId],
     queryFn: async () => {
       const res = await fetch(`/api/cards?areaId=${areaId}`)
-      return res.json()
+      if (!res.ok) return []
+      const json = await res.json()
+      return Array.isArray(json) ? json : []
     },
     enabled: !!areaId,
     refetchInterval: 20000,

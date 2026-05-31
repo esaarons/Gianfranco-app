@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
+import Link from 'next/link'
 import { useActiveShift } from '@/hooks/useActiveShift'
 import { useRealtimeKPIs } from '@/hooks/useRealtimeKPIs'
 import { useQuery } from '@tanstack/react-query'
@@ -275,6 +276,11 @@ export default function OperationsPage() {
           <p className="text-xs text-muted-foreground mt-1">Abre un turno para empezar a registrar métricas del equipo.</p>
         </div>
       )}
+
+      {/* History link */}
+      <Link href="/admin/operations/history" className="block text-center text-sm text-muted-foreground underline-offset-4 hover:underline">
+        Ver historial de turnos →
+      </Link>
 
       {/* Close modal */}
       {showCloseModal && shift && (

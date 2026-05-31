@@ -184,6 +184,7 @@ export function BottomNav() {
   // ── More drawer items
   const moreItems: DrawerItem[] = isAdminRole
     ? [
+        { href: '/admin/operations',    label: 'Operaciones',   icon: <span className="text-lg">📈</span> },
         { href: '/admin/orders',        label: 'Pedidos',       icon: <IconClipboard /> },
         { href: '/admin/reservations',  label: 'Reservas',      icon: <span className="text-lg">📅</span> },
         { href: '/admin/reports',       label: 'Reportes',      icon: <span className="text-lg">📊</span> },

@@ -70,7 +70,7 @@ function LogRow({ log }: { log: ActivityLog }) {
 
   return (
     <div
-      className={cn('border-b border-[#F0EDE8] last:border-0', hasDetail && 'cursor-pointer')}
+      className={cn('border-b border-[#EDE9E2] last:border-0', hasDetail && 'cursor-pointer')}
       onClick={() => hasDetail && setExpanded((e) => !e)}
     >
       <div className="px-4 py-3 flex items-start gap-3">
@@ -80,9 +80,9 @@ function LogRow({ log }: { log: ActivityLog }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[#252525] text-sm font-semibold">{cfg.label}</span>
+            <span className="text-[#1F1F1F] text-sm font-semibold">{cfg.label}</span>
             {log.user && (
-              <span className="text-[#8A8278] text-xs">· {log.user.name}</span>
+              <span className="text-[#7A756D] text-xs">· {log.user.name}</span>
             )}
           </div>
           <div className="flex items-center gap-2 mt-0.5">
@@ -92,13 +92,13 @@ function LogRow({ log }: { log: ActivityLog }) {
                 {log.new_state}
               </span>
             )}
-            <span className="text-[#B0AB9F] text-[11px]" title={fullTime(log.created_at)}>
+            <span className="text-[#A9A39C] text-[11px]" title={fullTime(log.created_at)}>
               {relativeTime(log.created_at)}
             </span>
           </div>
         </div>
         {hasDetail && (
-          <span className={cn('text-[#B0AB9F] text-xs transition-transform shrink-0 mt-1', expanded && 'rotate-180')}>
+          <span className={cn('text-[#A9A39C] text-xs transition-transform shrink-0 mt-1', expanded && 'rotate-180')}>
             ▾
           </span>
         )}
@@ -107,24 +107,24 @@ function LogRow({ log }: { log: ActivityLog }) {
         <div className="px-4 pb-3 ml-11 space-y-1.5">
           {log.old_state && (
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-[#B0AB9F] w-12 shrink-0">Antes</span>
+              <span className="text-[10px] text-[#A9A39C] w-12 shrink-0">Antes</span>
               <span className="text-xs bg-[#FEF2F2] text-[#C76868] px-2 py-0.5 rounded-md font-mono">{log.old_state}</span>
             </div>
           )}
           {log.new_state && (
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-[#B0AB9F] w-12 shrink-0">Después</span>
+              <span className="text-[10px] text-[#A9A39C] w-12 shrink-0">Después</span>
               <span className="text-xs bg-[#F0FDF4] text-[#3D7050] px-2 py-0.5 rounded-md font-mono">{log.new_state}</span>
             </div>
           )}
           {log.metadata && (
-            <div className="bg-[#F6F2EA] rounded-xl px-3 py-2 mt-1">
+            <div className="bg-[#F7F5F0] rounded-xl px-3 py-2 mt-1">
               <pre className="text-[10px] text-[#6A6460] font-mono whitespace-pre-wrap break-all">
                 {JSON.stringify(log.metadata, null, 2)}
               </pre>
             </div>
           )}
-          <p className="text-[#B0AB9F] text-[10px]">{fullTime(log.created_at)}</p>
+          <p className="text-[#A9A39C] text-[10px]">{fullTime(log.created_at)}</p>
         </div>
       )}
     </div>
@@ -142,8 +142,8 @@ function FilterPill({
       className={cn(
         'px-3 py-1.5 rounded-full text-xs font-bold border transition-all press-scale shrink-0',
         active
-          ? 'bg-[#0F3A43] text-white border-[#0F3A43]'
-          : 'bg-white text-[#8A8278] border-[#E8E4DC]'
+          ? 'bg-[#1E3541] text-white border-[#1E3541]'
+          : 'bg-white text-[#7A756D] border-[#E7E1D8]'
       )}
     >
       {label}
@@ -210,26 +210,26 @@ export default function LogsPage() {
   }, [filtered])
 
   return (
-    <div className="min-h-screen bg-[#F6F2EA] pb-24">
+    <div className="min-h-screen bg-[#F7F5F0] pb-24">
 
       {/* Header */}
       <div className="px-5 pt-8 pb-4">
         <div className="flex items-center gap-3 mb-4">
           <button onClick={() => router.back()}
-            className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-[#E8E4DC] text-[#3A3630] press-scale shrink-0">
+            className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-[#E7E1D8] text-[#1F1F1F] press-scale shrink-0">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5M12 5l-7 7 7 7"/>
             </svg>
           </button>
           <div>
-            <p className="text-[#8A8278] text-[10px] uppercase tracking-[0.2em] font-medium">Administración</p>
-            <h1 className="text-[#252525] text-2xl font-bold tracking-tight leading-tight">Actividad</h1>
+            <p className="section-label">Administración</p>
+            <h1 className="text-[#1F1F1F] text-2xl font-bold tracking-tight leading-tight">Actividad</h1>
           </div>
         </div>
 
         {/* Search */}
         <div className="relative mb-3">
-          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#B0AB9F]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A9A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
           <input
@@ -237,11 +237,11 @@ export default function LogsPage() {
             placeholder="Buscar por usuario o acción…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white border border-[#E8E4DC] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#252525] outline-none focus:border-[#0F3A43]/30 placeholder:text-[#B0AB9F]"
+            className="w-full bg-white border border-[#E7E1D8] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#1F1F1F] outline-none focus:border-[#1E3541]/30 placeholder:text-[#A9A39C]"
           />
           {search && (
             <button onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B0AB9F] press-scale">✕</button>
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A9A39C] press-scale">✕</button>
           )}
         </div>
 
@@ -259,22 +259,22 @@ export default function LogsPage() {
         {isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-14 bg-white border border-[#E8E4DC] rounded-2xl animate-pulse" />
+              <div key={i} className="h-14 bg-white border border-[#E7E1D8] rounded-2xl animate-pulse" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center py-20">
             <p className="text-5xl mb-4 opacity-30">📋</p>
-            <p className="text-[#8A8278] text-sm font-medium">Sin actividad registrada</p>
+            <p className="text-[#7A756D] text-sm font-medium">Sin actividad registrada</p>
           </div>
         ) : (
           <div className="space-y-4">
             {grouped.map((group) => (
               <div key={group.label}>
-                <p className="text-[#B0AB9F] text-[10px] uppercase tracking-widest font-bold mb-2 px-1">
+                <p className="text-[#A9A39C] text-[10px] uppercase tracking-widest font-bold mb-2 px-1">
                   {group.label}
                 </p>
-                <div className="bg-white border border-[#E8E4DC] rounded-2xl overflow-hidden card-shadow">
+                <div className="bg-white border border-[#E7E1D8] rounded-2xl overflow-hidden card-shadow">
                   {group.items.map((log) => (
                     <LogRow key={log.id} log={log} />
                   ))}

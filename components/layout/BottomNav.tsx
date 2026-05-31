@@ -29,7 +29,7 @@ function usePendingCount(areaId: string | null) {
   return data?.filter((c) => c.status === 'pending').length ?? 0
 }
 
-// ── Svg icons (minimal, inline) ──────────────────────────────────────────────
+// ── SVG icons ─────────────────────────────────────────────────────────────────
 
 function IconGrid() {
   return (
@@ -112,7 +112,7 @@ function IconTruck() {
   )
 }
 
-// ── Drawer (slide up) ─────────────────────────────────────────────────────────
+// ── Flat drawer (ops stations) ────────────────────────────────────────────────
 
 interface DrawerItem {
   href: string
@@ -125,13 +125,10 @@ interface DrawerItem {
 function Drawer({ items, onClose }: { items: DrawerItem[]; onClose: () => void }) {
   return (
     <>
-      <div
-        className="fixed inset-0 z-[45] bg-[#252525]/20 overlay-fade"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 z-[45] bg-[#1E3541]/20 overlay-fade" onClick={onClose} />
       <div className="fixed bottom-0 left-0 right-0 z-[50] spring-up">
-        <div className="bg-[#F6F2EA] rounded-t-3xl border-t border-x border-[#E8E4DC] pb-safe">
-          <div className="w-10 h-1 bg-[#D4CFC5] rounded-full mx-auto mt-3 mb-4" />
+        <div className="bg-[#F7F5F0] rounded-t-3xl border-t border-x border-[#E7E1D8] pb-safe">
+          <div className="w-9 h-1 bg-[#D4CFC5] rounded-full mx-auto mt-3 mb-4" />
           <div className="px-4 pb-6 grid grid-cols-2 gap-2.5">
             {items.map((item) => (
               <Link
@@ -140,18 +137,73 @@ function Drawer({ items, onClose }: { items: DrawerItem[]; onClose: () => void }
                 onClick={onClose}
                 className={cn(
                   'relative flex items-center gap-3 px-4 py-3.5 rounded-2xl border press-scale transition-all',
-                  item.color ? '' : 'bg-white border-[#E8E4DC] text-[#252525]'
+                  item.color ? '' : 'bg-white border-[#E7E1D8] text-[#1F1F1F]'
                 )}
                 style={item.color ? { background: item.color + '18', borderColor: item.color + '30' } : undefined}
               >
-                <span style={item.color ? { color: item.color } : { color: '#0F3A43' }}>{item.icon}</span>
+                <span style={item.color ? { color: item.color } : { color: '#1E3541' }}>{item.icon}</span>
                 <span className="font-semibold text-sm">{item.label}</span>
                 {(item.badge ?? 0) > 0 && (
-                  <span className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-[#E08A50] text-white text-[10px] font-bold flex items-center justify-center">
+                  <span className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-[#C98933] text-white text-[10px] font-bold flex items-center justify-center">
                     {item.badge}
                   </span>
                 )}
               </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
+// ── Grouped "Más" drawer ──────────────────────────────────────────────────────
+
+interface NavSection {
+  label: string
+  items: DrawerItem[]
+}
+
+function GroupedDrawer({ sections, onClose }: { sections: NavSection[]; onClose: () => void }) {
+  return (
+    <>
+      <div className="fixed inset-0 z-[45] bg-[#1E3541]/20 overlay-fade" onClick={onClose} />
+      <div className="fixed bottom-0 left-0 right-0 z-[50] spring-up">
+        <div className="bg-[#F7F5F0] rounded-t-3xl border-t border-x border-[#E7E1D8]"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}>
+          <div className="w-9 h-1 bg-[#D4CFC5] rounded-full mx-auto mt-3 mb-1" />
+          <div className="overflow-y-auto max-h-[72vh] px-4 pb-2 pt-3 space-y-4">
+            {sections.map((section) => (
+              <div key={section.label}>
+                {/* Section header */}
+                <p className="text-[#A9A39C] text-[9px] font-bold uppercase tracking-[0.2em] px-1 mb-2">
+                  {section.label}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {section.items.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={onClose}
+                      className={cn(
+                        'relative flex items-center gap-2.5 px-3.5 py-3 rounded-xl border press-scale transition-all',
+                        item.color ? '' : 'bg-white border-[#E7E1D8] text-[#1F1F1F]'
+                      )}
+                      style={item.color ? { background: item.color + '15', borderColor: item.color + '25' } : undefined}
+                    >
+                      <span className="text-base leading-none" style={item.color ? { color: item.color } : { color: '#1E3541' }}>
+                        {item.icon}
+                      </span>
+                      <span className="font-semibold text-sm leading-none">{item.label}</span>
+                      {(item.badge ?? 0) > 0 && (
+                        <span className="absolute top-1.5 right-1.5 min-w-[16px] h-[16px] px-0.5 rounded-full bg-[#C98933] text-white text-[9px] font-bold flex items-center justify-center">
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -174,35 +226,49 @@ export function BottomNav() {
 
   const role        = user.role
   const isAdminRole = role === 'admin' || role === 'encargado'
+  const opsBadge    = barPending + kitchenPending
 
-  // ── Operations drawer items (admin + encargado)
+  // ── Stations drawer ──────────────────────────────────────────────────────────
   const opsItems: DrawerItem[] = [
-    { href: '/tables',   label: 'Salón',    icon: <IconMap />,    color: '#0F3A43' },
-    { href: '/bar',      label: 'Barra',    icon: <IconCoffee />, color: '#7C5640', badge: barPending },
-    { href: '/kitchen',  label: 'Cocina',   icon: <IconPot />,    color: '#C76868', badge: kitchenPending },
+    { href: '/tables',   label: 'Salón',    icon: <IconMap />,    color: '#1E3541' },
+    { href: '/bar',      label: 'Barra',    icon: <IconCoffee />, color: '#C98933', badge: barPending },
+    { href: '/kitchen',  label: 'Cocina',   icon: <IconPot />,    color: '#B8574E', badge: kitchenPending },
     { href: '/delivery', label: 'Delivery', icon: <IconTruck />,  color: '#6D9EEB' },
   ]
 
-  // ── More drawer items
-  const moreItems: DrawerItem[] = isAdminRole
+  // ── "Más" grouped sections ───────────────────────────────────────────────────
+  const moreSections: NavSection[] = isAdminRole
     ? [
-        { href: '/admin/operations',    label: 'Operaciones',   icon: <span className="text-lg">📈</span> },
-        { href: '/admin/orders',        label: 'Pedidos',       icon: <IconClipboard /> },
-        { href: '/admin/reservations',  label: 'Reservas',      icon: <span className="text-lg">📅</span> },
-        { href: '/admin/reports',       label: 'Reportes',      icon: <span className="text-lg">📊</span> },
-        { href: '/admin/logs',          label: 'Actividad',     icon: <span className="text-lg">🗂️</span> },
-        { href: '/admin/products',      label: 'Productos',     icon: <span className="text-lg">🍽</span> },
-        { href: '/admin/modifiers',     label: 'Modificadores', icon: <span className="text-lg">🧩</span> },
-        { href: '/staff',               label: 'Personal',      icon: <span className="text-lg">👥</span> },
-        { href: '/settings',            label: 'Ajustes',       icon: <span className="text-lg">⚙️</span> },
+        {
+          label: 'Operaciones',
+          items: [
+            { href: '/admin/operations', label: 'Turnos',    icon: '🎛' },
+            { href: '/admin/orders',     label: 'Pedidos',   icon: <IconClipboard /> },
+            { href: '/admin/reservations', label: 'Reservas', icon: '📅' },
+          ],
+        },
+        {
+          label: 'Inteligencia',
+          items: [
+            { href: '/admin/reports',   label: 'Métricas',   icon: '📊' },
+            { href: '/admin/logs',      label: 'Actividad',  icon: '🗂️' },
+            { href: '/admin/operations/history', label: 'Historial', icon: '📈' },
+          ],
+        },
+        {
+          label: 'Gestión',
+          items: [
+            { href: '/admin/products',  label: 'Productos',    icon: '🍽' },
+            { href: '/admin/modifiers', label: 'Modificadores', icon: '🧩' },
+            { href: '/staff',           label: 'Personal',     icon: '👥' },
+            { href: '/settings',        label: 'Ajustes',      icon: '⚙️' },
+          ],
+        },
       ]
-    : [{ href: '/settings', label: 'Ajustes', icon: <span className="text-lg">⚙️</span> }]
+    : [{ label: 'Cuenta', items: [{ href: '/settings', label: 'Ajustes', icon: '⚙️' }] }]
 
-  // ── Total ops badge
-  const opsBadge = barPending + kitchenPending
-
-  // ── Determine active section
-  const inOps    = ['/tables', '/bar', '/kitchen', '/delivery'].some((p) => pathname === p || pathname.startsWith(p + '/'))
+  // ── Active section detection ─────────────────────────────────────────────────
+  const inOps    = ['/tables', '/bar', '/kitchen', '/delivery'].some(p => pathname === p || pathname.startsWith(p + '/'))
   const inOrders = pathname.startsWith('/admin/orders')
   const inAdmin  = pathname === '/admin'
   const inMore   = !inAdmin && !inOps && !inOrders
@@ -215,34 +281,37 @@ export function BottomNav() {
 
   if (isAdminRole) {
     tabs = [
-      { type: 'link',   href: '/admin',        label: 'Dashboard',  icon: <IconGrid />,      active: inAdmin  },
+      { type: 'link',   href: '/admin',        label: 'Inicio',     icon: <IconGrid />,      active: inAdmin  },
       { type: 'drawer', key: 'ops',            label: 'Estaciones', icon: <IconZap />,       active: inOps,   badge: opsBadge > 0 ? opsBadge : undefined },
       { type: 'link',   href: '/admin/orders', label: 'Pedidos',    icon: <IconClipboard />, active: inOrders },
       { type: 'drawer', key: 'more',           label: 'Más',        icon: <IconMore />,      active: inMore   },
     ]
   } else {
     const dynamicTabs: TabItem[] = []
-
     if (hasArea(user, AREA_IDS.SALON))
       dynamicTabs.push({ type: 'link', href: '/tables',   label: 'Salón',    icon: <IconMap />,    active: pathname.startsWith('/tables') })
     if (hasArea(user, AREA_IDS.BAR))
-      dynamicTabs.push({ type: 'link', href: '/bar',      label: 'Barra',    icon: <IconCoffee />, active: pathname.startsWith('/bar'),      badge: barPending > 0 ? barPending : undefined })
+      dynamicTabs.push({ type: 'link', href: '/bar',      label: 'Barra',    icon: <IconCoffee />, active: pathname.startsWith('/bar'),     badge: barPending > 0 ? barPending : undefined })
     if (hasArea(user, AREA_IDS.KITCHEN))
-      dynamicTabs.push({ type: 'link', href: '/kitchen',  label: 'Cocina',   icon: <IconPot />,    active: pathname.startsWith('/kitchen'),   badge: kitchenPending > 0 ? kitchenPending : undefined })
+      dynamicTabs.push({ type: 'link', href: '/kitchen',  label: 'Cocina',   icon: <IconPot />,    active: pathname.startsWith('/kitchen'),  badge: kitchenPending > 0 ? kitchenPending : undefined })
     if (hasArea(user, AREA_IDS.DELIVERY))
       dynamicTabs.push({ type: 'link', href: '/delivery', label: 'Delivery', icon: <IconTruck />,  active: pathname.startsWith('/delivery') })
-
     dynamicTabs.push({ type: 'drawer', key: 'more', label: 'Más', icon: <IconMore />, active: inMore })
     tabs = dynamicTabs
   }
 
+  const ACTIVE_COLOR = '#1E3541'
+  const MUTED_COLOR  = '#A9A39C'
+
   return (
     <>
-      {drawer === 'ops'  && <Drawer items={opsItems}   onClose={() => setDrawer(null)} />}
-      {drawer === 'more' && <Drawer items={moreItems}  onClose={() => setDrawer(null)} />}
+      {drawer === 'ops'  && <Drawer items={opsItems} onClose={() => setDrawer(null)} />}
+      {drawer === 'more' && <GroupedDrawer sections={moreSections} onClose={() => setDrawer(null)} />}
 
-      <nav className="bottom-nav fixed bottom-0 left-0 right-0 z-20 h-16 safe-area-pb flex items-center justify-around px-2"
-           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <nav
+        className="bottom-nav fixed bottom-0 left-0 right-0 z-20 h-16 flex items-center justify-around px-2"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
         {tabs.map((tab) => {
           const isActive = tab.active
           const badge    = tab.badge
@@ -250,23 +319,23 @@ export function BottomNav() {
           const content = (
             <>
               <div className="relative">
-                <span className={cn('transition-colors', isActive ? 'text-[#0F3A43]' : 'text-[#8A8278]')}>
+                <span style={{ color: isActive ? ACTIVE_COLOR : MUTED_COLOR, transition: 'color 150ms' }}>
                   {tab.icon}
                 </span>
                 {(badge ?? 0) > 0 && (
-                  <span className="absolute -top-1 -right-1.5 min-w-[16px] h-[16px] px-0.5 rounded-full bg-[#E08A50] text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                  <span className="absolute -top-1 -right-1.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-[#C98933] text-white text-[9px] font-bold flex items-center justify-center leading-none">
                     {badge}
                   </span>
                 )}
               </div>
-              <span className={cn(
-                'text-[10px] font-semibold tracking-tight mt-0.5',
-                isActive ? 'text-[#0F3A43]' : 'text-[#B0AB9F]'
-              )}>
+              <span
+                className="text-[10px] font-semibold tracking-tight mt-0.5 transition-colors"
+                style={{ color: isActive ? ACTIVE_COLOR : MUTED_COLOR }}
+              >
                 {tab.label}
               </span>
               {isActive && (
-                <span className="absolute bottom-1 w-4 h-0.5 rounded-full bg-[#0F3A43]" />
+                <span className="absolute bottom-1 w-4 h-0.5 rounded-full" style={{ background: ACTIVE_COLOR }} />
               )}
             </>
           )

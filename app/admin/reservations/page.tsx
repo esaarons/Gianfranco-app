@@ -10,12 +10,12 @@ import type { Reservation, ReservationStatus, TableZone } from '@/types'
 // ── Config ────────────────────────────────────────────────────────────────────
 
 const STATUS_CFG: Record<ReservationStatus, { label: string; color: string; bg: string; border: string }> = {
-  pending:     { label: 'Pendiente',    color: 'text-[#7C5640]', bg: 'bg-[#FEF3E8]', border: 'border-[#E08A50]/30' },
+  pending:     { label: 'Pendiente',    color: 'text-[#7C5640]', bg: 'bg-[#FEF3E8]', border: 'border-[#C98933]/30' },
   confirmed:   { label: 'Confirmada',   color: 'text-[#2A5FA0]', bg: 'bg-[#EFF6FF]', border: 'border-[#6D9EEB]/30' },
   in_progress: { label: 'En mesa',      color: 'text-[#166534]', bg: 'bg-[#F0FDF4]', border: 'border-[#86EFAC]/30' },
-  finished:    { label: 'Finalizada',   color: 'text-[#6A6460]', bg: 'bg-[#F6F2EA]', border: 'border-[#D4CFC5]/30' },
+  finished:    { label: 'Finalizada',   color: 'text-[#6A6460]', bg: 'bg-[#F7F5F0]', border: 'border-[#D4CFC5]/30' },
   cancelled:   { label: 'Cancelada',    color: 'text-[#7A2B2B]', bg: 'bg-[#FEF2F2]', border: 'border-[#C76868]/30' },
-  no_show:     { label: 'No se presentó', color: 'text-[#7C5640]', bg: 'bg-[#FFF7ED]', border: 'border-[#E08A50]/20' },
+  no_show:     { label: 'No se presentó', color: 'text-[#7C5640]', bg: 'bg-[#FFF7ED]', border: 'border-[#C98933]/20' },
 }
 
 const ZONE_LABELS: Record<string, string> = {
@@ -237,10 +237,10 @@ function ReservationCard({
     actions.push({ label: 'Confirmar',     status: 'confirmed',   style: 'bg-[#EFF6FF] text-[#2A5FA0] border-[#6D9EEB]/30' })
   if (res.status === 'confirmed') {
     actions.push({ label: 'Sentar',        status: 'in_progress', style: 'bg-[#F0FDF4] text-[#166534] border-[#86EFAC]/30' })
-    actions.push({ label: 'No se presentó', status: 'no_show',   style: 'bg-[#FFF7ED] text-[#7C5640] border-[#E08A50]/30' })
+    actions.push({ label: 'No se presentó', status: 'no_show',   style: 'bg-[#FFF7ED] text-[#7C5640] border-[#C98933]/30' })
   }
   if (res.status === 'in_progress')
-    actions.push({ label: 'Finalizar',     status: 'finished',    style: 'bg-[#F6F2EA] text-[#3A3630] border-[#D4CFC5]/30' })
+    actions.push({ label: 'Finalizar',     status: 'finished',    style: 'bg-[#F7F5F0] text-[#1F1F1F] border-[#D4CFC5]/30' })
   if (['pending','confirmed','in_progress'].includes(res.status))
     actions.push({ label: 'Cancelar',      status: 'cancelled',   style: 'bg-[#FEF2F2] text-[#7A2B2B] border-[#C76868]/30' })
 
@@ -253,29 +253,29 @@ function ReservationCard({
       <div className="px-4 pt-3.5 pb-2.5 flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-[#252525] font-bold text-[15px] leading-tight">{res.customer_name}</p>
+            <p className="text-[#1F1F1F] font-bold text-[15px] leading-tight">{res.customer_name}</p>
             <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border', st.bg, st.color, st.border)}>
               {st.label}
             </span>
           </div>
           <div className="flex items-center gap-3 mt-1 flex-wrap">
-            <span className="text-[#8A8278] text-xs font-medium">
+            <span className="text-[#7A756D] text-xs font-medium">
               🕐 {formatTime(res.start_time)} – {formatTime(res.end_time)}
             </span>
-            <span className="text-[#8A8278] text-xs font-medium">
+            <span className="text-[#7A756D] text-xs font-medium">
               👥 {res.party_size} personas
             </span>
-            <span className="text-[#8A8278] text-xs font-medium">
+            <span className="text-[#7A756D] text-xs font-medium">
               📍 {ZONE_LABELS[res.zone ?? 'salon2']}
             </span>
             {res.menu_type && (
-              <span className="text-[#8A8278] text-xs font-medium">
+              <span className="text-[#7A756D] text-xs font-medium">
                 🍽 {MENU_LABELS[res.menu_type]}
               </span>
             )}
           </div>
           {res.customer_phone && (
-            <p className="text-[#8A8278] text-xs mt-0.5">📞 {res.customer_phone}</p>
+            <p className="text-[#7A756D] text-xs mt-0.5">📞 {res.customer_phone}</p>
           )}
           {res.notes && (
             <p className="text-[#6A6460] text-xs italic mt-0.5">"{res.notes}"</p>
@@ -283,7 +283,7 @@ function ReservationCard({
         </div>
         {!isDone && (
           <button onClick={onEdit}
-            className="w-8 h-8 flex items-center justify-center rounded-xl bg-[#F6F2EA] border border-[#E8E4DC] text-[#8A8278] press-scale shrink-0">
+            className="w-8 h-8 flex items-center justify-center rounded-xl bg-[#F7F5F0] border border-[#E7E1D8] text-[#7A756D] press-scale shrink-0">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -373,42 +373,42 @@ export default function ReservationsPage() {
   const archived = reservations.filter(r =>  ['finished','cancelled','no_show'].includes(r.status))
 
   return (
-    <div className="min-h-screen bg-[#F6F2EA] pb-24">
+    <div className="min-h-screen bg-[#F7F5F0] pb-24">
 
       {/* Header */}
       <div className="px-5 pt-8 pb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <button onClick={() => router.back()}
-              className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-[#E8E4DC] text-[#3A3630] press-scale shrink-0">
+              className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-[#E7E1D8] text-[#1F1F1F] press-scale shrink-0">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5M12 5l-7 7 7 7"/>
               </svg>
             </button>
             <div>
-              <p className="text-[#8A8278] text-[10px] uppercase tracking-[0.2em] font-medium">Administración</p>
-              <h1 className="text-[#252525] text-2xl font-bold tracking-tight leading-tight">Reservas</h1>
+              <p className="section-label mb-0.5">Administración</p>
+              <h1 className="text-[#1F1F1F] text-2xl font-bold tracking-tight leading-tight">Reservas</h1>
             </div>
           </div>
           <button onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 bg-[#0F3A43] text-white font-bold px-4 py-2.5 rounded-xl text-sm btn-primary mt-1">
+            className="flex items-center gap-2 bg-[#1E3541] text-white font-bold px-4 py-2.5 rounded-xl text-sm btn-primary mt-1 shrink-0">
             <span className="text-base leading-none">+</span> Nueva
           </button>
         </div>
 
         {/* Date navigator */}
-        <div className="flex items-center gap-2 mt-4 bg-white border border-[#E8E4DC] rounded-2xl p-1">
+        <div className="flex items-center gap-2 mt-4 bg-white border border-[#E7E1D8] rounded-2xl p-1">
           <button onClick={() => shiftDate(-1)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-[#8A8278] hover:bg-[#F6F2EA] press-scale transition-colors">
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-[#7A756D] hover:bg-[#F7F5F0] press-scale transition-colors">
             ‹
           </button>
           <button onClick={() => setDate(toDateStr(new Date()))}
             className="flex-1 text-center py-2">
-            <p className="text-[#252525] text-sm font-bold">{formatDateLabel(date)}</p>
-            <p className="text-[#8A8278] text-[10px]">{new Date(date + 'T12:00:00').toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            <p className="text-[#1F1F1F] text-sm font-bold">{formatDateLabel(date)}</p>
+            <p className="text-[#7A756D] text-[10px]">{new Date(date + 'T12:00:00').toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
           </button>
           <button onClick={() => shiftDate(1)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-[#8A8278] hover:bg-[#F6F2EA] press-scale transition-colors">
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-[#7A756D] hover:bg-[#F7F5F0] press-scale transition-colors">
             ›
           </button>
         </div>
@@ -416,11 +416,11 @@ export default function ReservationsPage() {
         {/* Summary chips */}
         {!isLoading && reservations.length > 0 && (
           <div className="flex gap-2 mt-3 flex-wrap">
-            <div className="flex items-center gap-1.5 bg-white border border-[#E8E4DC] rounded-full px-3 py-1.5">
-              <span className="text-[#252525] text-xs font-medium">{reservations.length} reserva{reservations.length !== 1 ? 's' : ''}</span>
+            <div className="flex items-center gap-1.5 bg-white border border-[#E7E1D8] rounded-full px-3 py-1.5">
+              <span className="text-[#1F1F1F] text-xs font-medium">{reservations.length} reserva{reservations.length !== 1 ? 's' : ''}</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-white border border-[#E8E4DC] rounded-full px-3 py-1.5">
-              <span className="text-[#252525] text-xs font-medium">
+            <div className="flex items-center gap-1.5 bg-white border border-[#E7E1D8] rounded-full px-3 py-1.5">
+              <span className="text-[#1F1F1F] text-xs font-medium">
                 👥 {reservations.reduce((s, r) => s + r.party_size, 0)} personas
               </span>
             </div>
@@ -438,14 +438,14 @@ export default function ReservationsPage() {
       <div className="px-5 space-y-2.5">
         {isLoading ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-24 bg-white border border-[#E8E4DC] rounded-2xl animate-pulse" />
+            <div key={i} className="h-24 bg-white border border-[#E7E1D8] rounded-2xl animate-pulse" />
           ))
         ) : reservations.length === 0 ? (
           <div className="flex flex-col items-center py-20">
             <p className="text-5xl mb-4 opacity-30">📅</p>
-            <p className="text-[#8A8278] text-sm font-medium">Sin reservas para este día</p>
+            <p className="text-[#7A756D] text-sm font-medium">Sin reservas para este día</p>
             <button onClick={() => setShowCreate(true)}
-              className="mt-4 text-[#0F3A43] text-sm font-semibold underline underline-offset-2">
+              className="mt-4 text-[#1E3541] text-sm font-semibold underline underline-offset-2">
               Crear una reserva
             </button>
           </div>
@@ -461,7 +461,7 @@ export default function ReservationsPage() {
             ))}
             {archived.length > 0 && (
               <>
-                <p className="text-[#B0AB9F] text-[10px] uppercase tracking-widest font-bold pt-2 px-1">
+                <p className="text-[#A9A39C] text-[10px] uppercase tracking-widest font-bold pt-2 px-1">
                   Finalizadas / Canceladas
                 </p>
                 {archived.map((res) => (

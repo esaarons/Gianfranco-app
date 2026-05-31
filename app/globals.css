@@ -2,26 +2,35 @@
 
 /* ─── Brand Design Tokens ──────────────────────────────────────────────────── */
 @theme inline {
-  /* New palette */
-  --color-cream:    #F6F2EA;
-  --color-teal:     #0F3A43;
+  /* ── Redesign 2025 palette ── */
+  --color-primary:       #1E3541;
+  --color-op-green:      #6D8A5C;
+  --color-alert-amber:   #C98933;
+  --color-alert-red:     #B8574E;
+  --color-bg:            #F7F5F0;
+  --color-text-secondary:#7A756D;
+  --color-border-soft:   #E7E1D8;
+
+  /* Legacy / compat */
+  --color-cream:    #F7F5F0;
+  --color-teal:     #1E3541;
   --color-teal-mid: #1A5260;
   --color-coffee:   #7C5640;
   --color-matcha:   #9DAA7D;
-  --color-charcoal: #252525;
+  --color-charcoal: #1F1F1F;
   --color-ink:      #3A3630;
 
   /* Surfaces */
-  --color-surface:   #F6F2EA;
+  --color-surface:   #F7F5F0;
   --color-card:      #FFFFFF;
   --color-card-soft: #F9F7F3;
-  --color-border:    #E8E4DC;
+  --color-border:    #E7E1D8;
   --color-border-mid:#D4CFC5;
 
   /* Text */
-  --color-text:       #252525;
-  --color-text-muted: #8A8278;
-  --color-text-faint: #B0AB9F;
+  --color-text:       #1F1F1F;
+  --color-text-muted: #7A756D;
+  --color-text-faint: #A9A39C;
 
   /* Table states */
   --color-state-libre:     #C9D4C2;
@@ -39,8 +48,8 @@
   --color-delivered: #9DAA7D;
 
   /* Legacy compat */
-  --color-gf-deep:    #0F3A43;
-  --color-gf-crema:   #F6F2EA;
+  --color-gf-deep:    #1E3541;
+  --color-gf-crema:   #F7F5F0;
   --color-gf-taupe:   #C8B8AA;
   --color-gf-stone:   #E8E4DC;
   --color-gf-sage:    #9DAA7D;
@@ -70,8 +79,8 @@
   }
 
   body {
-    background-color: #F6F2EA;
-    color: #252525;
+    background-color: #F7F5F0;
+    color: #1F1F1F;
     font-family: var(--font-sans);
     font-feature-settings: "ss01" on, "ss02" on;
     min-height: 100dvh;
@@ -93,15 +102,15 @@
 
 /* ─── Surface utilities ──────────────────────────────────────────────────────── */
 .surface {
-  background-color: #F6F2EA;
+  background-color: #F7F5F0;
 }
 .card {
   background-color: #FFFFFF;
-  border: 1px solid #E8E4DC;
+  border: 1px solid #E7E1D8;
 }
 .card-soft {
-  background-color: #F9F7F3;
-  border: 1px solid #EDEAE3;
+  background-color: #F9F7F4;
+  border: 1px solid #EDE9E2;
 }
 
 /* ─── Glassmorphism ─────────────────────────────────────────────────────────── */
@@ -193,10 +202,19 @@
 
 /* ─── Bottom nav ─────────────────────────────────────────────────────────────── */
 .bottom-nav {
-  background: rgba(246, 242, 234, 0.92);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border-top: 1px solid rgba(37,37,37,0.08);
+  background: rgba(247, 245, 240, 0.94);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-top: 1px solid rgba(30,53,65,0.07);
+}
+
+/* ─── Section label (navigation / dashboard) ────────────────────────────────── */
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #7A756D;
 }
 
 /* ─── Table join animations ─────────────────────────────────────────────────── */

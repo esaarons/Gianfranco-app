@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/shifts/cron?action=open_am",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/shifts/cron?action=open_pm",
+      "schedule": "0 19 * * *"
+    },
+    {
+      "path": "/api/shifts/cron?action=close_pm",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

@@ -264,18 +264,18 @@ export default function AdminModifiersPage() {
   const activeCount = visible.filter((m) => m.active).length
 
   return (
-    <div className="min-h-screen bg-[#F6F2EA]">
+    <div className="min-h-screen bg-[#F7F5F0]">
 
       {/* Header */}
       <div className="px-5 pt-8 pb-4">
         <div className="flex items-start justify-between mb-1">
           <div>
-            <p className="text-[#8A8278] text-[10px] uppercase tracking-[0.2em] font-medium mb-1">Administración</p>
-            <h1 className="text-[#252525] text-2xl font-bold tracking-tight">Modificadores</h1>
+            <p className="text-[#7A756D] text-[10px] uppercase tracking-[0.2em] font-medium mb-1">Administración</p>
+            <h1 className="text-[#1F1F1F] text-2xl font-bold tracking-tight">Modificadores</h1>
           </div>
           <button
             onClick={() => { setEditMod(undefined); setShowSheet(true) }}
-            className="flex items-center gap-2 bg-[#0F3A43] text-white font-bold px-4 py-2.5 rounded-2xl text-sm btn-primary mt-1"
+            className="flex items-center gap-2 bg-[#1E3541] text-white font-bold px-4 py-2.5 rounded-2xl text-sm btn-primary mt-1"
           >
             + Nuevo
           </button>
@@ -293,33 +293,33 @@ export default function AdminModifiersPage() {
               onClick={() => setActiveGroup(g)}
               className={cn(
                 'flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 press-scale border',
-                active ? 'bg-[#0F3A43] text-white border-transparent' : 'bg-white text-[#8A8278] border-[#E8E4DC] hover:border-[#C8C4BC]'
+                active ? 'bg-[#1E3541] text-white border-transparent' : 'bg-white text-[#7A756D] border-[#E7E1D8] hover:border-[#C8C4BC]'
               )}
             >
               <span>{groupIcon(g)}</span>
               {groupLabel(g)}
-              <span className={cn('text-[10px]', active ? 'text-white/60' : 'text-[#B0AB9F]')}>{count}</span>
+              <span className={cn('text-[10px]', active ? 'text-white/60' : 'text-[#A9A39C]')}>{count}</span>
             </button>
           )
         })}
       </div>
 
-      <div className="h-px bg-[#E8E4DC] mx-5 mb-3" />
+      <div className="h-px bg-[#E7E1D8] mx-5 mb-3" />
 
       {/* Summary */}
       <div className="flex items-center justify-between px-5 mb-3">
-        <p className="text-[#8A8278] text-xs font-semibold uppercase tracking-widest">{groupLabel(effectiveGroup)}</p>
-        <p className="text-[#B0AB9F] text-xs">{activeCount} activos · {visible.length} total</p>
+        <p className="text-[#7A756D] text-xs font-semibold uppercase tracking-widest">{groupLabel(effectiveGroup)}</p>
+        <p className="text-[#A9A39C] text-xs">{activeCount} activos · {visible.length} total</p>
       </div>
 
       {/* List */}
       <div className="px-4 pb-10 space-y-2">
         {isLoading ? (
           <div className="flex justify-center py-16">
-            <div className="w-8 h-8 border-2 border-[#E8E4DC] border-t-[#8A8278] rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-[#E7E1D8] border-t-[#8A8278] rounded-full animate-spin" />
           </div>
         ) : visible.length === 0 ? (
-          <div className="flex flex-col items-center py-16 text-[#B0AB9F]">
+          <div className="flex flex-col items-center py-16 text-[#A9A39C]">
             <p className="text-4xl mb-2">🧩</p>
             <p className="text-sm font-medium">Sin modificadores en este grupo</p>
           </div>
@@ -329,7 +329,7 @@ export default function AdminModifiersPage() {
               key={m.id}
               className={cn(
                 'flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border transition-all card-shadow',
-                m.active ? 'border-[#E8E4DC]' : 'border-[#F0EDE8] opacity-50'
+                m.active ? 'border-[#E7E1D8]' : 'border-[#EDE9E2] opacity-50'
               )}
             >
               {/* Name — tap to edit */}
@@ -338,8 +338,8 @@ export default function AdminModifiersPage() {
                 className="flex-1 text-left min-w-0 group"
               >
                 <p className={cn(
-                  'text-sm font-semibold truncate group-hover:text-[#0F3A43] transition-colors',
-                  m.active ? 'text-[#252525]' : 'text-[#B0AB9F]'
+                  'text-sm font-semibold truncate group-hover:text-[#1E3541] transition-colors',
+                  m.active ? 'text-[#1F1F1F]' : 'text-[#A9A39C]'
                 )}>
                   {m.name}
                 </p>
@@ -348,7 +348,7 @@ export default function AdminModifiersPage() {
               {/* Price — tap to edit inline */}
               {editingPrice === m.id ? (
                 <div className="flex items-center gap-1 shrink-0">
-                  <span className="text-xs text-[#B0AB9F]">S/</span>
+                  <span className="text-xs text-[#A9A39C]">S/</span>
                   <input
                     ref={priceRef}
                     type="number"
@@ -361,7 +361,7 @@ export default function AdminModifiersPage() {
                       if (e.key === 'Enter') commitPrice(m)
                       if (e.key === 'Escape') setEditingPrice(null)
                     }}
-                    className="w-14 text-right text-sm font-bold text-[#252525] bg-[#F6F2EA] rounded-lg px-2 py-1 outline-none border border-[#D4CFC5]"
+                    className="w-14 text-right text-sm font-bold text-[#1F1F1F] bg-[#F7F5F0] rounded-lg px-2 py-1 outline-none border border-[#D4CFC5]"
                   />
                 </div>
               ) : (
@@ -371,7 +371,7 @@ export default function AdminModifiersPage() {
                     'shrink-0 text-sm font-bold px-2.5 py-1 rounded-lg transition-colors',
                     m.price > 0
                       ? 'text-[#A7B897] bg-[#A7B897]/10 hover:bg-[#A7B897]/20'
-                      : 'text-[#B0AB9F] bg-[#F6F2EA] hover:bg-[#EEEAE2]'
+                      : 'text-[#A9A39C] bg-[#F7F5F0] hover:bg-[#EEEAE2]'
                   )}
                   title="Editar precio"
                 >

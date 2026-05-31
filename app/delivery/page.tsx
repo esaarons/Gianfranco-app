@@ -58,20 +58,20 @@ export default function DeliveryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F6F2EA]">
+    <div className="min-h-screen bg-[#F7F5F0]">
       <SoundEnabler />
 
       {/* Header */}
       <div className="px-5 pt-8 pb-5">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-[#8A8278] text-[10px] uppercase tracking-[0.2em] font-medium mb-1">Estación</p>
-            <h1 className="text-[#252525] text-2xl font-bold tracking-tight">Delivery / Tareas</h1>
+            <p className="section-label mb-1">Estación</p>
+            <h1 className="text-[#1F1F1F] text-2xl font-bold tracking-tight">Delivery / Tareas</h1>
           </div>
           <div className="flex items-center gap-2 mt-1">
             {pending.length > 0 && (
-              <span className="flex items-center gap-1.5 bg-[#E08A50]/12 text-[#A05A28] text-xs font-bold px-3 py-1.5 rounded-full border border-[#E08A50]/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#E08A50] dot-pulse-amber" />
+              <span className="flex items-center gap-1.5 bg-[#C98933]/12 text-[#9A6520] text-xs font-bold px-3 py-1.5 rounded-full border border-[#C98933]/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#C98933] dot-pulse-amber" />
                 {pending.length} pend.
               </span>
             )}
@@ -85,7 +85,7 @@ export default function DeliveryPage() {
                 onClick={() => setShowCreate(v => !v)}
                 className={cn(
                   'w-9 h-9 flex items-center justify-center rounded-xl text-lg font-bold transition-all press-scale',
-                  showCreate ? 'bg-[#0F3A43] text-white' : 'bg-white border border-[#E8E4DC] text-[#3A3630]'
+                  showCreate ? 'bg-[#1E3541] text-white' : 'bg-white border border-[#E7E1D8] text-[#1F1F1F]'
                 )}
               >
                 {showCreate ? '✕' : '+'}
@@ -100,16 +100,16 @@ export default function DeliveryPage() {
         <div className="px-5 mb-5 fade-in">
           <form
             onSubmit={handleCreate}
-            className="bg-white border border-[#E8E4DC] rounded-2xl p-4 space-y-3 card-shadow"
+            className="bg-white border border-[#E7E1D8] rounded-2xl p-4 space-y-3 card-shadow"
           >
-            <p className="text-[#8A8278] text-xs font-bold uppercase tracking-widest">Nueva tarea</p>
+            <p className="text-[#7A756D] text-xs font-bold uppercase tracking-widest">Nueva tarea</p>
 
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Título — Ej: Llevar POS a TC"
-              className="w-full bg-[#F6F2EA] border border-[#E8E4DC] rounded-xl px-3.5 py-3 text-sm text-[#252525] placeholder:text-[#B0AB9F] outline-none focus:ring-1 focus:ring-[#0F3A43]/20 transition-shadow"
+              className="w-full bg-[#F7F5F0] border border-[#E7E1D8] rounded-xl px-3.5 py-3 text-sm text-[#1F1F1F] placeholder:text-[#A9A39C] outline-none focus:ring-1 focus:ring-[#1E3541]/20 transition-shadow"
               required
               autoFocus
             />
@@ -118,13 +118,13 @@ export default function DeliveryPage() {
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Notas adicionales…"
               rows={2}
-              className="w-full bg-[#F6F2EA] border border-[#E8E4DC] rounded-xl px-3.5 py-3 text-sm text-[#252525] placeholder:text-[#B0AB9F] outline-none focus:ring-1 focus:ring-[#0F3A43]/20 transition-shadow resize-none"
+              className="w-full bg-[#F7F5F0] border border-[#E7E1D8] rounded-xl px-3.5 py-3 text-sm text-[#1F1F1F] placeholder:text-[#A9A39C] outline-none focus:ring-1 focus:ring-[#1E3541]/20 transition-shadow resize-none"
             />
             <div className="flex gap-2 pt-1">
               <button
                 type="button"
                 onClick={() => setShowCreate(false)}
-                className="px-4 py-3 rounded-xl text-sm font-semibold text-[#8A8278] bg-[#F6F2EA] border border-[#E8E4DC] press-scale"
+                className="px-4 py-3 rounded-xl text-sm font-semibold text-[#7A756D] bg-[#F7F5F0] border border-[#E7E1D8] press-scale"
               >
                 Cancelar
               </button>
@@ -144,15 +144,15 @@ export default function DeliveryPage() {
       {isLoading ? (
         <div className="flex items-center justify-center h-48">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-2 border-[#E8E4DC] border-t-[#0F3A43] rounded-full animate-spin" />
-            <p className="text-[#8A8278] text-sm">Cargando tareas…</p>
+            <div className="w-8 h-8 border-2 border-[#E7E1D8] border-t-[#0F3A43] rounded-full animate-spin" />
+            <p className="text-[#7A756D] text-sm">Cargando tareas…</p>
           </div>
         </div>
       ) : deliveryCards.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-48">
           <p className="text-4xl mb-3 opacity-40">📦</p>
-          <p className="text-[#8A8278] text-sm font-medium">Sin tareas activas</p>
-          <p className="text-[#B0AB9F] text-xs mt-1">Las nuevas tareas aparecerán aquí</p>
+          <p className="text-[#7A756D] text-sm font-medium">Sin tareas activas</p>
+          <p className="text-[#A9A39C] text-xs mt-1">Las nuevas tareas aparecerán aquí</p>
         </div>
       ) : (
         <div className="px-4 pb-8 space-y-2.5">
@@ -162,9 +162,9 @@ export default function DeliveryPage() {
           {delivered.length > 0 && (
             <div className="pt-4">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-[#B0AB9F] text-[10px] font-bold uppercase tracking-widest">Completadas</span>
+                <span className="text-[#A9A39C] text-[10px] font-bold uppercase tracking-widest">Completadas</span>
                 <div className="flex-1 h-px bg-[#E8E4DC]" />
-                <span className="bg-white border border-[#E8E4DC] text-[#B0AB9F] text-[10px] px-2 py-0.5 rounded-full">{delivered.length}</span>
+                <span className="bg-white border border-[#E7E1D8] text-[#A9A39C] text-[10px] px-2 py-0.5 rounded-full">{delivered.length}</span>
               </div>
               {delivered.slice(0, 5).map((card) => <AreaCardComponent key={card.id} card={card} myAreaType="bar" />)}
             </div>

@@ -377,18 +377,18 @@ export default function AdminProductsPage() {
   function openEdit(p: Product) { setEditProduct(p); setShowSheet(true) }
 
   return (
-    <div className="min-h-screen bg-[#F6F2EA]">
+    <div className="min-h-screen bg-[#F7F5F0]">
 
       {/* Header */}
       <div className="px-5 pt-8 pb-4">
         <div className="flex items-start justify-between mb-1">
           <div>
-            <p className="text-[#8A8278] text-[10px] uppercase tracking-[0.2em] font-medium mb-1">Administración</p>
-            <h1 className="text-[#252525] text-2xl font-bold tracking-tight">Productos</h1>
+            <p className="text-[#7A756D] text-[10px] uppercase tracking-[0.2em] font-medium mb-1">Administración</p>
+            <h1 className="text-[#1F1F1F] text-2xl font-bold tracking-tight">Productos</h1>
           </div>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 bg-[#0F3A43] text-white font-bold px-4 py-2.5 rounded-2xl text-sm btn-primary mt-1"
+            className="flex items-center gap-2 bg-[#1E3541] text-white font-bold px-4 py-2.5 rounded-2xl text-sm btn-primary mt-1"
           >
             + Nuevo
           </button>
@@ -407,25 +407,25 @@ export default function AdminProductsPage() {
               className={cn(
                 'flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 press-scale border',
                 active
-                  ? 'bg-[#0F3A43] text-white border-transparent'
-                  : 'bg-white text-[#8A8278] border-[#E8E4DC] hover:border-[#C8C4BC]'
+                  ? 'bg-[#1E3541] text-white border-transparent'
+                  : 'bg-white text-[#7A756D] border-[#E7E1D8] hover:border-[#C8C4BC]'
               )}
             >
               <span>{CAT_ICON[cat] ?? '•'}</span>
               <span>{cat}</span>
-              <span className={cn('text-[10px]', active ? 'text-white/60' : 'text-[#B0AB9F]')}>{count}</span>
+              <span className={cn('text-[10px]', active ? 'text-white/60' : 'text-[#A9A39C]')}>{count}</span>
             </button>
           )
         })}
       </div>
 
-      <div className="h-px bg-[#E8E4DC] mx-5 mb-3" />
+      <div className="h-px bg-[#E7E1D8] mx-5 mb-3" />
 
       {/* Summary */}
       {effectiveCategory && (
         <div className="flex items-center justify-between px-5 mb-3">
-          <p className="text-[#8A8278] text-xs font-semibold uppercase tracking-widest">{effectiveCategory}</p>
-          <p className="text-[#B0AB9F] text-xs">{activeCount} activos · {visible.length} total</p>
+          <p className="text-[#7A756D] text-xs font-semibold uppercase tracking-widest">{effectiveCategory}</p>
+          <p className="text-[#A9A39C] text-xs">{activeCount} activos · {visible.length} total</p>
         </div>
       )}
 
@@ -436,10 +436,10 @@ export default function AdminProductsPage() {
       <div className="px-4 pb-10 space-y-2">
         {isLoading ? (
           <div className="flex justify-center py-16">
-            <div className="w-8 h-8 border-2 border-[#E8E4DC] border-t-[#8A8278] rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-[#E7E1D8] border-t-[#8A8278] rounded-full animate-spin" />
           </div>
         ) : visible.length === 0 ? (
-          <div className="flex flex-col items-center py-16 text-[#B0AB9F]">
+          <div className="flex flex-col items-center py-16 text-[#A9A39C]">
             <p className="text-4xl mb-2">📦</p>
             <p className="text-sm font-medium">Sin productos en esta categoría</p>
           </div>
@@ -492,14 +492,14 @@ function ProductRow({
   return (
     <div className={cn(
       'flex items-center gap-3 bg-white rounded-2xl px-3.5 py-3 border transition-all card-shadow',
-      product.active ? 'border-[#E8E4DC]' : 'border-[#F0EDE8] opacity-50'
+      product.active ? 'border-[#E7E1D8]' : 'border-[#EDE9E2] opacity-50'
     )}>
 
       {/* Image thumbnail */}
       <button
         onClick={() => fileRef.current?.click()}
         disabled={uploading}
-        className="shrink-0 w-10 h-10 rounded-xl overflow-hidden bg-[#F6F2EA] border border-[#E8E4DC] flex items-center justify-center relative group"
+        className="shrink-0 w-10 h-10 rounded-xl overflow-hidden bg-[#F7F5F0] border border-[#E7E1D8] flex items-center justify-center relative group"
         title="Cambiar imagen"
       >
         {uploading ? (
@@ -512,7 +512,7 @@ function ProductRow({
             </div>
           </>
         ) : (
-          <span className="text-[#C8C4BC] text-sm group-hover:text-[#8A8278] transition-colors">📷</span>
+          <span className="text-[#C8C4BC] text-sm group-hover:text-[#7A756D] transition-colors">📷</span>
         )}
       </button>
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => onImageChange(product, e)} />
@@ -520,7 +520,7 @@ function ProductRow({
       {/* Favorite */}
       <button
         onClick={() => onToggle(product, 'is_favorite')}
-        className={cn('shrink-0 text-base transition-colors', product.is_favorite ? 'text-[#D4A847]' : 'text-[#D4CFC5] hover:text-[#B0AB9F]')}
+        className={cn('shrink-0 text-base transition-colors', product.is_favorite ? 'text-[#D4A847]' : 'text-[#D4CFC5] hover:text-[#A9A39C]')}
         title={product.is_favorite ? 'Quitar de favoritos' : 'Marcar favorito'}
       >
         {product.is_favorite ? '★' : '☆'}
@@ -528,15 +528,15 @@ function ProductRow({
 
       {/* Name — tap to edit */}
       <button onClick={() => onEdit(product)} className="flex-1 text-left min-w-0 group">
-        <p className={cn('text-sm font-semibold leading-snug truncate group-hover:text-[#0F3A43] transition-colors',
-          product.active ? 'text-[#252525]' : 'text-[#B0AB9F]')}>
+        <p className={cn('text-sm font-semibold leading-snug truncate group-hover:text-[#1E3541] transition-colors',
+          product.active ? 'text-[#1F1F1F]' : 'text-[#A9A39C]')}>
           {product.name}
         </p>
-        <p className="text-[#B0AB9F] text-[10px] mt-0.5">{product.category?.name} · {product.primary_area?.name}</p>
+        <p className="text-[#A9A39C] text-[10px] mt-0.5">{product.category?.name} · {product.primary_area?.name}</p>
       </button>
 
       {/* Price */}
-      <span className="shrink-0 text-sm font-bold text-[#0F3A43]">{formatPrice(product.price)}</span>
+      <span className="shrink-0 text-sm font-bold text-[#1E3541]">{formatPrice(product.price)}</span>
 
       {/* Active toggle */}
       <button
@@ -585,24 +585,24 @@ function BreakfastSettings() {
   }
 
   return (
-    <div className="mx-4 mb-4 bg-white border border-[#E8E4DC] rounded-2xl px-4 py-3.5">
+    <div className="mx-4 mb-4 bg-white border border-[#E7E1D8] rounded-2xl px-4 py-3.5">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[#252525] text-sm font-bold">Hora límite de desayunos</p>
-          <p className="text-[#8A8278] text-xs mt-0.5">Desayunos no disponibles después de esta hora</p>
+          <p className="text-[#1F1F1F] text-sm font-bold">Hora límite de desayunos</p>
+          <p className="text-[#7A756D] text-xs mt-0.5">Desayunos no disponibles después de esta hora</p>
         </div>
         <div className="flex items-center gap-2">
           <input
             type="time"
             value={value}
             onChange={(e) => setDraft(e.target.value)}
-            className="border border-[#E8E4DC] rounded-xl px-3 py-2 text-sm font-bold text-[#252525] focus:border-[#0F3A43] outline-none bg-[#F6F2EA]"
+            className="border border-[#E7E1D8] rounded-xl px-3 py-2 text-sm font-bold text-[#1F1F1F] focus:border-[#1E3541] outline-none bg-[#F7F5F0]"
           />
           {draft && draft !== cutoff && (
             <button
               onClick={save}
               disabled={saving}
-              className="bg-[#0F3A43] text-white font-bold px-4 py-2 rounded-xl text-xs btn-primary disabled:opacity-50"
+              className="bg-[#1E3541] text-white font-bold px-4 py-2 rounded-xl text-xs btn-primary disabled:opacity-50"
             >
               {saving ? '…' : 'Guardar'}
             </button>

@@ -51,13 +51,12 @@ interface TableCardProps {
   selected?: boolean
   joinSource?: boolean
   joinTarget?: boolean
-  animSend?: boolean
-  animReceive?: boolean
+  joinPulse?: boolean
   orderTotal?: number
 }
 
 export function TableCard({
-  table, onClick, selected, joinSource, joinTarget, animSend, animReceive, orderTotal,
+  table, onClick, selected, joinSource, joinTarget, joinPulse, orderTotal,
 }: TableCardProps) {
   const cfg = STATUS_CONFIG[table.status]
 
@@ -67,15 +66,13 @@ export function TableCard({
       className={cn(
         'relative flex flex-col items-center justify-between rounded-2xl border p-2.5 w-full aspect-square min-h-[72px]',
         'select-none card-shadow',
-        animSend    && 'join-send',
-        animReceive && 'join-receive',
-        !animSend && !animReceive && (
-          joinSource
+        joinPulse
+          ? cn('bg-[#FEF3E8] border-[#D79A57]/60 join-pulse')
+          : joinSource
             ? 'bg-[#FEF3E8] border-[#D79A57]/70 glow-pendiente scale-[1.06] transition-all duration-200'
             : joinTarget
               ? 'bg-white border-[#0F3A43]/20 opacity-75 hover:opacity-100 hover:border-[#0F3A43]/40 transition-all duration-200'
-              : cn(cfg.card, cfg.glow, 'press-scale transition-all duration-200', selected && 'glow-selected scale-[1.06]')
-        ),
+              : cn(cfg.card, cfg.glow, 'press-scale transition-all duration-200', selected && 'glow-selected scale-[1.06]'),
         onClick ? 'cursor-pointer' : 'cursor-default'
       )}
     >
@@ -135,11 +132,11 @@ interface GroupTableCardProps {
   onClick?: (table: Table) => void
   selected?: boolean
   orderTotal?: number
-  animReceive?: boolean
+  isMergeNew?: boolean
 }
 
 export function GroupTableCard({
-  parent, children, onClick, selected, orderTotal, animReceive,
+  parent, children, onClick, selected, orderTotal, isMergeNew,
 }: GroupTableCardProps) {
   const cfg = STATUS_CONFIG[parent.status]
   const all  = [parent, ...children]
@@ -152,10 +149,10 @@ export function GroupTableCard({
       className={cn(
         colSpan,
         'relative rounded-2xl border px-4 py-3 w-full min-h-[72px]',
-        'select-none press-scale transition-all duration-200 fade-scale-in card-shadow',
+        'select-none press-scale transition-all duration-200 card-shadow',
+        isMergeNew ? 'merge-pop' : 'fade-scale-in',
         cfg.card, cfg.glow,
         selected && 'glow-selected scale-[1.02]',
-        animReceive && 'join-receive',
         onClick ? 'cursor-pointer' : 'cursor-default'
       )}
     >

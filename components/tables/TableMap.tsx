@@ -21,20 +21,16 @@ type RenderGroup =
   | { type: 'single'; table: Table }
   | { type: 'group'; parent: Table; children: Table[] }
 
-function getRenderGroups(zoneTables: Table[], animatingSourceId?: string): RenderGroup[] {
+function getRenderGroups(zoneTables: Table[]): RenderGroup[] {
   const rendered = new Set<string>()
   const groups: RenderGroup[] = []
 
   for (const table of zoneTables) {
     if (rendered.has(table.id)) continue
 
-    // Collect all direct children of this parent.
-    // While a join animation is playing for a source card, keep it as a solo
-    // TableCard so its fly-toward animation can complete before it merges.
     const children = zoneTables.filter(t =>
       t.parent_table_id === table.id &&
-      !rendered.has(t.id) &&
-      t.id !== animatingSourceId
+      !rendered.has(t.id)
     )
 
     if (children.length > 0) {
@@ -58,10 +54,13 @@ export function TableMap() {
   const setTable     = useOrderStore((s) => s.setTable)
   const router       = useRouter()
 
-  const [selected, setSelected]     = useState<Table | null>(null)
-  const [viewOrder, setViewOrder]   = useState(false)
-  const [joinSource, setJoinSource] = useState<Table | null>(null)
-  const [joining, setJoining]       = useState<{ sourceId: string; targetId: string } | null>(null)
+  const [selected, setSelected]       = useState<Table | null>(null)
+  const [viewOrder, setViewOrder]     = useState(false)
+  const [joinSource, setJoinSource]   = useState<Table | null>(null)
+  // joinPulseId: target card shows amber ripple while mutation is in-flight
+  const [joinPulseId, setJoinPulseId] = useState<string | null>(null)
+  // recentMergeId: new GroupTableCard plays merge-pop if its parent.id matches
+  const [recentMergeId, setRecentMergeId] = useState<string | null>(null)
 
   const { data: openOrders = [] } = useQuery<Order[]>({
     queryKey: ['orders', 'open'],
@@ -105,19 +104,24 @@ export function TableMap() {
     // ── Join mode ──
     if (joinSource) {
       if (joinSource.id === table.id) { setJoinSource(null); return }
-      setJoining({ sourceId: joinSource.id, targetId: table.id })
-      setJoinSource(null)
       const src = joinSource
-      setTimeout(() => {
-        joinTables.mutate(
-          { childId: src.id, parentId: table.id },
-          {
-            onSuccess: () => toast.success(`Mesa ${src.code} unida a ${table.code}`),
-            onError:   () => toast.error('Error al unir mesas'),
-          }
-        )
-      }, 120)
-      setTimeout(() => setJoining(null), 800)
+      setJoinSource(null)
+      // Pulse the target immediately for tactile feedback
+      setJoinPulseId(table.id)
+      setTimeout(() => setJoinPulseId(null), 600)
+      // Fire mutation right away — no artificial delay
+      joinTables.mutate(
+        { childId: src.id, parentId: table.id },
+        {
+          onSuccess: () => {
+            // Mark the parent so GroupTableCard plays merge-pop when it mounts
+            setRecentMergeId(table.id)
+            setTimeout(() => setRecentMergeId(null), 2000)
+            toast.success(`Mesa ${src.code} unida a ${table.code}`)
+          },
+          onError: () => toast.error('Error al unir mesas'),
+        }
+      )
       return
     }
     // If clicking a child table, select its parent instead
@@ -267,7 +271,7 @@ export function TableMap() {
           {ZONES.map((zone) => {
             const zoneTables = getByZone(zone)
             if (!zoneTables.length) return null
-            const groups = getRenderGroups(zoneTables, joining?.sourceId)
+            const groups = getRenderGroups(zoneTables)
             return (
               <section key={zone} className="fade-in">
                 <div className="flex items-center gap-2 mb-3">
@@ -287,7 +291,7 @@ export function TableMap() {
                         onClick={handleTableClick}
                         selected={selected?.id === group.parent.id}
                         orderTotal={orderByTable.get(group.parent.id)}
-                        animReceive={joining?.targetId === group.parent.id}
+                        isMergeNew={recentMergeId === group.parent.id}
                       />
                     ) : (
                       <TableCard
@@ -297,8 +301,7 @@ export function TableMap() {
                         selected={selected?.id === group.table.id}
                         joinSource={joinSource?.id === group.table.id}
                         joinTarget={!!joinSource && joinSource.id !== group.table.id}
-                        animSend={joining?.sourceId === group.table.id}
-                        animReceive={joining?.targetId === group.table.id}
+                        joinPulse={joinPulseId === group.table.id}
                         orderTotal={orderByTable.get(group.table.id)}
                       />
                     )

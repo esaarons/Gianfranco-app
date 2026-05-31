@@ -36,8 +36,6 @@ const STATUS_CONFIG = {
   },
 }
 
-// ── Time elapsed helper ───────────────────────────────────────────────────────
-
 function elapsed(updatedAt: string): string {
   const diff = Math.floor((Date.now() - new Date(updatedAt).getTime()) / 60000)
   if (diff < 1)  return 'ahora'
@@ -127,78 +125,88 @@ export function TableCard({
   )
 }
 
-// ── Merged table card (col-span-2) ────────────────────────────────────────────
+// ── Group table card — N tables merged into one ───────────────────────────────
+// Shows "8 + 9 + 10" with capacity badge. Spans 2 columns for 1 child,
+// 3 columns for 2+ children so the whole row is consumed at mobile width.
 
-interface MergedTableCardProps {
+interface GroupTableCardProps {
   parent: Table
-  child: Table
+  children: Table[]
   onClick?: (table: Table) => void
   selected?: boolean
   orderTotal?: number
+  animReceive?: boolean
 }
 
-export function MergedTableCard({ parent, child, onClick, selected, orderTotal }: MergedTableCardProps) {
+export function GroupTableCard({
+  parent, children, onClick, selected, orderTotal, animReceive,
+}: GroupTableCardProps) {
   const cfg = STATUS_CONFIG[parent.status]
-  const totalCapacity = parent.capacity + child.capacity
+  const all  = [parent, ...children]
+  const totalCapacity = all.reduce((s, t) => s + t.capacity, 0)
+  const colSpan = children.length >= 2 ? 'col-span-3' : 'col-span-2'
 
   return (
     <button
       onClick={() => onClick?.(parent)}
       className={cn(
-        'col-span-2 relative flex items-center justify-center rounded-2xl border px-4 py-3 w-full',
+        colSpan,
+        'relative rounded-2xl border px-4 py-3 w-full min-h-[72px]',
         'select-none press-scale transition-all duration-200 fade-scale-in card-shadow',
         cfg.card, cfg.glow,
-        selected && 'glow-selected scale-[1.03]',
+        selected && 'glow-selected scale-[1.02]',
+        animReceive && 'join-receive',
         onClick ? 'cursor-pointer' : 'cursor-default'
       )}
-      style={{ minHeight: '72px' }}
     >
-      {/* Left: parent code */}
-      <div className="flex flex-col items-center gap-1 flex-1">
-        <div className="flex gap-0.5">
-          {Array.from({ length: Math.min(parent.capacity, 4) }).map((_, i) => (
-            <div key={i} className={cn('w-1.5 h-1.5 rounded-full', cfg.dot, i === 0 && parent.status === 'occupied' ? cfg.dotAnim : '')} />
-          ))}
-        </div>
-        <span className={cn('text-xl font-bold tracking-tight leading-none', cfg.code)}>{parent.code}</span>
-      </div>
+      <div className="flex items-start justify-between gap-2">
 
-      {/* Center: link icon */}
-      <div className="flex flex-col items-center gap-0.5 px-2">
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-px bg-[#252525]/15" />
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#252525]/25">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-          </svg>
-          <div className="w-3 h-px bg-[#252525]/15" />
+        {/* Left: codes + seat row */}
+        <div className="flex-1 min-w-0">
+          {/* Seat dots — all tables combined, max 10 shown */}
+          <div className="flex gap-0.5 mb-1.5">
+            {Array.from({ length: Math.min(totalCapacity, 10) }).map((_, i) => (
+              <div key={i} className={cn(
+                'w-1.5 h-1.5 rounded-full',
+                cfg.dot,
+                i === 0 && parent.status === 'occupied' ? cfg.dotAnim : ''
+              )} />
+            ))}
+          </div>
+          {/* Table codes joined with + */}
+          <div className="flex items-baseline gap-1 flex-wrap">
+            {all.map((t, i) => (
+              <span key={t.id} className="flex items-baseline gap-1">
+                {i > 0 && (
+                  <span className="text-[13px] font-bold leading-none" style={{ color: 'rgba(37,37,37,0.2)' }}>+</span>
+                )}
+                <span className={cn('text-xl font-bold tracking-tight leading-none', cfg.code)}>
+                  {t.code}
+                </span>
+              </span>
+            ))}
+          </div>
         </div>
-        <span className="text-[8px] text-[#252525]/30 font-bold uppercase tracking-wider">
-          {totalCapacity}p
+
+        {/* Right: status / total badge */}
+        <span className={cn(
+          'text-[9px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase shrink-0 mt-0.5',
+          cfg.badge
+        )}>
+          {parent.status === 'occupied' && orderTotal != null && orderTotal > 0
+            ? formatPrice(orderTotal)
+            : parent.status === 'occupied'
+              ? elapsed(parent.updated_at)
+              : cfg.label}
         </span>
       </div>
 
-      {/* Right: child code */}
-      <div className="flex flex-col items-center gap-1 flex-1">
-        <div className="flex gap-0.5">
-          {Array.from({ length: Math.min(child.capacity, 4) }).map((_, i) => (
-            <div key={i} className={cn('w-1.5 h-1.5 rounded-full', cfg.dot)} />
-          ))}
-        </div>
-        <span className={cn('text-xl font-bold tracking-tight leading-none', cfg.code)}>{child.code}</span>
+      {/* Bottom metadata: group size + total capacity */}
+      <div className="flex items-center gap-1.5 mt-2">
+        <span className="text-[10px] font-semibold" style={{ color: 'rgba(37,37,37,0.3)' }}>
+          {all.length} mesas · {totalCapacity} personas
+        </span>
       </div>
-
-      {/* Status badge — absolute bottom center */}
-      <span className={cn(
-        'absolute bottom-1.5 text-[9px] font-bold px-2.5 py-0.5 rounded-full tracking-widest uppercase',
-        cfg.badge
-      )}>
-        {(parent.status === 'occupied' && orderTotal != null && orderTotal > 0)
-          ? formatPrice(orderTotal)
-          : parent.status === 'occupied'
-            ? elapsed(parent.updated_at)
-            : cfg.label}
-      </span>
     </button>
   )
 }

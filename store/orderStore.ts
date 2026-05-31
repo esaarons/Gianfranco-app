@@ -1,41 +1,56 @@
 import { create } from 'zustand'
 import type { CartItem } from '@/types'
 
-// Unique key per cart line: same product with different modifiers → different lines
+// Unique key per cart line: same product + same modifiers + same notes + same guest → same line
 export function cartKey(item: CartItem): string {
-  return `${item.productId}:${item.modifiers.map((m) => m.modifierId).sort().join(',')}`
+  const mods  = item.modifiers.map((m) => m.modifierId).sort().join(',')
+  const note  = item.notes?.trim() ?? ''
+  const guest = item.guestName?.trim() ?? ''
+  return `${item.productId}:${mods}:${note}:${guest}`
 }
 
 interface OrderStore {
-  tableId: string | null
-  tableCode: string | null
-  items: CartItem[]
-  setTable: (id: string, code: string) => void
-  addItem: (item: CartItem) => void
-  updateItemQty: (key: string, delta: number) => void
-  removeItem: (key: string) => void
-  clearCart: () => void
-  total: () => number
+  tableId:     string | null
+  tableCode:   string | null
+  items:       CartItem[]
+  guests:      string[]
+  activeGuest: string | null
+
+  setTable:       (id: string, code: string) => void
+  addItem:        (item: CartItem) => void
+  updateItemQty:  (key: string, delta: number) => void
+  removeItem:     (key: string) => void
+  clearCart:      () => void
+  total:          () => number
+
+  addGuest:       (name: string) => void
+  setActiveGuest: (name: string | null) => void
+  removeGuest:    (name: string) => void
 }
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
-  tableId: null,
-  tableCode: null,
-  items: [],
+  tableId:     null,
+  tableCode:   null,
+  items:       [],
+  guests:      [],
+  activeGuest: null,
 
-  setTable: (id, code) => set({ tableId: id, tableCode: code, items: [] }),
+  setTable: (id, code) => set({ tableId: id, tableCode: code, items: [], guests: [], activeGuest: null }),
 
   addItem: (item) => {
-    const key = cartKey(item)
+    // Attach the active guest automatically
+    const guest = get().activeGuest
+    const fullItem: CartItem = guest ? { ...item, guestName: guest } : item
+    const key = cartKey(fullItem)
     const existing = get().items.find((i) => cartKey(i) === key)
     if (existing) {
       set((s) => ({
         items: s.items.map((i) =>
-          cartKey(i) === key ? { ...i, quantity: i.quantity + item.quantity } : i
+          cartKey(i) === key ? { ...i, quantity: i.quantity + fullItem.quantity } : i
         ),
       }))
     } else {
-      set((s) => ({ items: [...s.items, item] }))
+      set((s) => ({ items: [...s.items, fullItem] }))
     }
   },
 
@@ -50,7 +65,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   removeItem: (key) =>
     set((s) => ({ items: s.items.filter((i) => cartKey(i) !== key) })),
 
-  clearCart: () => set({ tableId: null, tableCode: null, items: [] }),
+  clearCart: () => set({ tableId: null, tableCode: null, items: [], guests: [], activeGuest: null }),
 
   total: () => {
     return get().items.reduce((sum, item) => {
@@ -58,4 +73,20 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       return sum + (item.unitPrice + modTotal) * item.quantity
     }, 0)
   },
+
+  addGuest: (name) => {
+    if (!name.trim()) return
+    if (get().guests.includes(name.trim())) return
+    set((s) => ({ guests: [...s.guests, name.trim()], activeGuest: name.trim() }))
+  },
+
+  setActiveGuest: (name) => set({ activeGuest: name }),
+
+  removeGuest: (name) =>
+    set((s) => ({
+      guests: s.guests.filter((g) => g !== name),
+      activeGuest: s.activeGuest === name ? null : s.activeGuest,
+      // unlink items that belonged to this guest
+      items: s.items.map((i) => i.guestName === name ? { ...i, guestName: undefined } : i),
+    })),
 }))

@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useSound } from '@/hooks/useSound'
+import { useSound, areaLabel } from '@/hooks/useSound'
 import type { AreaCard, CardStatus } from '@/types'
 
 // Re-export for convenience
@@ -11,7 +11,7 @@ export type { CardStatus }
 
 export function useAreaCards(areaId: string) {
   const queryClient = useQueryClient()
-  const { playOrderAlert } = useSound()
+  const { playAlert } = useSound()
   const knownIds = useRef<Set<string>>(new Set())
 
   const query = useQuery<AreaCard[]>({
@@ -39,8 +39,10 @@ export function useAreaCards(areaId: string) {
           if (!knownIds.current.has(newCard.id)) {
             knownIds.current.add(newCard.id)
             queryClient.invalidateQueries({ queryKey: ['cards', areaId] })
-            // Only alert for genuinely new pending cards, not manual delivery tasks
-            if (newCard.status === 'pending') playOrderAlert(null, 'table')
+            if (newCard.status === 'pending') {
+              const area = areaLabel(newCard.area_id)
+              playAlert(`Nuevo pedido para ${area}`, `Nuevo pedido — ${area}`)
+            }
           }
         }
       )
@@ -50,7 +52,7 @@ export function useAreaCards(areaId: string) {
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [areaId, queryClient, playOrderAlert])
+  }, [areaId, queryClient, playAlert])
 
   return query
 }

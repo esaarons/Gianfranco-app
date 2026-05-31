@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTables, useUpdateTableStatus, useJoinTables, useSplitTable } from '@/hooks/useTables'
 import { useQuery } from '@tanstack/react-query'
-import { TableCard, MergedTableCard } from './TableCard'
+import { TableCard, GroupTableCard } from './TableCard'
 import { TableOrderSheet } from './TableOrderSheet'
 import { PickupBanner } from '@/components/notifications/PickupBanner'
 import { ZONE_LABELS } from '@/lib/constants'
@@ -19,7 +19,7 @@ const ZONE_ICONS: Record<string, string> = { salon1: '🪑', salon2: '🪟', ter
 // ── Render group helpers ──────────────────────────────────────────────────────
 type RenderGroup =
   | { type: 'single'; table: Table }
-  | { type: 'merged'; parent: Table; child: Table }
+  | { type: 'group'; parent: Table; children: Table[] }
 
 function getRenderGroups(zoneTables: Table[], animatingSourceId?: string): RenderGroup[] {
   const rendered = new Set<string>()
@@ -27,17 +27,20 @@ function getRenderGroups(zoneTables: Table[], animatingSourceId?: string): Rende
 
   for (const table of zoneTables) {
     if (rendered.has(table.id)) continue
-    // While the join animation is playing, don't merge the source card yet —
-    // it needs to stay as an individual TableCard to run its join-send animation.
-    const child = zoneTables.find(t =>
+
+    // Collect all direct children of this parent.
+    // While a join animation is playing for a source card, keep it as a solo
+    // TableCard so its fly-toward animation can complete before it merges.
+    const children = zoneTables.filter(t =>
       t.parent_table_id === table.id &&
       !rendered.has(t.id) &&
       t.id !== animatingSourceId
     )
-    if (child) {
-      groups.push({ type: 'merged', parent: table, child })
+
+    if (children.length > 0) {
+      groups.push({ type: 'group', parent: table, children })
       rendered.add(table.id)
-      rendered.add(child.id)
+      children.forEach(c => rendered.add(c.id))
     } else {
       groups.push({ type: 'single', table })
       rendered.add(table.id)
@@ -87,10 +90,11 @@ export function TableMap() {
   const occupiedCount = tables.filter(t => t.status === 'occupied').length
   const cleaningCount = tables.filter(t => t.status === 'cleaning').length
 
-  // Child table of the currently selected (if merged)
-  const selectedChild = selected
-    ? tables.find(t => t.parent_table_id === selected.id)
-    : null
+  // All children of the currently selected table (flat, direct children only)
+  const selectedChildren: Table[] = selected
+    ? tables.filter(t => t.parent_table_id === selected.id)
+    : []
+  const hasChildren = selectedChildren.length > 0
 
   function getByZone(zone: TableZone) {
     return tables.filter(t => t.zone === zone)
@@ -107,7 +111,7 @@ export function TableMap() {
         joinTables.mutate(
           { childId: src.id, parentId: table.id },
           {
-            onSuccess: () => toast.success(`Mesas ${src.code} y ${table.code} unidas`),
+            onSuccess: () => toast.success(`Mesa ${src.code} unida a ${table.code}`),
             onError:   () => toast.error('Error al unir mesas'),
           }
         )
@@ -150,30 +154,33 @@ export function TableMap() {
     )
   }
 
-  function handleSplitAndClean() {
+  async function handleSplitAndClean() {
     if (!selected) return
-    if (!selectedChild) { handleCleaning(); return }
-    // Split the child, then set both to cleaning
-    splitTable.mutate(selectedChild.id, {
-      onSuccess: () => {
-        updateStatus.mutate({ id: selected.id, status: 'cleaning' })
-        updateStatus.mutate({ id: selectedChild.id, status: 'cleaning' })
-        toast.success(`Mesas ${selected.code} y ${selectedChild.code} separadas — en limpieza`)
-        setSelected(null)
-      },
-      onError: () => toast.error('Error al separar mesas'),
-    })
+    if (!hasChildren) { handleCleaning(); return }
+    try {
+      await Promise.all(selectedChildren.map(c => splitTable.mutateAsync(c.id)))
+      await Promise.all([
+        updateStatus.mutateAsync({ id: selected.id, status: 'cleaning' }),
+        ...selectedChildren.map(c => updateStatus.mutateAsync({ id: c.id, status: 'cleaning' })),
+      ])
+      const codes = [selected, ...selectedChildren].map(t => t.code).join(', ')
+      toast.success(`Mesas ${codes} separadas — en limpieza`)
+      setSelected(null)
+    } catch {
+      toast.error('Error al separar mesas')
+    }
   }
 
-  function handleSplitOnly() {
-    if (!selected || !selectedChild) return
-    splitTable.mutate(selectedChild.id, {
-      onSuccess: () => {
-        toast.success(`Mesas ${selected.code} y ${selectedChild.code} separadas`)
-        setSelected(null)
-      },
-      onError: () => toast.error('Error al separar'),
-    })
+  async function handleSplitOnly() {
+    if (!selected || !hasChildren) return
+    try {
+      await Promise.all(selectedChildren.map(c => splitTable.mutateAsync(c.id)))
+      const codes = [selected, ...selectedChildren].map(t => t.code).join(', ')
+      toast.success(`Mesas ${codes} separadas`)
+      setSelected(null)
+    } catch {
+      toast.error('Error al separar')
+    }
   }
 
   function handleFree() {
@@ -183,6 +190,10 @@ export function TableMap() {
       { onSuccess: () => { toast.success(`Mesa ${selected.code} lista`); setSelected(null) } }
     )
   }
+
+  const groupLabel = hasChildren
+    ? `Mesa ${[selected!, ...selectedChildren].map(t => t.code).join(' + ')}`
+    : selected ? `Mesa ${selected.code}` : ''
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F6F2EA]">
@@ -195,7 +206,7 @@ export function TableMap() {
             <h1 className="text-[#252525] text-2xl font-bold tracking-tight">Mesas</h1>
           </div>
           <button
-            onClick={() => router.push('/order/takeaway')}
+            onClick={() => { setTable('takeaway', 'Para Llevar'); router.push('/order/takeaway') }}
             className="flex items-center gap-2 bg-white border border-[#E8E4DC] rounded-2xl px-3.5 py-2.5 press-scale mt-1 card-shadow"
           >
             <span className="text-base">🥡</span>
@@ -267,14 +278,15 @@ export function TableMap() {
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5">
                   {groups.map((group) =>
-                    group.type === 'merged' ? (
-                      <MergedTableCard
-                        key={`${group.parent.id}-${group.child.id}`}
+                    group.type === 'group' ? (
+                      <GroupTableCard
+                        key={`${group.parent.id}-${group.children.map(c => c.id).join('-')}`}
                         parent={group.parent}
-                        child={group.child}
+                        children={group.children}
                         onClick={handleTableClick}
                         selected={selected?.id === group.parent.id}
                         orderTotal={orderByTable.get(group.parent.id)}
+                        animReceive={joining?.targetId === group.parent.id}
                       />
                     ) : (
                       <TableCard
@@ -322,26 +334,22 @@ export function TableMap() {
             <div className="flex items-start justify-between mb-6">
               <div>
                 <div className="flex items-baseline gap-2.5">
-                  <h3 className="text-white text-2xl font-bold tracking-tight">
-                    {selectedChild
-                      ? `Mesa ${selected.code} + ${selectedChild.code}`
-                      : `Mesa ${selected.code}`}
-                  </h3>
+                  <h3 className="text-white text-2xl font-bold tracking-tight">{groupLabel}</h3>
                   <span className="text-white/40 text-sm">
-                    {selectedChild
-                      ? `${selected.capacity + selectedChild.capacity} pers.`
+                    {hasChildren
+                      ? `${[selected, ...selectedChildren].reduce((s, t) => s + t.capacity, 0)} pers.`
                       : `${selected.capacity} pers.`}
                   </span>
                 </div>
                 <p className="text-white/30 text-sm mt-0.5 flex items-center gap-1.5">
                   {ZONE_LABELS[selected.zone]}
-                  {selectedChild && (
+                  {hasChildren && (
                     <span className="text-[10px] bg-white/8 text-white/30 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">
-                      Unidas
+                      {[selected, ...selectedChildren].length} unidas
                     </span>
                   )}
                 </p>
-                {selected.status === 'occupied' && orderByTable.get(selected.id) != null && (orderByTable.get(selected.id) ?? 0) > 0 && (
+                {selected.status === 'occupied' && (orderByTable.get(selected.id) ?? 0) > 0 && (
                   <p className="text-[#A7B897] text-sm font-bold mt-1">
                     {formatPrice(orderByTable.get(selected.id)!)} en consumo
                   </p>
@@ -377,11 +385,10 @@ export function TableMap() {
                     className="w-full glass border-0 text-white/70 font-semibold py-3.5 rounded-2xl text-sm press-scale">
                     + Agregar al pedido
                   </button>
-                  {/* Clientes se van: si hay mesas unidas, separa + limpia; si no, solo limpia */}
                   <button
-                    onClick={selectedChild ? handleSplitAndClean : handleCleaning}
+                    onClick={handleSplitAndClean}
                     className="w-full glass border-0 text-white/40 font-medium py-3 rounded-2xl text-sm press-scale">
-                    {selectedChild
+                    {hasChildren
                       ? `Clientes se van — Separar y limpiar`
                       : `Clientes se van — Limpieza`}
                   </button>
@@ -395,19 +402,19 @@ export function TableMap() {
                 </button>
               )}
 
-              {/* Separar sin cambiar estado (solo si están unidas) */}
-              {selectedChild && selected.status !== 'cleaning' && (
+              {/* Separar sin cambiar estado */}
+              {hasChildren && selected.status !== 'cleaning' && (
                 <button onClick={handleSplitOnly}
                   className="w-full glass border-0 text-white/30 font-medium py-3 rounded-2xl text-sm press-scale">
                   Separar mesas (mantener estado)
                 </button>
               )}
 
-              {/* Unir con otra mesa (solo si no están ya unidas) */}
-              {!selectedChild && selected.status !== 'cleaning' && (
+              {/* Unir con otra mesa — always available when not cleaning */}
+              {selected.status !== 'cleaning' && (
                 <button onClick={startJoin}
                   className="w-full glass border-0 text-white/45 font-medium py-3.5 rounded-2xl text-sm press-scale">
-                  Unir con otra mesa
+                  {hasChildren ? 'Añadir otra mesa al grupo' : 'Unir con otra mesa'}
                 </button>
               )}
             </div>

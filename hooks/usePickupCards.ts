@@ -10,7 +10,7 @@ import type { AreaCard } from '@/types'
 
 export function usePickupCards() {
   const queryClient   = useQueryClient()
-  const { playPickupAlert } = useSound()
+  const { playAlert } = useSound()
   const notifiedIds   = useRef<Set<string>>(new Set())
 
   const query = useQuery<AreaCard[]>({
@@ -51,7 +51,7 @@ export function usePickupCards() {
         },
       })
 
-      playPickupAlert(areaName)
+      playAlert(`Pedido listo en ${areaName}`, `Listo — ${areaName}`)
     }
 
     // Two listeners on one channel — one per area
@@ -68,7 +68,7 @@ export function usePickupCards() {
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [queryClient, playPickupAlert])
+  }, [queryClient, playAlert])
 
   return query
 }

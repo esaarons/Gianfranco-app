@@ -3,17 +3,18 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
-import { useSound } from '@/hooks/useSound'
+import { useSound, MODE_CFG } from '@/hooks/useSound'
 import { ROLE_CONFIG } from '@/lib/constants'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import type { NotificationMode } from '@/store/notificationStore'
 import type { UserRole } from '@/types'
 
 export default function SettingsPage() {
   const router  = useRouter()
   const user    = useAuthStore((s) => s.user)
   const setUser = useAuthStore((s) => s.setUser)
-  const { enabled: soundEnabled, enableSound } = useSound()
+  const { enabled: soundEnabled, mode, permissionStatus, enableSound, setMode } = useSound()
 
   const [name, setName]             = useState(user?.name ?? '')
   const [pin, setPin]               = useState('')
@@ -189,13 +190,15 @@ export default function SettingsPage() {
 
         {/* Notificaciones */}
         <div className="h-px bg-[#E8E4DC]" />
+
+        {/* Sound on/off */}
         <div className="bg-white border border-[#E8E4DC] rounded-2xl px-4 py-3.5 flex items-center justify-between card-shadow">
           <div className="flex items-center gap-3">
             <span className="text-xl">🔔</span>
             <div>
-              <p className="text-[#252525] text-sm font-semibold">Notificaciones sonoras</p>
+              <p className="text-[#252525] text-sm font-semibold">Sonido y notificaciones</p>
               <p className="text-[#8A8278] text-xs mt-0.5">
-                {soundEnabled ? 'Activadas' : 'Toca para activar el sonido'}
+                {soundEnabled ? 'Activados' : 'Toca para activar'}
               </p>
             </div>
           </div>
@@ -212,6 +215,92 @@ export default function SettingsPage() {
             </button>
           )}
         </div>
+
+        {/* Notification permission */}
+        {soundEnabled && permissionStatus !== null && permissionStatus !== 'granted' && (
+          <div className={cn(
+            'rounded-2xl px-4 py-3.5 flex items-center justify-between border',
+            permissionStatus === 'unsupported'
+              ? 'bg-[#F9F7F3] border-[#E8E4DC]'
+              : 'bg-[#FEF9EE] border-[#D79A57]/30'
+          )}>
+            <div className="flex items-center gap-3">
+              <span className="text-xl">{permissionStatus === 'unsupported' ? '📵' : '⚠️'}</span>
+              <div>
+                <p className="text-[#252525] text-sm font-semibold">Notificaciones del sistema</p>
+                <p className="text-[#8A8278] text-xs mt-0.5">
+                  {permissionStatus === 'unsupported'
+                    ? 'No disponible en este navegador'
+                    : permissionStatus === 'denied'
+                      ? 'Bloqueadas — actívalas en Ajustes del dispositivo'
+                      : 'Permiso no otorgado aún'}
+                </p>
+              </div>
+            </div>
+            {permissionStatus === 'default' && (
+              <button
+                onClick={async () => {
+                  const perm = await Notification.requestPermission()
+                  // permissionStatus updates via store
+                  void perm
+                }}
+                className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-[#0F3A43] text-white press-scale shrink-0"
+              >
+                Permitir
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Alert mode selector */}
+        {soundEnabled && (
+          <div className="space-y-2.5">
+            <label className="text-[#8A8278] text-[10px] font-bold uppercase tracking-widest px-1">
+              Modo de alerta
+            </label>
+            {(Object.entries(MODE_CFG) as [NotificationMode, typeof MODE_CFG[NotificationMode]][]).map(([key, cfg]) => {
+              const active = mode === key
+              const chimeIcons = '♪'.repeat(cfg.chimes)
+              const vibrIcon = cfg.vibratePattern.length > 1 ? '📳' : '·'
+              return (
+                <button
+                  key={key}
+                  onClick={() => setMode(key)}
+                  className={cn(
+                    'w-full text-left rounded-2xl px-4 py-3.5 border transition-all press-scale',
+                    active
+                      ? 'bg-[#0F3A43] border-[#0F3A43] text-white'
+                      : 'bg-white border-[#E8E4DC] text-[#252525]'
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className={cn('text-sm font-bold', active ? 'text-white' : 'text-[#252525]')}>
+                        {cfg.label}
+                      </p>
+                      <p className={cn('text-xs mt-0.5', active ? 'text-white/60' : 'text-[#8A8278]')}>
+                        {cfg.description}
+                      </p>
+                    </div>
+                    <div className={cn('flex items-center gap-2 text-xs shrink-0', active ? 'text-white/70' : 'text-[#8A8278]')}>
+                      <span title="Chimes">{chimeIcons}</span>
+                      <span title="Vibración">{vibrIcon}</span>
+                      <span title="Volumen">{Math.round(cfg.volume * 100)}%</span>
+                      {active && <span className="ml-1 text-[#A7B897] font-bold">✓</span>}
+                    </div>
+                  </div>
+                  {active && (
+                    <p className="text-[10px] text-white/50 mt-2">
+                      {key === 'normal' && 'Alerta si no hay atención en 5 min'}
+                      {key === 'alto' && 'Alerta si no hay atención en 3 min'}
+                      {key === 'cocina_ruidosa' && 'Alerta si no hay atención en 2 min'}
+                    </p>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         {/* Logout */}
         <div className="h-px bg-[#E8E4DC]" />

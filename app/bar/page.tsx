@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import { useAreaCards } from '@/hooks/useCards'
+import { useUnattendedAlerts } from '@/hooks/useUnattendedAlerts'
 import { AreaCardComponent } from '@/components/cards/AreaCard'
 import { SoundEnabler } from '@/components/notifications/SoundEnabler'
+import { AREA_IDS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
-const BAR_AREA_ID = 'aaaaaaaa-0000-0000-0000-000000000001'
+const BAR_AREA_ID = AREA_IDS.BAR
 
 type Tab = 'pending' | 'received' | 'delivered'
 
@@ -18,6 +20,7 @@ const TABS: { key: Tab; label: string; emptyMsg: string }[] = [
 
 export default function BarPage() {
   const { data: cards = [], isLoading } = useAreaCards(BAR_AREA_ID)
+  useUnattendedAlerts(cards, 'Barra')
   const [tab, setTab] = useState<Tab>('pending')
 
   const pending   = cards.filter((c) => c.status === 'pending')

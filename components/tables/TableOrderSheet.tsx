@@ -97,6 +97,7 @@ export function TableOrderSheet({ table, onClose, onAddMore }: TableOrderSheetPr
       setClosed(true)
       qc.invalidateQueries({ queryKey: ['tables'] })
       qc.invalidateQueries({ queryKey: ['table-order', table.id] })
+      qc.invalidateQueries({ queryKey: ['orders', 'open'] })
       setTimeout(onClose, 1200)
     } finally {
       setClosing(false)
@@ -110,7 +111,7 @@ export function TableOrderSheet({ table, onClose, onAddMore }: TableOrderSheetPr
       <div className="absolute inset-0 bg-black/50 backdrop-blur-[6px]" onClick={onClose} />
 
       <div
-        className="absolute bottom-0 left-0 right-0 rounded-t-[2rem] flex flex-col max-h-[92dvh] spring-up relative overflow-hidden"
+        className="absolute bottom-0 left-0 right-0 rounded-t-[2rem] flex flex-col max-h-[92dvh] spring-up overflow-hidden"
         style={{ background: '#0D2226', borderTop: '1px solid rgba(255,255,255,0.12)' }}
       >
         {/* Handle */}
@@ -332,7 +333,11 @@ function ItemGroup({
 
                 {/* Name + modifiers + notes */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-semibold leading-snug">{item.product?.name}</p>
+                  <p className="text-white text-sm font-semibold leading-snug">
+                    {item.product?.name ?? (
+                      <span className="text-[#EAD9B1]/80 italic">✦ {item.notes ?? 'Pedido libre'}</span>
+                    )}
+                  </p>
                   {item.modifiers && item.modifiers.length > 0 && (
                     <p className="text-white/45 text-xs mt-0.5">
                       {item.modifiers.map((m) => m.modifier?.name).join(' · ')}

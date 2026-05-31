@@ -1,0 +1,43 @@
+import { create } from 'zustand'
+
+export type NotificationMode = 'normal' | 'alto' | 'cocina_ruidosa'
+
+interface NotificationStore {
+  enabled: boolean
+  mode: NotificationMode
+  permissionStatus: NotificationPermission | 'unsupported' | null
+  _hydrated: boolean
+  enable: () => void
+  setMode: (m: NotificationMode) => void
+  setPermissionStatus: (s: NotificationPermission | 'unsupported') => void
+  hydrate: () => void
+}
+
+export const useNotificationStore = create<NotificationStore>((set, get) => ({
+  enabled: false,
+  mode: 'normal',
+  permissionStatus: null,
+  _hydrated: false,
+
+  enable: () => {
+    set({ enabled: true })
+    localStorage.setItem('gf_sound_enabled', 'true')
+  },
+
+  setMode: (m) => {
+    set({ mode: m })
+    localStorage.setItem('gf_notification_mode', m)
+  },
+
+  setPermissionStatus: (s) => set({ permissionStatus: s }),
+
+  hydrate: () => {
+    if (get()._hydrated) return
+    const enabled = localStorage.getItem('gf_sound_enabled') === 'true'
+    const saved   = localStorage.getItem('gf_notification_mode') as NotificationMode | null
+    const mode: NotificationMode = saved ?? 'normal'
+    const permissionStatus: NotificationPermission | 'unsupported' =
+      'Notification' in window ? Notification.permission : 'unsupported'
+    set({ enabled, mode, permissionStatus, _hydrated: true })
+  },
+}))

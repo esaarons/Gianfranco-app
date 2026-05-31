@@ -123,7 +123,11 @@ export function AreaCardComponent({ card, myAreaType }: AreaCardProps) {
                     <li key={item.id} className="flex items-start gap-2.5">
                       <span className="text-sm font-bold text-[#8A8278] w-6 shrink-0">{item.quantity}×</span>
                       <div className="flex-1 min-w-0">
-                        <span className="text-sm font-semibold text-[#252525]">{item.product?.name}</span>
+                        <span className="text-sm font-semibold text-[#252525]">
+                          {item.product?.name ?? (
+                            <span className="text-[#E08A50] italic">✦ {item.notes ?? 'Pedido libre'}</span>
+                          )}
+                        </span>
                         {item.modifiers && item.modifiers.length > 0 && (
                           <span className="text-xs text-[#8A8278] ml-1.5">
                             {item.modifiers.map((m) => m.modifier?.name).join(' · ')}
@@ -146,7 +150,9 @@ export function AreaCardComponent({ card, myAreaType }: AreaCardProps) {
                   {otherItems.map((item) => (
                     <li key={item.id} className="flex items-center gap-2.5">
                       <span className="text-xs text-[#8A8278] w-6 shrink-0">{item.quantity}×</span>
-                      <span className="text-xs text-[#3A3630]">{item.product?.name}</span>
+                      <span className="text-xs text-[#3A3630]">
+                        {item.product?.name ?? item.notes ?? 'Pedido libre'}
+                      </span>
                     </li>
                   ))}
                 </ul>

@@ -150,6 +150,7 @@ export interface CartItem {
   areaId: string
   areaType: AreaType
   notes?: string
+  guestName?: string    // per-person ordering — UI-only, not persisted
   modifiers: Array<{
     modifierId: string
     name: string

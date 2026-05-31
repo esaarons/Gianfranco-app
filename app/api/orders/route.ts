@@ -105,18 +105,20 @@ export async function POST(req: NextRequest) {
     orderId = newOrder.id
   }
 
+  const FREE_ITEM = 'FREE_ITEM'
+
   // Insert order items one-by-one to guarantee ID alignment with modifier insertion
   const insertedItemIds: string[] = []
   for (const item of items) {
     const { data: dbItem, error: itemError } = await supabase
       .from('order_items')
       .insert({
-        order_id: orderId,
-        product_id: item.productId,
-        quantity: item.quantity,
+        order_id:   orderId,
+        product_id: item.productId === FREE_ITEM ? null : item.productId,
+        quantity:   item.quantity,
         unit_price: item.unitPrice,
-        area_id: item.areaId,
-        notes: item.notes ?? null,
+        area_id:    item.areaId,
+        notes:      item.notes ?? null,
       })
       .select('id')
       .single()
@@ -138,8 +140,9 @@ export async function POST(req: NextRequest) {
     await supabase.from('order_item_modifiers').insert(modifiersToInsert)
   }
 
-  // Create or wake up area cards — group items by area
-  const areaIds = [...new Set(items.map((i) => i.areaId))]
+  // Create or wake up area cards — group items by area.
+  // Free items (no product) are informational and don't generate separate cards.
+  const areaIds = [...new Set(items.filter(i => i.productId !== FREE_ITEM).map((i) => i.areaId))]
 
   for (const areaId of areaIds) {
     const { data: existingCard } = await supabase

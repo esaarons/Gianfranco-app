@@ -161,6 +161,79 @@ export interface CartItem {
   }>
 }
 
+// ─── Shifts & Analytics ───────────────────────────────────────────────────────
+
+export interface ShiftAreaStat {
+  area_id:          string
+  area_name:        string
+  area_type:        string
+  cards:            number
+  avg_reaction_min: number | null
+  avg_prep_min:     number | null
+  avg_total_min:    number | null
+}
+
+export interface ShiftStaffStat {
+  user_id:          string
+  name:             string
+  cards_handled:    number
+  avg_reaction_min: number | null
+}
+
+export interface ShiftHourlyLoad {
+  hour:         number
+  cards:        number
+  avg_prep_min: number | null
+}
+
+export interface ShiftSummary {
+  period:               { from: string; to: string }
+  cards_total:          number
+  orders_closed:        number
+  avg_reaction_time_min: number | null
+  avg_prep_time_min:    number | null
+  avg_total_time_min:   number | null
+  avg_table_cycle_min:  number | null
+  by_area:              ShiftAreaStat[]
+  by_staff:             ShiftStaffStat[]
+  hourly_load:          ShiftHourlyLoad[]
+}
+
+export interface Shift {
+  id:          string
+  started_at:  string
+  ended_at:    string | null
+  started_by:  string | null
+  ended_by:    string | null
+  notes:       string | null
+  summary:     ShiftSummary | null
+  started_by_user?: { id: string; name: string } | null
+  ended_by_user?:   { id: string; name: string } | null
+}
+
+export interface RealtimeAreaStat {
+  area_type:    string
+  pending:      number
+  avg_wait_min: number | null
+}
+
+export interface RealtimeAlert {
+  type:        string
+  area?:       string
+  card_id?:    string
+  table_code?: string
+  minutes:     number
+}
+
+export interface RealtimeKPIs {
+  timestamp:          string
+  tables_occupied:    number
+  tables_total:       number
+  longest_table_min:  number
+  area_stats:         RealtimeAreaStat[]
+  alerts:             RealtimeAlert[]
+}
+
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 export interface AuthSession {

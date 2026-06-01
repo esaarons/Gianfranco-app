@@ -5,24 +5,44 @@ import { createClient } from '@/lib/supabase/server'
 export async function GET() {
   const supabase = await createClient()
 
-  const [areas, recentCards, recentOrders] = await Promise.all([
-    supabase.from('areas').select('id, name, type').order('name'),
-    supabase
-      .from('area_cards')
-      .select('id, area_id, status, created_at, order_id, area:areas(id, name, type)')
-      .order('created_at', { ascending: false })
-      .limit(10),
-    supabase
-      .from('orders')
-      .select('id, type, status, created_at, items:order_items(id, area_id, product_id)')
-      .eq('status', 'open')
-      .order('created_at', { ascending: false })
-      .limit(5),
-  ])
+  // Basic areas + cards check
+  const areas = await supabase.from('areas').select('id, name, type').order('name')
+
+  const simpleCards = await supabase
+    .from('area_cards')
+    .select('id, area_id, status, created_at, order_id, area:areas(id, name, type)')
+    .in('status', ['pending', 'received'])
+    .order('created_at', { ascending: false })
+    .limit(5)
+
+  // Test the FULL select that /api/cards actually uses
+  const fullCardsBar = await supabase
+    .from('area_cards')
+    .select(`
+      *,
+      area:areas(id, name, type),
+      assignee:users(id, name, role),
+      order:orders(
+        id, type, total, created_at, notes,
+        table:tables(id, code, zone),
+        items:order_items(
+          id, quantity, unit_price, notes, guest_label,
+          product:products(id, name),
+          area:areas(id, name, type),
+          modifiers:order_item_modifiers(price, modifier:modifiers(name))
+        )
+      )
+    `)
+    .eq('area_id', 'aaaaaaaa-0000-0000-0000-000000000001')
+    .in('status', ['pending', 'received', 'delivered'])
+    .order('created_at', { ascending: false })
+    .limit(3)
 
   return NextResponse.json({
-    areas:         areas.data    ?? areas.error,
-    recentCards:   recentCards.data  ?? recentCards.error,
-    recentOrders:  recentOrders.data ?? recentOrders.error,
+    areas:          areas.data       ?? { error: areas.error },
+    simpleCards:    simpleCards.data ?? { error: simpleCards.error },
+    fullCardsBar:   fullCardsBar.data   !== null
+                      ? `OK — ${fullCardsBar.data?.length} cards returned`
+                      : { error: fullCardsBar.error },
   })
 }

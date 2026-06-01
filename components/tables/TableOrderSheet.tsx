@@ -199,7 +199,7 @@ export function TableOrderSheet({ table, onClose, onAddMore }: TableOrderSheetPr
 
         {/* Footer */}
         {order && (
-          <div className="shrink-0 px-5 pb-8 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="shrink-0 px-5 pb-safe-8 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
             <div className="flex items-center justify-between mb-4">
               <span className="text-white/40 text-sm font-medium">Total consumido</span>
               <span className="text-white text-2xl font-bold tracking-tight">{formatPrice(total)}</span>

@@ -244,7 +244,7 @@ export function SplitBillSheet({ order, onClose, onCloseTable }: SplitBillSheetP
         </div>
 
         {/* Footer — cobrar persona activa */}
-        <div className="shrink-0 px-5 pb-8 pt-3 space-y-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="shrink-0 px-5 pb-safe-8 pt-3 space-y-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
 
           {allPaid ? (
             <div className="space-y-2">

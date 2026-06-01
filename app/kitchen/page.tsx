@@ -109,7 +109,7 @@ export default function KitchenPage() {
           <p className="text-[#7A756D] text-sm font-medium">{TABS.find((t) => t.key === tab)?.emptyMsg}</p>
         </div>
       ) : (
-        <div className="px-4 pb-8 space-y-2.5">
+        <div className="px-4 pb-safe-8 space-y-2.5">
           {visible.map((card) => (
             <AreaCardComponent key={card.id} card={card} myAreaType="kitchen" />
           ))}

@@ -193,7 +193,7 @@ export function OrderSummary({ onSubmit, submitting, label }: OrderSummaryProps)
       )}
 
       {/* ── CTA ─────────────────────────────────────────────────────────────── */}
-      <div className="px-4 pb-5 pt-1.5 flex items-center gap-3">
+      <div className="px-4 pb-safe-5 pt-1.5 flex items-center gap-3">
         <div className="flex-1 min-w-0">
           <p className="text-xs text-white/30 font-medium truncate">
             {tableCode ? `Mesa ${tableCode}` : 'Para llevar'}

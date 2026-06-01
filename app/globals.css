@@ -70,7 +70,11 @@
 
 /* ─── Base ─────────────────────────────────────────────────────────────────── */
 @layer base {
-  *, *::before, *::after { box-sizing: border-box; }
+  *, *::before, *::after {
+    box-sizing: border-box;
+    /* Remove tap flash on every touchable element */
+    -webkit-tap-highlight-color: transparent;
+  }
 
   html {
     -webkit-font-smoothing: antialiased;
@@ -84,6 +88,8 @@
     font-family: var(--font-sans);
     font-feature-settings: "ss01" on, "ss02" on;
     min-height: 100dvh;
+    /* Prevent iOS bounce on body — sheets handle their own scroll */
+    overscroll-behavior: none;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -91,7 +97,28 @@
     font-weight: 600;
     letter-spacing: -0.02em;
   }
+
+  /* Prevent long-press callout popup on buttons and links */
+  button, a { -webkit-touch-callout: none; }
+
+  /* iOS Safari auto-zooms when input font-size < 16px — prevent it */
+  @supports (-webkit-touch-callout: none) {
+    input, textarea, select { font-size: max(16px, 1em) !important; }
+  }
 }
+
+/* ─── iOS Safe Area utilities ────────────────────────────────────────────────
+   Require viewport-fit=cover in <head> (set in layout.tsx viewport config).
+   Use these on any element that sits at the bottom edge of the screen.      */
+.pb-safe    { padding-bottom: env(safe-area-inset-bottom); }
+.pb-safe-2  { padding-bottom: calc(0.5rem  + env(safe-area-inset-bottom)); }
+.pb-safe-4  { padding-bottom: calc(1rem    + env(safe-area-inset-bottom)); }
+.pb-safe-5  { padding-bottom: calc(1.25rem + env(safe-area-inset-bottom)); }
+.pb-safe-6  { padding-bottom: calc(1.5rem  + env(safe-area-inset-bottom)); }
+.pb-safe-8  { padding-bottom: calc(2rem    + env(safe-area-inset-bottom)); }
+.pb-safe-10 { padding-bottom: calc(2.5rem  + env(safe-area-inset-bottom)); }
+.pt-safe    { padding-top: env(safe-area-inset-top); }
+.mb-safe    { margin-bottom: env(safe-area-inset-bottom); }
 
 /* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
 .scrollbar-hide {

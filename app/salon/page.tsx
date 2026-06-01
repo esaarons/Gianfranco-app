@@ -435,7 +435,7 @@ export default function SalonPage() {
       )}
 
       {/* ── Pedidos activos ── */}
-      <section className="px-4 pb-8">
+      <section className="px-4 pb-safe-8">
         <div className="flex items-center justify-between mb-2.5">
           <p className="section-label">Pedidos activos</p>
           <Link

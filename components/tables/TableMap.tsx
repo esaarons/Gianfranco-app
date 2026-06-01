@@ -302,7 +302,7 @@ export function TableMap() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 px-4 pb-6 space-y-6 overflow-y-auto">
+        <div className="flex-1 px-4 pb-safe-6 space-y-6 overflow-y-auto">
           {ZONES.map((zone) => {
             const zoneTables = getByZone(zone)
             if (!zoneTables.length) return null
@@ -364,7 +364,7 @@ export function TableMap() {
           <div className="fixed inset-0 bg-black/50 z-30 backdrop-blur-[6px]"
                onClick={() => { setSelected(null); setViewOrder(false) }} />
 
-          <div className="fixed bottom-0 left-0 right-0 z-40 glass-sheet rounded-t-[2rem] px-5 pt-2 pb-10 spring-up"
+          <div className="fixed bottom-0 left-0 right-0 z-40 glass-sheet rounded-t-[2rem] px-5 pt-2 pb-safe-10 spring-up"
                style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
 
             <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-6" />

@@ -7,7 +7,7 @@ const secret = new TextEncoder().encode(
 )
 
 // Routes that never require a session
-const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/auth/logout']
+const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/auth/logout', '/api/debug']
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl

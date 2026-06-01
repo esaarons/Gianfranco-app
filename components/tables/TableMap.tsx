@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTables, useUpdateTableStatus, useJoinTables, useSplitTable } from '@/hooks/useTables'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { TableCard, GroupTableCard } from './TableCard'
 import { TableOrderSheet } from './TableOrderSheet'
 import { PickupBanner } from '@/components/notifications/PickupBanner'
@@ -55,6 +55,7 @@ export function TableMap() {
   const splitTable   = useSplitTable()
   const setTable     = useOrderStore((s) => s.setTable)
   const router       = useRouter()
+  const qc           = useQueryClient()
 
   const [selected, setSelected]       = useState<Table | null>(null)
   const [viewOrder, setViewOrder]     = useState(false)
@@ -153,23 +154,50 @@ export function TableMap() {
     }
   }
 
-  function handleCleaning() {
+  async function closeOrderForTable(tableId: string) {
+    const order = openOrders.find(o => o.table_id === tableId)
+    if (!order) return
+    await fetch(`/api/orders/${order.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'closed' }),
+    })
+  }
+
+  async function handleCleaning() {
     if (!selected) return
-    updateStatus.mutate(
-      { id: selected.id, status: 'cleaning' },
-      { onSuccess: () => { toast.success(`Mesa ${selected.code} en limpieza`); setSelected(null) } }
-    )
+    const hasOrder = openOrders.some(o => o.table_id === selected.id)
+    if (hasOrder) {
+      // Closing the order auto-sets the table to cleaning via API
+      await closeOrderForTable(selected.id)
+      qc.invalidateQueries({ queryKey: ['tables'] })
+      qc.invalidateQueries({ queryKey: ['orders', 'open'] })
+      toast.success(`Mesa ${selected.code} cerrada — en limpieza`)
+      setSelected(null)
+    } else {
+      updateStatus.mutate(
+        { id: selected.id, status: 'cleaning' },
+        { onSuccess: () => { toast.success(`Mesa ${selected.code} en limpieza`); setSelected(null) } }
+      )
+    }
   }
 
   async function handleSplitAndClean() {
     if (!selected) return
-    if (!hasChildren) { handleCleaning(); return }
+    if (!hasChildren) { await handleCleaning(); return }
     try {
       await Promise.all(selectedChildren.map(c => splitTable.mutateAsync(c.id)))
-      await Promise.all([
-        updateStatus.mutateAsync({ id: selected.id, status: 'cleaning' }),
-        ...selectedChildren.map(c => updateStatus.mutateAsync({ id: c.id, status: 'cleaning' })),
-      ])
+      const allTableIds = [selected.id, ...selectedChildren.map(c => c.id)]
+      // Close any open orders first (API auto-sets table to cleaning)
+      await Promise.all(allTableIds.map(id => closeOrderForTable(id)))
+      // Set cleaning for tables that had no open order
+      const tablesWithOrders = new Set(openOrders.filter(o => o.table_id).map(o => o.table_id!))
+      const tablesNeedingClean = allTableIds.filter(id => !tablesWithOrders.has(id))
+      if (tablesNeedingClean.length) {
+        await Promise.all(tablesNeedingClean.map(id => updateStatus.mutateAsync({ id, status: 'cleaning' })))
+      }
+      qc.invalidateQueries({ queryKey: ['tables'] })
+      qc.invalidateQueries({ queryKey: ['orders', 'open'] })
       const codes = [selected, ...selectedChildren].map(t => t.code).join(', ')
       toast.success(`Mesas ${codes} separadas — en limpieza`)
       setSelected(null)
@@ -197,6 +225,8 @@ export function TableMap() {
       { onSuccess: () => { toast.success(`Mesa ${selected.code} lista`); setSelected(null) } }
     )
   }
+
+  const selectedHasOrder = selected ? openOrders.some(o => o.table_id === selected.id) : false
 
   const groupLabel = hasChildren
     ? `Mesa ${[selected!, ...selectedChildren].map(t => t.code).join(' + ')}`
@@ -399,7 +429,9 @@ export function TableMap() {
                     className="w-full glass border-0 text-white/40 font-medium py-3 rounded-2xl text-sm press-scale">
                     {hasChildren
                       ? `Clientes se van — Separar y limpiar`
-                      : `Clientes se van — Limpieza`}
+                      : selectedHasOrder
+                        ? `Clientes se van — Cerrar mesa`
+                        : `Clientes se van — Limpieza`}
                   </button>
                 </>
               )}

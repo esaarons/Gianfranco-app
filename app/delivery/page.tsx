@@ -157,8 +157,8 @@ export default function DeliveryPage() {
         </div>
       ) : (
         <div className="px-4 pb-8 space-y-2.5">
-          {pending.map((card)  => <AreaCardComponent key={card.id} card={card} myAreaType="bar" />)}
-          {received.map((card) => <AreaCardComponent key={card.id} card={card} myAreaType="bar" />)}
+          {pending.map((card)  => <AreaCardComponent key={card.id} card={card} myAreaType="delivery" />)}
+          {received.map((card) => <AreaCardComponent key={card.id} card={card} myAreaType="delivery" />)}
 
           {delivered.length > 0 && (
             <div className="pt-4">
@@ -167,7 +167,7 @@ export default function DeliveryPage() {
                 <div className="flex-1 h-px bg-[#E8E4DC]" />
                 <span className="bg-white border border-[#E7E1D8] text-[#A9A39C] text-[10px] px-2 py-0.5 rounded-full">{delivered.length}</span>
               </div>
-              {delivered.slice(0, 5).map((card) => <AreaCardComponent key={card.id} card={card} myAreaType="bar" />)}
+              {delivered.slice(0, 5).map((card) => <AreaCardComponent key={card.id} card={card} myAreaType="delivery" />)}
             </div>
           )}
         </div>

@@ -45,8 +45,6 @@ export async function GET(req: NextRequest) {
       .filter((a: { id: string; type: string }) => candidates.includes(a.type))
       .map((a: { id: string; type: string }) => a.id)
 
-    console.log(`[cards] areaType=${areaType} candidates=${JSON.stringify(candidates)} matched=${JSON.stringify(matchedIds)} allAreas=${JSON.stringify(allAreas)}`)
-
     if (!matchedIds.length) return NextResponse.json([])
     query = query.in('area_id', matchedIds)
   } else if (areaId) {

@@ -197,6 +197,7 @@ export default function AdminPage() {
   const occupiedTables  = tables.filter(t => t.status === 'occupied').length
   const freeTables      = tables.filter(t => t.status === 'free').length
   const cleaningTables  = tables.filter(t => t.status === 'cleaning').length
+  const salonPending    = openOrders.filter(o => o.table != null).length
   const barPending      = barCards.filter(c => c.status === 'pending').length
   const barReceived     = barCards.filter(c => c.status === 'received').length
   const kitchenPending  = kitchenCards.filter(c => c.status === 'pending').length
@@ -302,8 +303,8 @@ export default function AdminPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
               <AreaCard
                 label="Salón" href="/tables" emoji="🗺️"
-                pending={0} received={occupiedTables} avgWait={null}
-                accent="#6D8A5C" bg="#EEF3EA" statusOk
+                pending={salonPending} received={occupiedTables} avgWait={null}
+                accent="#6D8A5C" bg="#EEF3EA" statusOk={salonPending === 0}
               />
               <AreaCard
                 label="Barra" href="/bar" emoji="☕"

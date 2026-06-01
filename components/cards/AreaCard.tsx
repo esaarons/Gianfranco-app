@@ -7,7 +7,7 @@ import type { AreaCard, OrderItem } from '@/types'
 
 interface AreaCardProps {
   card: AreaCard
-  myAreaType: 'bar' | 'kitchen'
+  myAreaType: 'bar' | 'kitchen' | 'delivery'
 }
 
 const STATUS_STYLES = {
@@ -122,8 +122,8 @@ export function AreaCardComponent({ card, myAreaType }: AreaCardProps) {
 
   const myItems    = order?.items?.filter((i) => i.area?.type === myAreaType) ?? []
   const otherItems = order?.items?.filter((i) => i.area?.type !== myAreaType) ?? []
-  const myLabel    = myAreaType === 'bar' ? 'Tu área · Barra' : 'Tu área · Cocina'
-  const otherLabel = myAreaType === 'bar' ? 'Cocina' : 'Barra'
+  const myLabel    = myAreaType === 'bar' ? 'Tu área · Barra' : myAreaType === 'kitchen' ? 'Tu área · Cocina' : 'Tu área'
+  const otherLabel = myAreaType === 'bar' ? 'Cocina' : myAreaType === 'kitchen' ? 'Barra' : ''
 
   function handle(status: 'received' | 'delivered') {
     updateStatus.mutate(

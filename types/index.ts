@@ -57,6 +57,8 @@ export interface Category {
   active: boolean
 }
 
+export type StockStatus = 'available' | 'low' | 'out'
+
 export interface Product {
   id: string
   name: string
@@ -69,6 +71,7 @@ export interface Product {
   sort_order: number
   image_url?: string | null
   product_type?: 'standard' | 'breakfast' | 'ice_cream'
+  stock_status?: StockStatus
   category?: Category
   primary_area?: Area
 }
@@ -108,6 +111,7 @@ export interface OrderItem {
   unit_price: number
   area_id: string
   notes?: string
+  guest_label?: string | null
   product?: Product
   area?: Area
   modifiers?: OrderItemModifier[]

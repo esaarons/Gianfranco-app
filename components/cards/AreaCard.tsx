@@ -1,10 +1,9 @@
 'use client'
 
 import { useUpdateCardStatus } from '@/hooks/useCards'
-import { formatTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import type { AreaCard } from '@/types'
+import type { AreaCard, OrderItem } from '@/types'
 
 interface AreaCardProps {
   card: AreaCard
@@ -41,12 +40,75 @@ const STATUS_STYLES = {
   },
 }
 
-// Elapsed time since card was created
 function elapsed(ts: string): string {
   const diff = Math.floor((Date.now() - new Date(ts).getTime()) / 60000)
   if (diff < 1)  return 'ahora'
   if (diff < 60) return `${diff}m`
   return `${Math.floor(diff / 60)}h ${diff % 60}m`
+}
+
+// Groups items by guest_label. Items without label go under null key.
+function groupByGuest(items: OrderItem[]): Map<string | null, OrderItem[]> {
+  const map = new Map<string | null, OrderItem[]>()
+  for (const item of items) {
+    const key = item.guest_label?.trim() || null
+    const list = map.get(key) ?? []
+    list.push(item)
+    map.set(key, list)
+  }
+  return map
+}
+
+function ItemRow({ item }: { item: OrderItem }) {
+  return (
+    <li className="flex items-start gap-2.5">
+      <span className="text-sm font-bold text-[#8A8278] w-6 shrink-0">{item.quantity}×</span>
+      <div className="flex-1 min-w-0">
+        <span className="text-sm font-semibold text-[#252525]">
+          {item.product?.name ?? (
+            <span className="text-[#E08A50] italic">✦ {item.notes ?? 'Pedido libre'}</span>
+          )}
+        </span>
+        {item.modifiers && item.modifiers.length > 0 && (
+          <span className="text-xs text-[#8A8278] ml-1.5">
+            {item.modifiers.map((m) => m.modifier?.name).join(' · ')}
+          </span>
+        )}
+        {item.notes && item.product && (
+          <p className="text-xs text-[#E08A50] italic mt-0.5">"{item.notes}"</p>
+        )}
+      </div>
+    </li>
+  )
+}
+
+function ItemList({ items }: { items: OrderItem[] }) {
+  const groups = groupByGuest(items)
+  const hasGuests = groups.size > 1 || !groups.has(null)
+
+  if (!hasGuests) {
+    return (
+      <ul className="space-y-2">
+        {items.map((item) => <ItemRow key={item.id} item={item} />)}
+      </ul>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {Array.from(groups.entries()).map(([guest, gItems]) => (
+        <div key={guest ?? '__none__'}>
+          <p className="text-[10px] font-bold text-[#8A8278]/70 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+            <span className="w-3.5 h-3.5 rounded-full bg-[#F0EDE8] flex items-center justify-center text-[8px]">👤</span>
+            {guest ?? 'Sin asignar'}
+          </p>
+          <ul className="space-y-1.5 pl-5">
+            {gItems.map((item) => <ItemRow key={item.id} item={item} />)}
+          </ul>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export function AreaCardComponent({ card, myAreaType }: AreaCardProps) {
@@ -118,28 +180,7 @@ export function AreaCardComponent({ card, myAreaType }: AreaCardProps) {
             {myItems.length > 0 && (
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#8A8278] mb-2">{myLabel}</p>
-                <ul className="space-y-2">
-                  {myItems.map((item) => (
-                    <li key={item.id} className="flex items-start gap-2.5">
-                      <span className="text-sm font-bold text-[#8A8278] w-6 shrink-0">{item.quantity}×</span>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-sm font-semibold text-[#252525]">
-                          {item.product?.name ?? (
-                            <span className="text-[#E08A50] italic">✦ {item.notes ?? 'Pedido libre'}</span>
-                          )}
-                        </span>
-                        {item.modifiers && item.modifiers.length > 0 && (
-                          <span className="text-xs text-[#8A8278] ml-1.5">
-                            {item.modifiers.map((m) => m.modifier?.name).join(' · ')}
-                          </span>
-                        )}
-                        {item.notes && (
-                          <p className="text-xs text-[#E08A50] italic mt-0.5">"{item.notes}"</p>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <ItemList items={myItems} />
               </div>
             )}
 

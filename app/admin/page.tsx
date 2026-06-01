@@ -3,11 +3,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState, useEffect } from 'react'
 import { useTables } from '@/hooks/useTables'
-import { useAreaCards } from '@/hooks/useCards'
-import { AREA_IDS, ZONE_LABELS } from '@/lib/constants'
+import { useAreaCardsByType } from '@/hooks/useCards'
+import { ZONE_LABELS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/utils'
 import Link from 'next/link'
+import { ReservationBanner } from '@/components/notifications/ReservationBanner'
 import type { Table, Order } from '@/types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -160,8 +161,8 @@ const TABLE_DOT: Record<string, { dot: string; chip: string }> = {
 
 export default function AdminPage() {
   const { data: tables       = [] } = useTables()
-  const { data: barCards     = [] } = useAreaCards(AREA_IDS.BAR)
-  const { data: kitchenCards = [] } = useAreaCards(AREA_IDS.KITCHEN)
+  const { data: barCards     = [] } = useAreaCardsByType('bar')
+  const { data: kitchenCards = [] } = useAreaCardsByType('kitchen')
 
   const { data: openOrders = [] } = useQuery<Order[]>({
     queryKey: ['orders', 'open'],
@@ -321,6 +322,9 @@ export default function AdminPage() {
               />
             </div>
           </section>
+
+          {/* Upcoming reservations */}
+          <ReservationBanner />
 
           {/* Alerts */}
           {alerts.length > 0 && (

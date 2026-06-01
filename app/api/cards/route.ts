@@ -4,8 +4,20 @@ import { createClient } from '@/lib/supabase/server'
 export async function GET(req: NextRequest) {
   const supabase = await createClient()
   const { searchParams } = new URL(req.url)
-  const areaId = searchParams.get('areaId')
-  const status = searchParams.get('status')
+  const areaId   = searchParams.get('areaId')
+  const areaType = searchParams.get('areaType')
+  const status   = searchParams.get('status')
+
+  // If areaType provided, resolve area IDs dynamically — avoids hardcoded UUID mismatch
+  let resolvedAreaIds: string[] | null = null
+  if (areaType && !areaId) {
+    const { data: areas } = await supabase
+      .from('areas')
+      .select('id')
+      .eq('type', areaType)
+    resolvedAreaIds = areas?.map((a: { id: string }) => a.id) ?? []
+    if (resolvedAreaIds.length === 0) return NextResponse.json([])
+  }
 
   let query = supabase
     .from('area_cards')
@@ -17,7 +29,7 @@ export async function GET(req: NextRequest) {
         id, type, total, created_at, notes,
         table:tables(id, code, zone),
         items:order_items(
-          id, quantity, unit_price, notes,
+          id, quantity, unit_price, notes, guest_label,
           product:products(id, name),
           area:areas(id, name, type),
           modifiers:order_item_modifiers(price, modifier:modifiers(name))
@@ -26,9 +38,11 @@ export async function GET(req: NextRequest) {
     `)
     .order('created_at', { ascending: false })
 
-  if (areaId) query = query.eq('area_id', areaId)
+  if (resolvedAreaIds)      query = query.in('area_id', resolvedAreaIds)
+  else if (areaId)          query = query.eq('area_id', areaId)
+
   if (status) query = query.eq('status', status)
-  else query = query.in('status', ['pending', 'received'])
+  else        query = query.in('status', ['pending', 'received'])
 
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

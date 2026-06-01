@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { useProducts } from '@/hooks/useProducts'
+import { useProducts, useProductsRealtime } from '@/hooks/useProducts'
 import { useSetting } from '@/hooks/useSetting'
 import { formatPrice } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import type { Product } from '@/types'
 
 function isBreakfastAvailable(cutoff: string | null | undefined): boolean {
@@ -74,6 +75,19 @@ export function ProductSearch({ onSelect }: ProductSearchProps) {
   const [query, setQuery]                = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const chipRef = useRef<HTMLDivElement>(null)
+
+  useProductsRealtime()
+
+  function handleSelect(product: Product) {
+    if (product.stock_status === 'out') {
+      toast.error(`Sin stock — ${product.name} (86)`, { description: 'No disponible por el momento' })
+      return
+    }
+    if (product.stock_status === 'low') {
+      toast.warning(`Poco stock — ${product.name} (85)`)
+    }
+    onSelect(product)
+  }
 
   const breakfastAvailable = isBreakfastAvailable(breakfastCutoff)
 
@@ -147,7 +161,7 @@ export function ProductSearch({ onSelect }: ProductSearchProps) {
           <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1">
             {favorites.map((p) => (
               <div key={p.id} className="w-32 shrink-0">
-                <ProductCard product={p} onSelect={onSelect} isFav />
+                <ProductCard product={p} onSelect={handleSelect} isFav />
               </div>
             ))}
             <div className="w-1 shrink-0" />
@@ -201,7 +215,7 @@ export function ProductSearch({ onSelect }: ProductSearchProps) {
           </div>
         ) : isSearching ? (
           <div className="space-y-2">
-            {filtered.map((p) => <ProductRow key={p.id} product={p} onSelect={onSelect} />)}
+            {filtered.map((p) => <ProductRow key={p.id} product={p} onSelect={handleSelect} />)}
           </div>
         ) : effectiveCategory === 'Desayunos' && !breakfastAvailable ? (
           <BreakfastUnavailable cutoff={breakfastCutoff ?? '11:30'} />
@@ -209,7 +223,7 @@ export function ProductSearch({ onSelect }: ProductSearchProps) {
           <CategoryGrid
             products={filtered}
             effectiveCategory={effectiveCategory}
-            onSelect={onSelect}
+            onSelect={handleSelect}
           />
         )}
       </div>
@@ -277,17 +291,30 @@ function ProductCard({ product, onSelect, isFav }: {
   onSelect: (p: Product) => void
   isFav?: boolean
 }) {
-  const cfg = CAT_CONFIG[product.category?.name ?? ''] ?? DEFAULT_CFG
+  const cfg    = CAT_CONFIG[product.category?.name ?? ''] ?? DEFAULT_CFG
+  const isOut  = product.stock_status === 'out'
+  const isLow  = product.stock_status === 'low'
 
   return (
     <button
       onClick={() => onSelect(product)}
-      className="relative w-full bg-[#0E2A2E] border border-white/8 rounded-2xl overflow-hidden text-left press-scale transition-all group"
+      className={cn(
+        'relative w-full bg-[#0E2A2E] border border-white/8 rounded-2xl overflow-hidden text-left press-scale transition-all group',
+        isOut && 'opacity-50'
+      )}
       style={isFav || product.is_favorite
         ? { boxShadow: '0 0 24px rgba(234,217,177,0.12), 0 0 1px rgba(234,217,177,0.3)', borderColor: 'rgba(234,217,177,0.2)' }
         : undefined
       }
     >
+      {/* Stock badge */}
+      {isOut && (
+        <span className="absolute top-2 left-2.5 z-20 text-[9px] font-bold bg-red-500/25 text-red-300 px-1.5 py-0.5 rounded-full border border-red-400/30 leading-tight">86</span>
+      )}
+      {isLow && (
+        <span className="absolute top-2 left-2.5 z-20 text-[9px] font-bold bg-amber-400/20 text-amber-300 px-1.5 py-0.5 rounded-full border border-amber-400/30 leading-tight">85</span>
+      )}
+
       {/* Icon area */}
       <div
         className="w-full flex items-center justify-center pt-5 pb-4 relative overflow-hidden"
@@ -307,17 +334,22 @@ function ProductCard({ product, onSelect, isFav }: {
         {(isFav || product.is_favorite) && (
           <span className="absolute top-2 right-2.5 text-[11px] leading-none z-10">⭐</span>
         )}
+        {isOut && (
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            <span className="text-[10px] font-bold text-white/50 bg-black/40 px-2 py-1 rounded-lg tracking-wide">SIN STOCK</span>
+          </div>
+        )}
       </div>
 
       {/* Info */}
       <div className="px-3 pb-3.5 pt-1">
-        <p className="text-white/90 text-[11px] font-semibold line-clamp-2 min-h-[2.4rem] leading-snug">
+        <p className={cn('text-[11px] font-semibold line-clamp-2 min-h-[2.4rem] leading-snug', isOut ? 'text-white/40' : 'text-white/90')}>
           {product.name}
         </p>
         <div className="flex items-center justify-between mt-2">
-          <span className="text-white text-sm font-bold">{formatPrice(product.price)}</span>
+          <span className={cn('text-sm font-bold', isOut ? 'text-white/30' : 'text-white')}>{formatPrice(product.price)}</span>
           <div
-            className="w-7 h-7 rounded-full flex items-center justify-center text-lg font-bold add-btn"
+            className={cn('w-7 h-7 rounded-full flex items-center justify-center text-lg font-bold add-btn', isOut && 'opacity-30')}
             style={{ background: cfg.chipColor, color: '#fff' }}
           >
             +
@@ -347,11 +379,13 @@ function BreakfastUnavailable({ cutoff }: { cutoff: string }) {
 
 // ── Search result row ─────────────────────────────────────────────────────────
 function ProductRow({ product, onSelect }: { product: Product; onSelect: (p: Product) => void }) {
-  const cfg = CAT_CONFIG[product.category?.name ?? ''] ?? DEFAULT_CFG
+  const cfg   = CAT_CONFIG[product.category?.name ?? ''] ?? DEFAULT_CFG
+  const isOut = product.stock_status === 'out'
+  const isLow = product.stock_status === 'low'
   return (
     <button
       onClick={() => onSelect(product)}
-      className="w-full flex items-center gap-3 bg-[#0E2A2E] border border-white/8 rounded-2xl px-3.5 py-3 press-scale text-left transition-all hover:border-white/15 group"
+      className={cn('w-full flex items-center gap-3 bg-[#0E2A2E] border border-white/8 rounded-2xl px-3.5 py-3 press-scale text-left transition-all hover:border-white/15 group', isOut && 'opacity-50')}
     >
       <div
         className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0"
@@ -360,13 +394,17 @@ function ProductRow({ product, onSelect }: { product: Product; onSelect: (p: Pro
         {cfg.icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-white/90 text-sm font-semibold leading-snug line-clamp-1">{product.name}</p>
-        <p className="text-white/30 text-xs mt-0.5">{product.category?.name}</p>
+        <p className={cn('text-sm font-semibold leading-snug line-clamp-1', isOut ? 'text-white/40' : 'text-white/90')}>{product.name}</p>
+        <div className="flex items-center gap-2 mt-0.5">
+          <p className="text-white/30 text-xs">{product.category?.name}</p>
+          {isOut && <span className="text-[9px] font-bold bg-red-500/20 text-red-300 px-1.5 py-0.5 rounded-full border border-red-400/25">86 · Sin stock</span>}
+          {isLow && <span className="text-[9px] font-bold bg-amber-400/15 text-amber-300 px-1.5 py-0.5 rounded-full border border-amber-400/25">85 · Poco stock</span>}
+        </div>
       </div>
       <div className="flex flex-col items-end gap-1.5 shrink-0">
-        <span className="text-white text-sm font-bold">{formatPrice(product.price)}</span>
+        <span className={cn('text-sm font-bold', isOut ? 'text-white/30' : 'text-white')}>{formatPrice(product.price)}</span>
         <div
-          className="w-7 h-7 rounded-full flex items-center justify-center text-base font-bold add-btn"
+          className={cn('w-7 h-7 rounded-full flex items-center justify-center text-base font-bold add-btn', isOut && 'opacity-30')}
           style={{ background: cfg.chipColor, color: '#fff' }}
         >+</div>
       </div>

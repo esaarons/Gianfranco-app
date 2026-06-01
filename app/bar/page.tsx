@@ -1,14 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { useAreaCards } from '@/hooks/useCards'
+import { useAreaCardsByType } from '@/hooks/useCards'
 import { useUnattendedAlerts } from '@/hooks/useUnattendedAlerts'
+import { useProducts } from '@/hooks/useProducts'
 import { AreaCardComponent } from '@/components/cards/AreaCard'
+import { StockPanel } from '@/components/cards/StockPanel'
 import { SoundEnabler } from '@/components/notifications/SoundEnabler'
-import { AREA_IDS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
-
-const BAR_AREA_ID = AREA_IDS.BAR
 
 type Tab = 'pending' | 'received' | 'delivered'
 
@@ -19,9 +18,14 @@ const TABS: { key: Tab; label: string; emptyMsg: string }[] = [
 ]
 
 export default function BarPage() {
-  const { data: cards = [], isLoading } = useAreaCards(BAR_AREA_ID)
+  const { data: cards = [], isLoading } = useAreaCardsByType('bar')
+  const { data: products = [] }         = useProducts()
   useUnattendedAlerts(cards, 'Barra')
-  const [tab, setTab] = useState<Tab>('pending')
+  const [tab, setTab]           = useState<Tab>('pending')
+  const [stockOpen, setStockOpen] = useState(false)
+
+  const barProducts   = products.filter((p) => p.active && p.primary_area?.type === 'bar')
+  const stockAlertCount = barProducts.filter((p) => p.stock_status === 'out' || p.stock_status === 'low').length
 
   const pending   = cards.filter((c) => c.status === 'pending')
   const received  = cards.filter((c) => c.status === 'received')
@@ -39,12 +43,28 @@ export default function BarPage() {
         <p className="section-label mb-1">Estación</p>
         <div className="flex items-center justify-between">
           <h1 className="text-[#1F1F1F] text-2xl font-bold tracking-tight">Barra</h1>
-          {pending.length > 0 && (
-            <span className="flex items-center gap-1.5 bg-[#C98933]/10 text-[#9A6520] text-xs font-bold px-3 py-1.5 rounded-full border border-[#C98933]/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#C98933] dot-pulse-amber" />
-              {pending.length} nuevo{pending.length !== 1 ? 's' : ''}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {pending.length > 0 && (
+              <span className="flex items-center gap-1.5 bg-[#C98933]/10 text-[#9A6520] text-xs font-bold px-3 py-1.5 rounded-full border border-[#C98933]/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#C98933] dot-pulse-amber" />
+                {pending.length} nuevo{pending.length !== 1 ? 's' : ''}
+              </span>
+            )}
+            <button
+              onClick={() => setStockOpen(true)}
+              className={cn(
+                'flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border transition-all press-scale',
+                stockAlertCount > 0
+                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                  : 'bg-white text-[#7A756D] border-[#E7E1D8]'
+              )}
+            >
+              Stock
+              {stockAlertCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-amber-400 text-white text-[9px] font-bold flex items-center justify-center">{stockAlertCount}</span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -95,6 +115,8 @@ export default function BarPage() {
           ))}
         </div>
       )}
+
+      {stockOpen && <StockPanel areaType="bar" onClose={() => setStockOpen(false)} />}
     </div>
   )
 }

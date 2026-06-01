@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { TableCard, GroupTableCard } from './TableCard'
 import { TableOrderSheet } from './TableOrderSheet'
 import { PickupBanner } from '@/components/notifications/PickupBanner'
+import { ReservationBanner } from '@/components/notifications/ReservationBanner'
 import { ZONE_LABELS } from '@/lib/constants'
 import { useOrderStore } from '@/store/orderStore'
 import { formatPrice, cn } from '@/lib/utils'
@@ -22,27 +23,28 @@ type RenderGroup =
   | { type: 'group'; parent: Table; children: Table[] }
 
 function getRenderGroups(zoneTables: Table[]): RenderGroup[] {
-  const rendered = new Set<string>()
-  const groups: RenderGroup[] = []
+  // Pass 1: build parent→children map and collect all child IDs
+  const childrenOf = new Map<string, Table[]>()
+  const childIds   = new Set<string>()
 
-  for (const table of zoneTables) {
-    if (rendered.has(table.id)) continue
-
-    const children = zoneTables.filter(t =>
-      t.parent_table_id === table.id &&
-      !rendered.has(t.id)
-    )
-
-    if (children.length > 0) {
-      groups.push({ type: 'group', parent: table, children })
-      rendered.add(table.id)
-      children.forEach(c => rendered.add(c.id))
-    } else {
-      groups.push({ type: 'single', table })
-      rendered.add(table.id)
+  for (const t of zoneTables) {
+    if (t.parent_table_id) {
+      childIds.add(t.id)
+      const list = childrenOf.get(t.parent_table_id) ?? []
+      list.push(t)
+      childrenOf.set(t.parent_table_id, list)
     }
   }
-  return groups
+
+  // Pass 2: render only root tables (not someone's child); attach their children
+  return zoneTables
+    .filter(t => !childIds.has(t.id))
+    .map(t => {
+      const children = childrenOf.get(t.id) ?? []
+      return children.length > 0
+        ? { type: 'group' as const, parent: t, children }
+        : { type: 'single' as const, table: t }
+    })
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -237,6 +239,9 @@ export function TableMap() {
           )}
         </div>
       </div>
+
+      {/* ── Upcoming reservations banner ── */}
+      <ReservationBanner />
 
       {/* ── Pickup ready banner ── */}
       <PickupBanner />

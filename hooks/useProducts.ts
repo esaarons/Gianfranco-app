@@ -1,9 +1,9 @@
 'use client'
 
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import type { Product, Modifier, Order } from '@/types'
+import type { Product, Modifier, Order, StockStatus } from '@/types'
 
 export function useProducts() {
   return useQuery<Product[]>({
@@ -13,7 +13,50 @@ export function useProducts() {
       if (!res.ok) throw new Error('Error cargando productos')
       return res.json()
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 2,
+  })
+}
+
+export function useProductsRealtime() {
+  const queryClient = useQueryClient()
+  useEffect(() => {
+    const supabase = createClient()
+    const channel = supabase
+      .channel('products-stock-realtime')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'products' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['products'] })
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [queryClient])
+}
+
+export function useUpdateProductStock() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, stock_status }: { id: string; stock_status: StockStatus }) => {
+      const res = await fetch(`/api/products/${id}/stock`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stock_status }),
+      })
+      if (!res.ok) throw new Error('Error actualizando stock')
+      return res.json()
+    },
+    onMutate: async ({ id, stock_status }) => {
+      await queryClient.cancelQueries({ queryKey: ['products'] })
+      const prev = queryClient.getQueryData<Product[]>(['products'])
+      queryClient.setQueryData<Product[]>(['products'], (old) =>
+        old?.map((p) => p.id === id ? { ...p, stock_status } : p) ?? []
+      )
+      return { prev }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(['products'], ctx.prev)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+    },
   })
 }
 

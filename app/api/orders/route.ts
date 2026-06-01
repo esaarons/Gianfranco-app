@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
       *,
       table:tables(id, code, zone),
       items:order_items(
-        *,
+        *, guest_label,
         product:products(id, name, price),
         area:areas(id, name, type),
         modifiers:order_item_modifiers(*, modifier:modifiers(id, name, price))
@@ -113,12 +113,13 @@ export async function POST(req: NextRequest) {
     const { data: dbItem, error: itemError } = await supabase
       .from('order_items')
       .insert({
-        order_id:   orderId,
-        product_id: item.productId === FREE_ITEM ? null : item.productId,
-        quantity:   item.quantity,
-        unit_price: item.unitPrice,
-        area_id:    item.areaId,
-        notes:      item.notes ?? null,
+        order_id:    orderId,
+        product_id:  item.productId === FREE_ITEM ? null : item.productId,
+        quantity:    item.quantity,
+        unit_price:  item.unitPrice,
+        area_id:     item.areaId,
+        notes:       item.notes      ?? null,
+        guest_label: item.guestName  ?? null,
       })
       .select('id')
       .single()
@@ -126,6 +127,8 @@ export async function POST(req: NextRequest) {
     if (itemError) return NextResponse.json({ error: itemError.message }, { status: 500 })
     insertedItemIds.push(dbItem.id)
   }
+
+
 
   // Insert modifiers — IDs are now correctly aligned with items
   const modifiersToInsert = insertedItemIds.flatMap((orderItemId, idx) =>

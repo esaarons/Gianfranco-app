@@ -21,7 +21,7 @@ export async function GET() {
     .select(`
       *,
       area:areas(id, name, type),
-      assignee:users(id, name, role),
+      assignee:users!area_cards_assigned_to_fkey(id, name, role),
       order:orders(
         id, type, total, created_at, notes,
         table:tables(id, code, zone),

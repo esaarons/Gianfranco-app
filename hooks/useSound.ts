@@ -49,6 +49,43 @@ export const MODE_CFG = {
 
 // ── Low-level helpers ──────────────────────────────────────────────────────────
 
+// Plays a synthesized tone without any audio file. Works even before an audio
+// file has been unlocked on iOS (as long as AudioContext was resumed by a gesture).
+export type ToneLevel = 'info' | 'warning' | 'critical'
+
+const TONE_CFG: Record<ToneLevel, { freq: number; pulses: number; duration: number; gap: number; gain: number }> = {
+  info:     { freq: 880,  pulses: 1, duration: 120, gap: 0,   gain: 0.35 },
+  warning:  { freq: 880,  pulses: 2, duration: 140, gap: 180, gain: 0.60 },
+  critical: { freq: 1046, pulses: 3, duration: 130, gap: 140, gain: 0.90 },
+}
+
+let _audioCtx: AudioContext | null = null
+function getAudioCtx(): AudioContext | null {
+  if (typeof window === 'undefined') return null
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+  if (_audioCtx.state === 'suspended') _audioCtx.resume().catch(() => {})
+  return _audioCtx
+}
+
+export function playTone(level: ToneLevel) {
+  const ctx = getAudioCtx()
+  if (!ctx) return
+  const cfg = TONE_CFG[level]
+  for (let i = 0; i < cfg.pulses; i++) {
+    const startAt = ctx.currentTime + i * (cfg.duration + cfg.gap) / 1000
+    const osc  = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.type      = 'sine'
+    osc.frequency.setValueAtTime(cfg.freq, startAt)
+    gain.gain.setValueAtTime(cfg.gain,   startAt)
+    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + cfg.duration / 1000)
+    osc.start(startAt)
+    osc.stop(startAt + cfg.duration / 1000 + 0.01)
+  }
+}
+
 function vibrate(pattern: number[]) {
   if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
     navigator.vibrate(pattern)
@@ -96,8 +133,8 @@ function playChimes(volume: number, count: number, gapMs: number) {
 
 export function useSound() {
   const {
-    enabled, mode, permissionStatus,
-    enable, setMode, setPermissionStatus, hydrate,
+    enabled, onShift, mode, permissionStatus,
+    enable, setOnShift, setMode, setPermissionStatus, hydrate,
   } = useNotificationStore()
 
   // Hydrate once from localStorage on first client render
@@ -117,18 +154,20 @@ export function useSound() {
   }
 
   const playAlert = useCallback(
-    (speechText: string, notifTitle = 'Nuevo pedido') => {
+    (speechText: string, notifTitle = 'Nuevo pedido', level: ToneLevel = 'info') => {
       if (!enabled) return
+      if (!onShift) return   // user is off-shift — suppress all alerts
       const cfg = MODE_CFG[mode]
       vibrate(cfg.vibratePattern)
       showBrowserNotification(notifTitle, speechText)
+      playTone(level)
       playChimes(cfg.volume, cfg.chimes, cfg.chimeGap)
       setTimeout(() => speak(speechText, cfg.speechRate), cfg.speechDelay)
     },
-    [enabled, mode]
+    [enabled, onShift, mode]
   )
 
-  return { enabled, mode, permissionStatus, enableSound, setMode, playAlert }
+  return { enabled, onShift, mode, permissionStatus, enableSound, setOnShift, setMode, playAlert }
 }
 
 // ── Utility exported for hooks that call playAlert ─────────────────────────────

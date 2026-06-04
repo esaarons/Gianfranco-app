@@ -8,6 +8,34 @@ import { useSound } from '@/hooks/useSound'
 import { AREA_IDS } from '@/lib/constants'
 import type { AreaCard } from '@/types'
 
+function buildToastText(card: AreaCard): { title: string; description: string; speech: string } {
+  const isBar    = card.area_id === AREA_IDS.BAR
+  const areaName = card.area?.name ?? (isBar ? 'Barra' : 'Cocina')
+  const areaIcon = isBar ? '☕' : '🍳'
+
+  const order     = card.order
+  const tableCode = order?.table?.code ?? null
+  const isTakeaway = order?.type === 'takeaway'
+
+  const areaType  = isBar ? 'bar' : 'kitchen'
+  const areaItems = order?.items?.filter(i => i.area?.type === areaType) ?? []
+  const itemsText = areaItems
+    .map(i => `${i.quantity > 1 ? i.quantity + '× ' : ''}${i.product?.name ?? i.notes ?? ''}`)
+    .filter(Boolean)
+    .join(', ')
+
+  const location = tableCode ? `Mesa ${tableCode}` : isTakeaway ? 'Para llevar' : ''
+  const title    = `${areaIcon} ${areaName}${location ? ` · ${location}` : ''}`
+  const description = itemsText || 'Pedido listo para recoger'
+
+  // Siri-readable speech text
+  const speech = location
+    ? `${areaName} listo. ${location}. ${itemsText}`
+    : `${areaName} listo. ${itemsText}`
+
+  return { title, description, speech }
+}
+
 export function usePickupCards() {
   const queryClient   = useQueryClient()
   const { playAlert } = useSound()
@@ -19,31 +47,40 @@ export function usePickupCards() {
       const res = await fetch('/api/cards/ready')
       if (!res.ok) return []
       const data: AreaCard[] = await res.json()
-      // Seed known IDs on load — no toast for already-delivered items
+      // Seed known IDs on load — don't toast for already-delivered items
       data.forEach((c) => notifiedIds.current.add(c.id))
       return data
     },
-    staleTime: 30000,
+    staleTime: 30_000,
+    refetchInterval: 30_000,
   })
 
   useEffect(() => {
     const supabase = createClient()
 
-    function handleUpdate(payload: { new: Record<string, unknown> }) {
-      const card = payload.new as unknown as AreaCard
-      if (card.status !== 'delivered') return
-      if (notifiedIds.current.has(card.id)) return
+    async function handleUpdate(payload: { new: Record<string, unknown> }) {
+      const partialCard = payload.new as unknown as AreaCard
+      if (partialCard.status !== 'delivered') return
+      if (notifiedIds.current.has(partialCard.id)) return
+      notifiedIds.current.add(partialCard.id)
 
-      notifiedIds.current.add(card.id)
+      // Invalidate the list immediately (card will appear in banner)
       queryClient.invalidateQueries({ queryKey: ['pickup-cards'] })
 
-      const isBar     = card.area_id === AREA_IDS.BAR
-      const areaName  = isBar ? 'Barra' : 'Cocina'
-      const areaIcon  = isBar ? '☕' : '🍳'
+      // Fetch full card with order/table join for the rich toast
+      let card = partialCard
+      try {
+        const res = await fetch(`/api/cards/${partialCard.id}`)
+        if (res.ok) card = await res.json()
+      } catch {
+        // fallback to partial card — toast still shows area name at minimum
+      }
 
-      toast(`${areaIcon} Listo en ${areaName}`, {
-        description: 'Pedido listo para recoger',
-        duration: 8000,
+      const { title, description, speech } = buildToastText(card)
+
+      toast(title, {
+        description,
+        duration: 10_000,
         style: {
           background: '#F0FDF4',
           border: '1px solid #86EFAC',
@@ -51,10 +88,9 @@ export function usePickupCards() {
         },
       })
 
-      playAlert(`Pedido listo en ${areaName}`, `Listo — ${areaName}`)
+      playAlert(speech, title, 'info')
     }
 
-    // Two listeners on one channel — one per area
     const channel = supabase
       .channel('pickup-notifications')
       .on('postgres_changes',

@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { verifyToken } from '@/lib/auth'
+import { sendPushToArea } from '@/lib/webpush'
 import type { CartItem } from '@/types'
+
+// Area emoji prefix for Siri-readable notification titles
+const AREA_EMOJI: Record<string, string> = {
+  bar:      '☕',
+  kitchen:  '🍳',
+  salon:    '🛎️',
+  delivery: '📦',
+}
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient()
@@ -22,7 +31,8 @@ export async function GET(req: NextRequest) {
         product:products(id, name, price),
         area:areas(id, name, type),
         modifiers:order_item_modifiers(*, modifier:modifiers(id, name, price))
-      )
+      ),
+      area_cards(id, status, area_id)
     `)
     .eq('status', status)
     .order('created_at', { ascending: false })
@@ -58,15 +68,29 @@ export async function POST(req: NextRequest) {
   let orderId: string
 
   if (tableId && type === 'table') {
-    const { data: existingOrder } = await supabase
+    const { data: existingOrders } = await supabase
       .from('orders')
-      .select('id')
+      .select('id, created_at')
       .eq('table_id', tableId)
       .eq('status', 'open')
-      .single()
+      .order('created_at', { ascending: false })
+      .limit(5)
 
-    if (existingOrder) {
-      orderId = existingOrder.id
+    if (existingOrders && existingOrders.length > 0) {
+      // Use the most-recent open order; silently close any stale duplicates
+      orderId = existingOrders[0].id
+      if (existingOrders.length > 1) {
+        const staleIds = existingOrders.slice(1).map((o) => o.id)
+        await supabase
+          .from('orders')
+          .update({ status: 'closed', closed_at: new Date().toISOString() })
+          .in('id', staleIds)
+        await supabase
+          .from('area_cards')
+          .delete()
+          .in('order_id', staleIds)
+          .in('status', ['pending', 'received'])
+      }
     } else {
       // Create new order
       const total = items.reduce((sum, item) => {
@@ -151,6 +175,9 @@ export async function POST(req: NextRequest) {
       .map((i) => i.areaId)
   )]
 
+  // Track which areas get a brand-new card (vs a reset) — only new ones trigger push
+  const newCardAreas: string[] = []
+
   for (const areaId of areaIds) {
     const { data: existingCard } = await supabase
       .from('area_cards')
@@ -166,15 +193,64 @@ export async function POST(req: NextRequest) {
         area_id: areaId,
         status: 'pending',
       })
+      newCardAreas.push(areaId)
     } else if (existingCard.status === 'received' || existingCard.status === 'delivered') {
       // New items added to an already in-progress or completed card — reset to pending
       await supabase
         .from('area_cards')
         .update({ status: 'pending', received_at: null, delivered_at: null })
         .eq('id', existingCard.id)
+      newCardAreas.push(areaId)  // also push for resets — chef needs to re-attend
     }
     // If already pending, the Realtime UPDATE on order_items triggers a refetch in bar/kitchen
   }
+
+  // ── Push notifications — fire-and-forget, never blocks order creation ────────
+  void (async () => {
+    try {
+      // Resolve table code and area names in one pass
+      const [tableRes, areaRes, itemsRes] = await Promise.all([
+        tableId ? supabase.from('tables').select('code').eq('id', tableId).single() : Promise.resolve({ data: null }),
+        supabase.from('areas').select('id, name, type').in('id', areaIds),
+        supabase
+          .from('order_items')
+          .select('quantity, notes, area_id, product:products(name)')
+          .eq('order_id', orderId)
+          .in('area_id', areaIds),
+      ])
+
+      const tableCode  = tableRes.data?.code ?? null
+      const areaMap    = new Map((areaRes.data ?? []).map((a) => [a.id, a]))
+      const orderItems = itemsRes.data ?? []
+
+      for (const areaId of newCardAreas) {
+        const area      = areaMap.get(areaId)
+        const areaName  = area?.name ?? 'Área'
+        const areaType  = area?.type ?? 'bar'
+        const emoji     = AREA_EMOJI[areaType] ?? '📋'
+
+        const areaItems = orderItems.filter((i) => i.area_id === areaId)
+        const itemsText = areaItems
+          .map((i) => `${i.quantity}× ${(i.product as {name?: string} | null)?.name ?? i.notes ?? 'item'}`)
+          .join(', ')
+
+        const title = tableCode
+          ? `${emoji} ${areaName} · Mesa ${tableCode}`
+          : `${emoji} ${areaName}`
+        const body  = itemsText || 'Nuevo pedido'
+
+        await sendPushToArea(areaId, {
+          title,
+          body,
+          tag:   `order-${orderId}-${areaId}`,
+          url:   areaType === 'bar' ? '/bar' : areaType === 'kitchen' ? '/kitchen' : '/salon',
+          level: 'info',
+        })
+      }
+    } catch {
+      // Push errors must never break order creation
+    }
+  })()
 
   // Update order total if adding to existing order
   const { data: allItems } = await supabase

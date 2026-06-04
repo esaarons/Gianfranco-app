@@ -59,7 +59,7 @@ export default function DeliveryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F5F0]">
+    <div className="min-h-screen bg-[#F7F5F0] pt-safe">
       <SoundEnabler />
 
       {/* Header */}
@@ -156,7 +156,7 @@ export default function DeliveryPage() {
           <p className="text-[#A9A39C] text-xs mt-1">Las nuevas tareas aparecerán aquí</p>
         </div>
       ) : (
-        <div className="px-4 pb-safe-8 space-y-2.5">
+        <div className="px-4 pb-nav space-y-2.5">
           {pending.map((card)  => <AreaCardComponent key={card.id} card={card} myAreaType="delivery" />)}
           {received.map((card) => <AreaCardComponent key={card.id} card={card} myAreaType="delivery" />)}
 

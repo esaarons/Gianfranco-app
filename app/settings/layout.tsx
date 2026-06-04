@@ -4,7 +4,7 @@ import { AuthProvider } from '@/components/layout/AuthProvider'
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <main className="pb-16 min-h-screen">{children}</main>
+      <main className="pb-nav min-h-screen">{children}</main>
       <BottomNav />
     </AuthProvider>
   )

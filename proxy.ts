@@ -7,7 +7,13 @@ const secret = new TextEncoder().encode(
 )
 
 // Routes that never require a session
-const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/auth/logout', '/api/debug']
+const PUBLIC_PATHS = [
+  '/login',
+  '/api/auth/login',
+  '/api/auth/logout',
+  '/api/debug',
+  '/api/push/vapid-key',   // VAPID public key is not sensitive — needed before auth for SW setup
+]
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -36,5 +42,6 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|icons|sounds|manifest.json).*)'],
+  // Exclude static assets AND the service worker from auth checks
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|icons|sounds|manifest.json|sw\\.js).*)'],
 }

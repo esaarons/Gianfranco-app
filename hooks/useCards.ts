@@ -1,19 +1,30 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useSound, areaLabel } from '@/hooks/useSound'
+import { AREA_IDS } from '@/lib/constants'
 import type { AreaCard, AreaType, CardStatus } from '@/types'
 
 // Re-export for convenience
 export type { CardStatus }
 
+// Direct map from AreaType to seeded UUID — avoids async fetch before subscribing
+const AREA_TYPE_TO_ID: Partial<Record<AreaType, string>> = {
+  bar:      AREA_IDS.BAR,
+  kitchen:  AREA_IDS.KITCHEN,
+  salon:    AREA_IDS.SALON,
+  delivery: AREA_IDS.DELIVERY,
+}
+
 // ── useAreaCards (by exact area_id) ─────────────────────────────────────────
 export function useAreaCards(areaId: string) {
   const queryClient = useQueryClient()
   const { playAlert } = useSound()
-  const knownIds = useRef<Set<string>>(new Set())
+  const knownIds    = useRef<Set<string>>(new Set())
+  const playAlertRef = useRef(playAlert)
+  useEffect(() => { playAlertRef.current = playAlert }, [playAlert])
 
   const query = useQuery<AreaCard[]>({
     queryKey: ['cards', areaId],
@@ -24,9 +35,19 @@ export function useAreaCards(areaId: string) {
       data.forEach((c) => knownIds.current.add(c.id))
       return data
     },
-    refetchInterval: 30_000,
-    staleTime: 15_000,
+    refetchInterval: 5_000,
+    staleTime: 3_000,
   })
+
+  // Immediate refetch when PWA comes to foreground
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible')
+        queryClient.invalidateQueries({ queryKey: ['cards', areaId] })
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [queryClient, areaId])
 
   useEffect(() => {
     const supabase = createClient()
@@ -38,33 +59,31 @@ export function useAreaCards(areaId: string) {
           if (!knownIds.current.has(newCard.id)) {
             knownIds.current.add(newCard.id)
             queryClient.invalidateQueries({ queryKey: ['cards', areaId] })
-            if (newCard.status === 'pending') playAlert(`Nuevo pedido para ${areaLabel(newCard.area_id)}`, `Nuevo pedido — ${areaLabel(newCard.area_id)}`)
+            if (newCard.status === 'pending')
+              playAlertRef.current(`Nuevo pedido para ${areaLabel(newCard.area_id)}`, `Nuevo pedido — ${areaLabel(newCard.area_id)}`, 'warning')
           }
         })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'area_cards', filter: `area_id=eq.${areaId}` },
         () => queryClient.invalidateQueries({ queryKey: ['cards', areaId] }))
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [areaId, queryClient, playAlert])
+  }, [areaId, queryClient]) // playAlert intentionally excluded — uses ref above
 
   return query
 }
 
 // ── useAreaCardsByType (by area.type) ────────────────────────────────────────
-// More robust: resolves actual area IDs from DB instead of relying on hardcoded constants.
+// Uses seeded AREA_IDS constants to subscribe to Realtime immediately on mount —
+// no async DB fetch needed before the channel opens.
 export function useAreaCardsByType(areaType: AreaType) {
-  const queryClient = useQueryClient()
+  const queryClient  = useQueryClient()
   const { playAlert } = useSound()
-  const knownIds   = useRef<Set<string>>(new Set())
-  const [resolvedIds, setResolvedIds] = useState<string[]>([])
+  const knownIds     = useRef<Set<string>>(new Set())
+  const playAlertRef = useRef(playAlert)
+  useEffect(() => { playAlertRef.current = playAlert }, [playAlert])
 
-  // Step 1: resolve area IDs for this type from the DB
-  useEffect(() => {
-    fetch(`/api/areas?type=${areaType}`)
-      .then((r) => r.json())
-      .then((areas: Array<{ id: string }>) => setResolvedIds(areas.map((a) => a.id)))
-      .catch(() => { /* keep empty, will fall back to polling */ })
-  }, [areaType])
+  // Known synchronously — no async step required
+  const areaId = AREA_TYPE_TO_ID[areaType]
 
   const query = useQuery<AreaCard[]>({
     queryKey: ['cards-type', areaType],
@@ -75,32 +94,41 @@ export function useAreaCardsByType(areaType: AreaType) {
       data.forEach((c) => knownIds.current.add(c.id))
       return data
     },
-    refetchInterval: 30_000,
-    staleTime: 15_000,
+    refetchInterval: 5_000,  // fast fallback if Realtime drops
+    staleTime: 3_000,
   })
 
-  // Step 2: set up Realtime subscriptions for each resolved area ID
+  // Immediate refetch when PWA comes to foreground (iOS WebSocket gets paused in background)
   useEffect(() => {
-    if (!resolvedIds.length) return
+    const onVisible = () => {
+      if (document.visibilityState === 'visible')
+        queryClient.invalidateQueries({ queryKey: ['cards-type', areaType] })
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [queryClient, areaType])
+
+  // Realtime subscription — starts immediately, no async wait
+  useEffect(() => {
+    if (!areaId) return
     const supabase = createClient()
-    const channels = resolvedIds.map((aid) =>
-      supabase
-        .channel(`cards-type-${areaType}-${aid}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'area_cards', filter: `area_id=eq.${aid}` },
-          (payload) => {
-            const newCard = payload.new as AreaCard
-            if (!knownIds.current.has(newCard.id)) {
-              knownIds.current.add(newCard.id)
-              queryClient.invalidateQueries({ queryKey: ['cards-type', areaType] })
-              if (newCard.status === 'pending') playAlert(`Nuevo pedido`, `Nuevo pedido — ${areaType}`)
-            }
-          })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'area_cards', filter: `area_id=eq.${aid}` },
-          () => queryClient.invalidateQueries({ queryKey: ['cards-type', areaType] }))
-        .subscribe()
-    )
-    return () => { channels.forEach((ch) => supabase.removeChannel(ch)) }
-  }, [resolvedIds, areaType, queryClient, playAlert])
+    const channel = supabase
+      .channel(`cards-type-${areaType}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'area_cards', filter: `area_id=eq.${areaId}` },
+        (payload) => {
+          const newCard = payload.new as AreaCard
+          if (!knownIds.current.has(newCard.id)) {
+            knownIds.current.add(newCard.id)
+            queryClient.invalidateQueries({ queryKey: ['cards-type', areaType] })
+            if (newCard.status === 'pending')
+              playAlertRef.current(`Nuevo pedido`, `Nuevo pedido — ${areaType}`, 'warning')
+          }
+        })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'area_cards', filter: `area_id=eq.${areaId}` },
+        () => queryClient.invalidateQueries({ queryKey: ['cards-type', areaType] }))
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [areaId, areaType, queryClient]) // playAlert intentionally excluded — uses ref above
 
   return query
 }
@@ -119,7 +147,27 @@ export function useUpdateCardStatus(areaId: string) {
       return res.json()
     },
     onSuccess: () => {
-      // Invalidate both key formats: exact areaId and areaType-based
+      queryClient.invalidateQueries({ queryKey: ['cards', areaId] })
+      queryClient.invalidateQueries({ queryKey: ['cards-type'] })
+    },
+  })
+}
+
+export function useUpdateCardNote(areaId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, operator_note, delay_minutes, delay_reason }:
+      { id: string; operator_note?: string; delay_minutes?: number | null; delay_reason?: string | null }) => {
+      const res = await fetch(`/api/cards/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operator_note, delay_minutes, delay_reason }),
+      })
+      if (!res.ok) throw new Error('Error actualizando nota')
+      return res.json()
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cards', areaId] })
       queryClient.invalidateQueries({ queryKey: ['cards-type'] })
     },

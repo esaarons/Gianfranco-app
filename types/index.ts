@@ -101,6 +101,7 @@ export interface Order {
   closed_at?: string
   table?: Table
   items?: OrderItem[]
+  area_cards?: { id: string; status: CardStatus; area_id: string }[]
 }
 
 export interface OrderItem {
@@ -140,6 +141,11 @@ export interface AreaCard {
   created_at: string
   received_at: string | null
   delivered_at: string | null
+  // Migration 013 fields (nullable, added via ALTER TABLE)
+  operator_note?: string | null
+  delay_minutes?: number | null
+  delay_reason?: string | null
+  delay_set_at?: string | null
   order?: Order
   area?: Area
   assignee?: User

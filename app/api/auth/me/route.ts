@@ -11,13 +11,40 @@ export async function GET(req: NextRequest) {
   if (!payload) return NextResponse.json({ user: null }, { status: 401 })
 
   const supabase = await createClient()
+
+  // Validate session is not revoked (graceful: if sessions table doesn't exist, skip)
+  if (payload.sessionId) {
+    try {
+      const { data: session } = await supabase
+        .from('sessions')
+        .select('id, revoked_at, expires_at')
+        .eq('id', payload.sessionId)
+        .maybeSingle()
+
+      if (session) {
+        // Explicitly revoked by admin
+        if (session.revoked_at) return NextResponse.json({ user: null }, { status: 401 })
+        // Expired (belt + suspenders alongside JWT exp)
+        if (new Date(session.expires_at) < new Date()) return NextResponse.json({ user: null }, { status: 401 })
+
+        // Update last_active for device tracking (fire-and-forget)
+        void supabase
+          .from('sessions')
+          .update({ last_active: new Date().toISOString() })
+          .eq('id', payload.sessionId)
+      }
+    } catch {
+      // sessions table not yet created — continue without revocation check
+    }
+  }
+
   const { data: user } = await supabase
     .from('users')
     .select('id, name, email, role, active')
     .eq('id', payload.userId)
     .single()
 
-  if (!user) return NextResponse.json({ user: null }, { status: 401 })
+  if (!user || !user.active) return NextResponse.json({ user: null }, { status: 401 })
 
   let areas: Area[] = []
   try {

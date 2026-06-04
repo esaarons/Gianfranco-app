@@ -1,11 +1,15 @@
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useProducts } from '@/hooks/useProducts'
+import { useSound } from '@/hooks/useSound'
+import { useWakeLock } from '@/hooks/useWakeLock'
 import { SoundEnabler } from '@/components/notifications/SoundEnabler'
+import { PickupBanner } from '@/components/notifications/PickupBanner'
 import { formatTime, formatPrice, cn } from '@/lib/utils'
 import { ZONE_LABELS } from '@/lib/constants'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import type { Order, AreaCard, Reservation } from '@/types'
 
@@ -276,6 +280,9 @@ function ReservationCard({ r }: { r: Reservation }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function SalonPage() {
+  const { enabled, onShift } = useSound()
+  useWakeLock(enabled && onShift)
+
   const [now, setNow] = useState<string>('')
 
   useEffect(() => {
@@ -297,6 +304,8 @@ export default function SalonPage() {
     refetchInterval: 15_000,
   })
 
+  const queryClient = useQueryClient()
+
   const { data: allCards = [] } = useQuery<AreaCard[]>({
     queryKey: ['cards-all-active'],
     queryFn: async () => {
@@ -305,7 +314,36 @@ export default function SalonPage() {
       return res.json()
     },
     refetchInterval: 10_000,
+    staleTime: 5_000,
   })
+
+  // Realtime: invalidate cards immediately when bar/kitchen updates a card
+  useEffect(() => {
+    const supabase = createClient()
+    const channel = supabase
+      .channel('salon-cards-realtime')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'area_cards' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['cards-all-active'] })
+          queryClient.invalidateQueries({ queryKey: ['orders', 'open'] })
+        })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'area_cards' },
+        () => queryClient.invalidateQueries({ queryKey: ['cards-all-active'] }))
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [queryClient])
+
+  // Immediate refetch when PWA returns to foreground
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        queryClient.invalidateQueries({ queryKey: ['cards-all-active'] })
+        queryClient.invalidateQueries({ queryKey: ['orders', 'open'] })
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [queryClient])
 
   const { data: reservations = [] } = useQuery<Reservation[]>({
     queryKey: ['reservations', 'today'],
@@ -363,8 +401,9 @@ export default function SalonPage() {
     .sort((a, b) => a.start_time.localeCompare(b.start_time))
 
   return (
-    <div className="min-h-screen bg-[#F7F5F0]">
+    <div className="min-h-screen bg-[#F7F5F0] pt-safe">
       <SoundEnabler />
+      <PickupBanner />
 
       {/* ── Header ── */}
       <div className="px-5 pt-8 pb-4">
@@ -435,7 +474,7 @@ export default function SalonPage() {
       )}
 
       {/* ── Pedidos activos ── */}
-      <section className="px-4 pb-safe-8">
+      <section className="px-4 pb-nav">
         <div className="flex items-center justify-between mb-2.5">
           <p className="section-label">Pedidos activos</p>
           <Link

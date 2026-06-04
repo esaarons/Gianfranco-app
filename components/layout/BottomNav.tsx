@@ -258,10 +258,11 @@ export function BottomNav() {
         {
           label: 'Gestión',
           items: [
-            { href: '/admin/products',  label: 'Productos',    icon: '🍽' },
-            { href: '/admin/modifiers', label: 'Modificadores', icon: '🧩' },
-            { href: '/staff',           label: 'Personal',     icon: '👥' },
-            { href: '/settings',        label: 'Ajustes',      icon: '⚙️' },
+            { href: '/admin/products',  label: 'Productos',      icon: '🍽' },
+            { href: '/admin/modifiers', label: 'Modificadores',  icon: '🧩' },
+            { href: '/staff',           label: 'Personal',       icon: '👥' },
+            { href: '/admin/devices',   label: 'Dispositivos',   icon: '📱' },
+            { href: '/settings',        label: 'Ajustes',        icon: '⚙️' },
           ],
         },
       ]
@@ -309,8 +310,8 @@ export function BottomNav() {
       {drawer === 'more' && <GroupedDrawer sections={moreSections} onClose={() => setDrawer(null)} />}
 
       <nav
-        className="bottom-nav fixed bottom-0 left-0 right-0 z-20 h-16 flex items-center justify-around px-2"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        className="bottom-nav fixed bottom-0 left-0 right-0 z-20 flex items-center justify-around px-2 pt-2"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)' }}
       >
         {tabs.map((tab) => {
           const isActive = tab.active

@@ -8,7 +8,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <AuthProvider>
       <RoleGuard allowed={['admin', 'encargado']}>
         <ShiftBanner />
-        <main className="pb-16 min-h-screen">{children}</main>
+        <main className="pb-nav min-h-screen">{children}</main>
         <BottomNav />
       </RoleGuard>
     </AuthProvider>

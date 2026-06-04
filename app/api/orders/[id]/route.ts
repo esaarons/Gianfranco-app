@@ -49,9 +49,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // When closing order, put table in cleaning
-  if (body.status === 'closed' && data.table_id) {
-    await supabase.from('tables').update({ status: 'cleaning' }).eq('id', data.table_id)
+  // When closing order: cancel pending/received area_cards and put table in cleaning
+  if (body.status === 'closed') {
+    await supabase
+      .from('area_cards')
+      .delete()
+      .eq('order_id', id)
+      .in('status', ['pending', 'received'])
+
+    if (data.table_id) {
+      await supabase.from('tables').update({ status: 'cleaning' }).eq('id', data.table_id)
+    }
   }
 
   return NextResponse.json(data)

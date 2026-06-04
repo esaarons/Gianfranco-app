@@ -89,6 +89,19 @@ export function TableMap() {
     return map
   }, [openOrders])
 
+  // 'ready'    — all area_cards for the order are delivered (food/drinks at the pass)
+  // 'preparing'— at least one card is pending or received
+  // undefined  — no cards yet (order just placed with no items dispatched)
+  const orderStatusByTable = useMemo(() => {
+    const map = new Map<string, 'ready' | 'preparing'>()
+    openOrders.forEach((o) => {
+      if (!o.table_id || !o.area_cards?.length) return
+      const allDelivered = o.area_cards.every((c) => c.status === 'delivered')
+      map.set(o.table_id, allDelivered ? 'ready' : 'preparing')
+    })
+    return map
+  }, [openOrders])
+
   const freeCount     = tables.filter(t => t.status === 'free').length
   const occupiedCount = tables.filter(t => t.status === 'occupied').length
   const cleaningCount = tables.filter(t => t.status === 'cleaning').length
@@ -154,32 +167,28 @@ export function TableMap() {
     }
   }
 
-  async function closeOrderForTable(tableId: string) {
-    const order = openOrders.find(o => o.table_id === tableId)
-    if (!order) return
-    await fetch(`/api/orders/${order.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'closed' }),
-    })
+  async function releaseTable(tableId: string) {
+    const res = await fetch(`/api/tables/${tableId}/release`, { method: 'POST' })
+    if (!res.ok) throw new Error(await res.text())
+  }
+
+  function invalidateAfterRelease() {
+    qc.invalidateQueries({ queryKey: ['tables'] })
+    qc.invalidateQueries({ queryKey: ['orders', 'open'] })
+    qc.invalidateQueries({ queryKey: ['cards-all-active'] })
+    qc.invalidateQueries({ queryKey: ['cards-type'] })
   }
 
   async function handleCleaning() {
     if (!selected) return
-    const hasOrder = openOrders.some(o => o.table_id === selected.id)
-    if (hasOrder) {
-      // Closing the order auto-sets the table to cleaning via API
-      await closeOrderForTable(selected.id)
-      qc.invalidateQueries({ queryKey: ['tables'] })
-      qc.invalidateQueries({ queryKey: ['orders', 'open'] })
-      toast.success(`Mesa ${selected.code} cerrada — en limpieza`)
-      setSelected(null)
-    } else {
-      updateStatus.mutate(
-        { id: selected.id, status: 'cleaning' },
-        { onSuccess: () => { toast.success(`Mesa ${selected.code} en limpieza`); setSelected(null) } }
-      )
+    try {
+      await releaseTable(selected.id)
+      invalidateAfterRelease()
+      toast.success(`Mesa ${selected.code} en limpieza`)
+    } catch {
+      toast.error('Error al cerrar mesa')
     }
+    setSelected(null)
   }
 
   async function handleSplitAndClean() {
@@ -188,16 +197,8 @@ export function TableMap() {
     try {
       await Promise.all(selectedChildren.map(c => splitTable.mutateAsync(c.id)))
       const allTableIds = [selected.id, ...selectedChildren.map(c => c.id)]
-      // Close any open orders first (API auto-sets table to cleaning)
-      await Promise.all(allTableIds.map(id => closeOrderForTable(id)))
-      // Set cleaning for tables that had no open order
-      const tablesWithOrders = new Set(openOrders.filter(o => o.table_id).map(o => o.table_id!))
-      const tablesNeedingClean = allTableIds.filter(id => !tablesWithOrders.has(id))
-      if (tablesNeedingClean.length) {
-        await Promise.all(tablesNeedingClean.map(id => updateStatus.mutateAsync({ id, status: 'cleaning' })))
-      }
-      qc.invalidateQueries({ queryKey: ['tables'] })
-      qc.invalidateQueries({ queryKey: ['orders', 'open'] })
+      await Promise.all(allTableIds.map(id => releaseTable(id)))
+      invalidateAfterRelease()
       const codes = [selected, ...selectedChildren].map(t => t.code).join(', ')
       toast.success(`Mesas ${codes} separadas — en limpieza`)
       setSelected(null)
@@ -233,7 +234,7 @@ export function TableMap() {
     : selected ? `Mesa ${selected.code}` : ''
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F6F2EA]">
+    <div className="flex flex-col min-h-screen bg-[#F6F2EA] pt-safe">
 
       {/* ── Header ── */}
       <div className="px-5 pt-8 pb-5 shrink-0">
@@ -302,7 +303,7 @@ export function TableMap() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 px-4 pb-safe-6 space-y-6 overflow-y-auto">
+        <div className="flex-1 px-4 pb-nav space-y-6 overflow-y-auto">
           {ZONES.map((zone) => {
             const zoneTables = getByZone(zone)
             if (!zoneTables.length) return null
@@ -326,6 +327,7 @@ export function TableMap() {
                         onClick={handleTableClick}
                         selected={selected?.id === group.parent.id}
                         orderTotal={orderByTable.get(group.parent.id)}
+                        orderStatus={orderStatusByTable.get(group.parent.id)}
                         isMergeNew={recentMergeId === group.parent.id}
                       />
                     ) : (
@@ -338,6 +340,7 @@ export function TableMap() {
                         joinTarget={!!joinSource && joinSource.id !== group.table.id}
                         joinPulse={joinPulseId === group.table.id}
                         orderTotal={orderByTable.get(group.table.id)}
+                        orderStatus={orderStatusByTable.get(group.table.id)}
                       />
                     )
                   )}

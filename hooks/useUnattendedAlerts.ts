@@ -51,7 +51,8 @@ export function useUnattendedAlerts(cards: AreaCard[], area: string) {
           alertedRef.current.add(card.id)
           playAlert(
             `Pedido sin atender en ${area}`,
-            `⚠️ Sin atender — ${area}`
+            `⚠️ Sin atender — ${area}`,
+            'critical'
           )
         }
       }

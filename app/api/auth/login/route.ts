@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { compare } from 'bcryptjs'
 import { createClient } from '@/lib/supabase/server'
-import { signToken } from '@/lib/auth'
+import { signToken, parseUserAgent } from '@/lib/auth'
 import { homeRouteFromAreas } from '@/lib/constants'
 import { createLog } from '@/lib/log'
 import type { Area } from '@/types'
@@ -15,7 +15,6 @@ export async function POST(req: NextRequest) {
 
   const supabase = await createClient()
 
-  // Step 1: fetch user + PIN only (no joins — never fails on missing user_areas)
   const { data: user, error } = await supabase
     .from('users')
     .select('id, name, email, role, active, pin')
@@ -32,7 +31,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 401 })
   }
 
-  // Step 2: fetch areas separately (graceful fallback if user_areas doesn't exist yet)
   let areas: Area[] = []
   try {
     const { data: ua } = await supabase
@@ -43,11 +41,37 @@ export async function POST(req: NextRequest) {
       .map((r) => r.areas)
       .filter((a): a is Area => a !== null)
   } catch {
-    // user_areas not yet migrated — continue with empty areas
+    // user_areas not yet migrated
+  }
+
+  // Create a session record for this device
+  const ua         = req.headers.get('user-agent') ?? ''
+  const ip         = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? req.headers.get('x-real-ip') ?? null
+  const { deviceName, platform } = parseUserAgent(ua)
+  const expiresAt  = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+
+  let sessionId: string
+  try {
+    const { data: session } = await supabase
+      .from('sessions')
+      .insert({
+        user_id:     user.id,
+        device_name: deviceName,
+        platform,
+        ip_address:  ip,
+        user_agent:  ua.slice(0, 500),  // cap at 500 chars
+        expires_at:  expiresAt,
+      })
+      .select('id')
+      .single()
+    sessionId = session?.id ?? crypto.randomUUID()
+  } catch {
+    // sessions table not yet migrated — use random UUID (backwards compatible)
+    sessionId = crypto.randomUUID()
   }
 
   const areaIds   = areas.map((a) => a.id)
-  const token     = await signToken({ userId: user.id, role: user.role, areaIds })
+  const token     = await signToken({ userId: user.id, role: user.role, areaIds, sessionId })
   const homeRoute = homeRouteFromAreas(user.role, areaIds)
 
   // Fire-and-forget side effects
@@ -61,7 +85,7 @@ export async function POST(req: NextRequest) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 8,
+    maxAge: 60 * 60 * 24 * 30,  // 30 days
     path: '/',
   })
 

@@ -120,6 +120,12 @@
 .pt-safe    { padding-top: env(safe-area-inset-top); }
 .mb-safe    { margin-bottom: env(safe-area-inset-bottom); }
 
+/* Page header: base padding + notch/dynamic island safe area */
+.pt-header  { padding-top: calc(2rem + env(safe-area-inset-top)); }
+
+/* Page content bottom: clears BottomNav (64px) + home indicator */
+.pb-nav     { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+
 /* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
 .scrollbar-hide {
   -ms-overflow-style: none;

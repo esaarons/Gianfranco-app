@@ -379,7 +379,7 @@ export function BottomNav() {
 
             const inner = (
               // Each tab column: top half is "air" for the circle, bottom has icon + label
-              <div className="flex flex-col items-center justify-end pb-1.5" style={{ paddingTop: '30px' }}>
+              <div className="flex flex-col items-center justify-end pb-1" style={{ paddingTop: '24px' }}>
                 {!isActive && (
                   <div className="relative">
                     <span style={{ color: INACTIVE_ICON_COLOR }}>

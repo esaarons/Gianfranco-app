@@ -1309,22 +1309,25 @@ export default function SalonPage() {
         </div>
       </div>
 
-      {/* ── Content ── */}
+      {/* ── Content — keyed so CSS animation replays on tab switch ── */}
       {mainTab === 'dashboard' ? (
-        <DashboardView
-          trackingItems={trackingItems}
-          stats={stats}
-          todayReservations={todayReservations}
-          tomorrowReservations={tomorrowReservations}
-          stockOut={stockOut}
-          stockLow={stockLow}
-          totalActiveTables={stats.total}
-          onTablePress={handleTablePress}
-        />
+        <div key="dashboard" className="tab-slide-in">
+          <DashboardView
+            trackingItems={trackingItems}
+            stats={stats}
+            todayReservations={todayReservations}
+            tomorrowReservations={tomorrowReservations}
+            stockOut={stockOut}
+            stockLow={stockLow}
+            totalActiveTables={stats.total}
+            onTablePress={handleTablePress}
+          />
+        </div>
       ) : (
         /* Plano — light green canvas over the dark green page */
         <div
-          className="rounded-t-3xl mt-1 min-h-screen"
+          key="plano"
+          className="rounded-t-3xl mt-1 min-h-screen tab-slide-in"
           style={{ background: '#EEF6EF' }}
         >
           {/* Zone tabs */}
@@ -1360,7 +1363,7 @@ export default function SalonPage() {
           </div>
 
           {/* Legend */}
-          <div className="fixed left-0 right-0 pointer-events-none z-10" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 62px)' }}>
+          <div className="fixed left-0 right-0 pointer-events-none z-10" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}>
             <div className="px-4 overflow-x-auto pb-1 no-scrollbar">
               <div className="flex gap-2 w-max">
                 {LEGEND.map(({ color, label }) => (

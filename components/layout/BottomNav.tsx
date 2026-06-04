@@ -230,7 +230,7 @@ export function BottomNav() {
 
   // ── Stations drawer ──────────────────────────────────────────────────────────
   const opsItems: DrawerItem[] = [
-    { href: '/tables',   label: 'Salón',    icon: <IconMap />,    color: '#1E3541' },
+    { href: '/salon',    label: 'Salón',    icon: <IconMap />,    color: '#1E3541' },
     { href: '/bar',      label: 'Barra',    icon: <IconCoffee />, color: '#C98933', badge: barPending },
     { href: '/kitchen',  label: 'Cocina',   icon: <IconPot />,    color: '#B8574E', badge: kitchenPending },
     { href: '/delivery', label: 'Delivery', icon: <IconTruck />,  color: '#6D9EEB' },
@@ -269,7 +269,7 @@ export function BottomNav() {
     : [{ label: 'Cuenta', items: [{ href: '/settings', label: 'Ajustes', icon: '⚙️' }] }]
 
   // ── Active section detection ─────────────────────────────────────────────────
-  const inOps    = ['/tables', '/bar', '/kitchen', '/delivery'].some(p => pathname === p || pathname.startsWith(p + '/'))
+  const inOps    = ['/salon', '/tables', '/bar', '/kitchen', '/delivery'].some(p => pathname === p || pathname.startsWith(p + '/'))
   const inOrders = pathname.startsWith('/admin/orders')
   const inAdmin  = pathname === '/admin'
   const inMore   = !inAdmin && !inOps && !inOrders
@@ -290,7 +290,7 @@ export function BottomNav() {
   } else {
     const dynamicTabs: TabItem[] = []
     if (hasArea(user, AREA_IDS.SALON))
-      dynamicTabs.push({ type: 'link', href: '/tables',   label: 'Salón',    icon: <IconMap />,    active: pathname.startsWith('/tables') })
+      dynamicTabs.push({ type: 'link', href: '/salon',    label: 'Salón',    icon: <IconMap />,    active: pathname.startsWith('/salon') || pathname.startsWith('/tables') })
     if (hasArea(user, AREA_IDS.BAR))
       dynamicTabs.push({ type: 'link', href: '/bar',      label: 'Barra',    icon: <IconCoffee />, active: pathname.startsWith('/bar'),     badge: barPending > 0 ? barPending : undefined })
     if (hasArea(user, AREA_IDS.KITCHEN))

@@ -11,6 +11,10 @@
     {
       "path": "/api/shifts/cron?action=close_pm",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/reset/midnight",
+      "schedule": "0 5 * * *"
     }
   ]
 }

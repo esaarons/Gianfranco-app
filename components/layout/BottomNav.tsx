@@ -29,11 +29,11 @@ function usePendingCount(areaId: string | null) {
   return data?.filter((c) => c.status === 'pending').length ?? 0
 }
 
-// ── SVG icons ─────────────────────────────────────────────────────────────────
+// ── Icons ────────────────────────────────────────────────────────────────────
 
-function IconGrid() {
+function IconGrid({ size = 22 }: { size?: number }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="7" height="7" rx="1.5" />
       <rect x="14" y="3" width="7" height="7" rx="1.5" />
       <rect x="3" y="14" width="7" height="7" rx="1.5" />
@@ -42,17 +42,17 @@ function IconGrid() {
   )
 }
 
-function IconZap() {
+function IconZap({ size = 22 }: { size?: number }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
     </svg>
   )
 }
 
-function IconClipboard() {
+function IconClipboard({ size = 22 }: { size?: number }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
       <rect x="9" y="3" width="6" height="4" rx="1" />
       <line x1="9" y1="12" x2="15" y2="12" />
@@ -61,19 +61,19 @@ function IconClipboard() {
   )
 }
 
-function IconMore() {
+function IconMore({ size = 22 }: { size?: number }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
-      <circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" strokeWidth="1.8">
+      <circle cx="5" cy="12" r="1.5" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+      <circle cx="19" cy="12" r="1.5" fill="currentColor" />
     </svg>
   )
 }
 
-function IconCoffee() {
+function IconCoffee({ size = 20 }: { size?: number }) {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
       <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
       <line x1="6" y1="1" x2="6" y2="4" />
@@ -83,17 +83,17 @@ function IconCoffee() {
   )
 }
 
-function IconPot() {
+function IconPot({ size = 20 }: { size?: number }) {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 11l19-9-9 19-2-8-8-2z" />
     </svg>
   )
 }
 
-function IconMap() {
+function IconMap({ size = 20 }: { size?: number }) {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
       <line x1="8" y1="2" x2="8" y2="18" />
       <line x1="16" y1="6" x2="16" y2="22" />
@@ -101,9 +101,9 @@ function IconMap() {
   )
 }
 
-function IconTruck() {
+function IconTruck({ size = 20 }: { size?: number }) {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="1" y="3" width="15" height="13" rx="1" />
       <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
       <circle cx="5.5" cy="18.5" r="2.5" />
@@ -112,7 +112,7 @@ function IconTruck() {
   )
 }
 
-// ── Flat drawer (ops stations) ────────────────────────────────────────────────
+// ── Ops drawer ────────────────────────────────────────────────────────────────
 
 interface DrawerItem {
   href: string
@@ -135,14 +135,13 @@ function Drawer({ items, onClose }: { items: DrawerItem[]; onClose: () => void }
                 key={item.href}
                 href={item.href}
                 onClick={onClose}
-                className={cn(
-                  'relative flex items-center gap-3 px-4 py-3.5 rounded-2xl border press-scale transition-all',
-                  item.color ? '' : 'bg-white border-[#E7E1D8] text-[#1F1F1F]'
-                )}
-                style={item.color ? { background: item.color + '18', borderColor: item.color + '30' } : undefined}
+                className="relative flex items-center gap-3 px-4 py-3.5 rounded-2xl border press-scale transition-all"
+                style={item.color
+                  ? { background: item.color + '18', borderColor: item.color + '30' }
+                  : { background: 'white', borderColor: '#E7E1D8' }}
               >
-                <span style={item.color ? { color: item.color } : { color: '#1E3541' }}>{item.icon}</span>
-                <span className="font-semibold text-sm">{item.label}</span>
+                <span style={{ color: item.color ?? '#1E3541' }}>{item.icon}</span>
+                <span className="font-semibold text-sm text-[#1F1F1F]">{item.label}</span>
                 {(item.badge ?? 0) > 0 && (
                   <span className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-[#C98933] text-white text-[10px] font-bold flex items-center justify-center">
                     {item.badge}
@@ -159,23 +158,21 @@ function Drawer({ items, onClose }: { items: DrawerItem[]; onClose: () => void }
 
 // ── Grouped "Más" drawer ──────────────────────────────────────────────────────
 
-interface NavSection {
-  label: string
-  items: DrawerItem[]
-}
+interface NavSection { label: string; items: DrawerItem[] }
 
 function GroupedDrawer({ sections, onClose }: { sections: NavSection[]; onClose: () => void }) {
   return (
     <>
       <div className="fixed inset-0 z-[45] bg-[#1E3541]/20 overlay-fade" onClick={onClose} />
       <div className="fixed bottom-0 left-0 right-0 z-[50] spring-up">
-        <div className="bg-[#F7F5F0] rounded-t-3xl border-t border-x border-[#E7E1D8]"
-          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}>
+        <div
+          className="bg-[#F7F5F0] rounded-t-3xl border-t border-x border-[#E7E1D8]"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
+        >
           <div className="w-9 h-1 bg-[#D4CFC5] rounded-full mx-auto mt-3 mb-1" />
           <div className="overflow-y-auto max-h-[72vh] px-4 pb-2 pt-3 space-y-4">
             {sections.map((section) => (
               <div key={section.label}>
-                {/* Section header */}
                 <p className="text-[#A9A39C] text-[9px] font-bold uppercase tracking-[0.2em] px-1 mb-2">
                   {section.label}
                 </p>
@@ -185,16 +182,15 @@ function GroupedDrawer({ sections, onClose }: { sections: NavSection[]; onClose:
                       key={item.href}
                       href={item.href}
                       onClick={onClose}
-                      className={cn(
-                        'relative flex items-center gap-2.5 px-3.5 py-3 rounded-xl border press-scale transition-all',
-                        item.color ? '' : 'bg-white border-[#E7E1D8] text-[#1F1F1F]'
-                      )}
-                      style={item.color ? { background: item.color + '15', borderColor: item.color + '25' } : undefined}
+                      className="relative flex items-center gap-2.5 px-3.5 py-3 rounded-xl border press-scale transition-all"
+                      style={item.color
+                        ? { background: item.color + '15', borderColor: item.color + '25' }
+                        : { background: 'white', borderColor: '#E7E1D8' }}
                     >
-                      <span className="text-base leading-none" style={item.color ? { color: item.color } : { color: '#1E3541' }}>
+                      <span className="text-base leading-none" style={{ color: item.color ?? '#1E3541' }}>
                         {item.icon}
                       </span>
-                      <span className="font-semibold text-sm leading-none">{item.label}</span>
+                      <span className="font-semibold text-sm text-[#1F1F1F] leading-none">{item.label}</span>
                       {(item.badge ?? 0) > 0 && (
                         <span className="absolute top-1.5 right-1.5 min-w-[16px] h-[16px] px-0.5 rounded-full bg-[#C98933] text-white text-[9px] font-bold flex items-center justify-center">
                           {item.badge}
@@ -214,6 +210,15 @@ function GroupedDrawer({ sections, onClose }: { sections: NavSection[]; onClose:
 
 // ── BottomNav ─────────────────────────────────────────────────────────────────
 
+// NAV_BG — the collar ring around the floating circle uses this exact color
+// so the circle appears embedded in the bar.
+const NAV_BG   = '#1E3541'
+const CIRCLE_BG = '#EAD9B1'   // warm gold — active indicator
+const ACTIVE_ICON_COLOR  = '#1E3541'
+const INACTIVE_ICON_COLOR = 'rgba(245,241,232,0.45)'
+const ACTIVE_LABEL_COLOR  = '#EAD9B1'
+const INACTIVE_LABEL_COLOR = 'rgba(245,241,232,0.38)'
+
 export function BottomNav() {
   const user     = useAuthStore((s) => s.user)
   const pathname = usePathname()
@@ -228,7 +233,7 @@ export function BottomNav() {
   const isAdminRole = role === 'admin' || role === 'encargado'
   const opsBadge    = barPending + kitchenPending
 
-  // ── Stations drawer ──────────────────────────────────────────────────────────
+  // ── Ops drawer items ──────────────────────────────────────────────────────────
   const opsItems: DrawerItem[] = [
     { href: '/salon',    label: 'Salón',    icon: <IconMap />,    color: '#1E3541' },
     { href: '/bar',      label: 'Barra',    icon: <IconCoffee />, color: '#C98933', badge: barPending },
@@ -236,44 +241,47 @@ export function BottomNav() {
     { href: '/delivery', label: 'Delivery', icon: <IconTruck />,  color: '#6D9EEB' },
   ]
 
-  // ── "Más" grouped sections ───────────────────────────────────────────────────
+  // ── "Más" grouped sections ────────────────────────────────────────────────────
   const moreSections: NavSection[] = isAdminRole
     ? [
         {
           label: 'Operaciones',
           items: [
-            { href: '/admin/operations', label: 'Turnos',    icon: '🎛' },
-            { href: '/admin/orders',     label: 'Pedidos',   icon: <IconClipboard /> },
-            { href: '/admin/reservations', label: 'Reservas', icon: '📅' },
+            { href: '/admin/operations',  label: 'Turnos',    icon: '🎛' },
+            { href: '/admin/orders',      label: 'Pedidos',   icon: <IconClipboard size={16} /> },
+            { href: '/admin/reservations',label: 'Reservas',  icon: '📅' },
           ],
         },
         {
           label: 'Inteligencia',
           items: [
-            { href: '/admin/reports',   label: 'Métricas',   icon: '📊' },
-            { href: '/admin/logs',      label: 'Actividad',  icon: '🗂️' },
-            { href: '/admin/operations/history', label: 'Historial', icon: '📈' },
+            { href: '/admin/reports',              label: 'Métricas',   icon: '📊' },
+            { href: '/admin/logs',                 label: 'Actividad',  icon: '🗂️' },
+            { href: '/admin/operations/history',   label: 'Historial',  icon: '📈' },
           ],
         },
         {
           label: 'Gestión',
           items: [
-            { href: '/admin/products',  label: 'Productos',      icon: '🍽' },
-            { href: '/admin/modifiers', label: 'Modificadores',  icon: '🧩' },
-            { href: '/staff',           label: 'Personal',       icon: '👥' },
-            { href: '/admin/devices',   label: 'Dispositivos',   icon: '📱' },
-            { href: '/settings',        label: 'Ajustes',        icon: '⚙️' },
+            { href: '/admin/products',  label: 'Productos',     icon: '🍽' },
+            { href: '/admin/modifiers', label: 'Modificadores', icon: '🧩' },
+            { href: '/staff',           label: 'Personal',      icon: '👥' },
+            { href: '/admin/devices',   label: 'Dispositivos',  icon: '📱' },
+            { href: '/settings',        label: 'Ajustes',       icon: '⚙️' },
           ],
         },
       ]
     : [{ label: 'Cuenta', items: [{ href: '/settings', label: 'Ajustes', icon: '⚙️' }] }]
 
-  // ── Active section detection ─────────────────────────────────────────────────
-  const inOps    = ['/salon', '/tables', '/bar', '/kitchen', '/delivery'].some(p => pathname === p || pathname.startsWith(p + '/'))
+  // ── Active path detection ─────────────────────────────────────────────────────
+  const inOps    = ['/salon', '/tables', '/bar', '/kitchen', '/delivery'].some(
+    p => pathname === p || pathname.startsWith(p + '/')
+  )
   const inOrders = pathname.startsWith('/admin/orders')
   const inAdmin  = pathname === '/admin'
   const inMore   = !inAdmin && !inOps && !inOrders
 
+  // ── Tab definitions ───────────────────────────────────────────────────────────
   type TabItem =
     | { type: 'link';   href: string; label: string; icon: React.ReactNode; active: boolean; badge?: number }
     | { type: 'drawer'; key: 'ops' | 'more'; label: string; icon: React.ReactNode; active: boolean; badge?: number }
@@ -283,7 +291,7 @@ export function BottomNav() {
   if (isAdminRole) {
     tabs = [
       { type: 'link',   href: '/admin',        label: 'Inicio',     icon: <IconGrid />,      active: inAdmin  },
-      { type: 'drawer', key: 'ops',            label: 'Estaciones', icon: <IconZap />,       active: inOps,   badge: opsBadge > 0 ? opsBadge : undefined },
+      { type: 'drawer', key: 'ops',            label: 'Operación',  icon: <IconZap />,       active: inOps,   badge: opsBadge > 0 ? opsBadge : undefined },
       { type: 'link',   href: '/admin/orders', label: 'Pedidos',    icon: <IconClipboard />, active: inOrders },
       { type: 'drawer', key: 'more',           label: 'Más',        icon: <IconMore />,      active: inMore   },
     ]
@@ -301,68 +309,117 @@ export function BottomNav() {
     tabs = dynamicTabs
   }
 
-  const ACTIVE_COLOR = '#1E3541'
-  const MUTED_COLOR  = '#A9A39C'
+  const numTabs    = tabs.length
+  const activeIdx  = tabs.findIndex(t => t.active)
+  // If no tab is active (e.g. deep sub-page), treat first as fallback
+  const safeIdx    = activeIdx >= 0 ? activeIdx : 0
+  const activeTab  = tabs[safeIdx]
+
+  // Circle left% = center of the active tab column
+  const circlePct  = ((safeIdx + 0.5) / numTabs) * 100
 
   return (
     <>
       {drawer === 'ops'  && <Drawer items={opsItems} onClose={() => setDrawer(null)} />}
       {drawer === 'more' && <GroupedDrawer sections={moreSections} onClose={() => setDrawer(null)} />}
 
-      <nav
-        className="bottom-nav fixed bottom-0 left-0 right-0 z-20 flex items-center justify-around px-2 pt-2"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)' }}
-      >
-        {tabs.map((tab) => {
-          const isActive = tab.active
-          const badge    = tab.badge
+      <nav className="fixed bottom-0 left-0 right-0 z-20">
 
-          const content = (
-            <>
-              <div className="relative">
-                <span style={{ color: isActive ? ACTIVE_COLOR : MUTED_COLOR, transition: 'color 150ms' }}>
-                  {tab.icon}
-                </span>
-                {(badge ?? 0) > 0 && (
-                  <span className="absolute -top-1 -right-1.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-[#C98933] text-white text-[9px] font-bold flex items-center justify-center leading-none">
-                    {badge}
-                  </span>
-                )}
-              </div>
+        {/* ── Floating active circle ── */}
+        <div
+          className="absolute z-10 pointer-events-none"
+          style={{
+            left: `${circlePct}%`,
+            top: 0,
+            transform: 'translate(-50%, -50%)',
+            transition: 'left 320ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+          }}
+        >
+          {/* Collar ring: same color as the bar so the circle looks embedded */}
+          <div
+            className="w-[54px] h-[54px] rounded-full flex items-center justify-center"
+            style={{
+              background: CIRCLE_BG,
+              boxShadow: `0 0 0 6px ${NAV_BG}, 0 6px 20px rgba(30,58,65,0.4)`,
+            }}
+          >
+            <span style={{ color: ACTIVE_ICON_COLOR }}>
+              {activeTab?.icon}
+            </span>
+            {/* Badge on active circle */}
+            {(activeTab?.badge ?? 0) > 0 && (
               <span
-                className="text-[10px] font-semibold tracking-tight mt-0.5 transition-colors"
-                style={{ color: isActive ? ACTIVE_COLOR : MUTED_COLOR }}
+                className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-0.5 rounded-full text-white text-[9px] font-bold flex items-center justify-center"
+                style={{ background: '#C98933' }}
               >
-                {tab.label}
+                {activeTab!.badge}
               </span>
-              {isActive && (
-                <span className="absolute bottom-1 w-4 h-0.5 rounded-full" style={{ background: ACTIVE_COLOR }} />
-              )}
-            </>
-          )
+            )}
+          </div>
+        </div>
 
-          if (tab.type === 'link') {
-            return (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                className="relative flex flex-col items-center justify-center gap-0.5 flex-1 py-2 press-scale"
-              >
-                {content}
-              </Link>
+        {/* ── Bar ── */}
+        <div
+          className="flex items-stretch"
+          style={{
+            background: NAV_BG,
+            borderRadius: '22px 22px 0 0',
+            paddingBottom: 'calc(env(safe-area-inset-bottom) + 4px)',
+            minHeight: '60px',
+          }}
+        >
+          {tabs.map((tab, i) => {
+            const isActive = i === safeIdx
+
+            const handleTap = () => {
+              if (tab.type === 'drawer') {
+                setDrawer(drawer === tab.key ? null : tab.key)
+              }
+            }
+
+            const inner = (
+              // Each tab column: top half is "air" for the circle, bottom has icon + label
+              <div className="flex flex-col items-center justify-end pb-1.5" style={{ paddingTop: '30px' }}>
+                {!isActive && (
+                  <div className="relative">
+                    <span style={{ color: INACTIVE_ICON_COLOR }}>
+                      {tab.icon}
+                    </span>
+                    {(tab.badge ?? 0) > 0 && (
+                      <span
+                        className="absolute -top-1 -right-1.5 min-w-[14px] h-[14px] px-0.5 rounded-full text-white text-[9px] font-bold flex items-center justify-center"
+                        style={{ background: '#C98933' }}
+                      >
+                        {tab.badge}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {isActive && <div style={{ height: 22 }} />}
+                <span
+                  className="text-[9px] font-semibold mt-0.5 transition-colors"
+                  style={{ color: isActive ? ACTIVE_LABEL_COLOR : INACTIVE_LABEL_COLOR }}
+                >
+                  {tab.label}
+                </span>
+              </div>
             )
-          }
 
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setDrawer(drawer === tab.key ? null : tab.key)}
-              className="relative flex flex-col items-center justify-center gap-0.5 flex-1 py-2 press-scale"
-            >
-              {content}
-            </button>
-          )
-        })}
+            if (tab.type === 'link') {
+              return (
+                <Link key={tab.href} href={tab.href} className="flex-1">
+                  {inner}
+                </Link>
+              )
+            }
+
+            return (
+              <button key={tab.key} onClick={handleTap} className="flex-1">
+                {inner}
+              </button>
+            )
+          })}
+        </div>
       </nav>
     </>
   )

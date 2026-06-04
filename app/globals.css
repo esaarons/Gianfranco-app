@@ -124,7 +124,8 @@
 .pt-header  { padding-top: calc(2rem + env(safe-area-inset-top)); }
 
 /* Page content bottom: clears BottomNav (64px) + home indicator */
-.pb-nav     { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+/* Nav bar = 60px bar + 27px for floating circle = ~87px total visual height */
+.pb-nav     { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
 
 /* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
 .scrollbar-hide {
@@ -233,13 +234,8 @@
   transition: none;
 }
 
-/* ─── Bottom nav ─────────────────────────────────────────────────────────────── */
-.bottom-nav {
-  background: rgba(247, 245, 240, 0.94);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-top: 1px solid rgba(30,53,65,0.07);
-}
+/* ─── Bottom nav — styles now applied inline in BottomNav.tsx ─────────────── */
+.bottom-nav { /* legacy — kept for compatibility */ }
 
 /* ─── Section label (navigation / dashboard) ────────────────────────────────── */
 .section-label {

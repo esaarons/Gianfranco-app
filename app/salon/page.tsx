@@ -73,11 +73,12 @@ function computeTableState(
 // ── Tracking types ────────────────────────────────────────────────────────────
 
 interface TrackingItem {
-  table: Table
+  table?: Table        // undefined for takeaway orders
   order: Order
   state: FloorState
   cards: AreaCard[]
   itemCount: number
+  isTakeaway?: boolean
 }
 
 // ── Tracking progress bar ─────────────────────────────────────────────────────
@@ -148,7 +149,7 @@ function TrackingProgressBar({ stages }: { stages: ProgressStage[] }) {
                   </svg>
                 )}
                 {isDone && isLast && (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1B3D2B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1B3428" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 )}
@@ -200,9 +201,9 @@ function TableTrackingCard({
 }: {
   item: TrackingItem
   isExiting: boolean
-  onClick: () => void
+  onClick?: () => void
 }) {
-  const { table, order, state, cards } = item
+  const { table, order, state, cards, isTakeaway } = item
   const barCard = cards.find(c => c.area_id === AREA_IDS.BAR)
   const kitCard = cards.find(c => c.area_id === AREA_IDS.KITCHEN)
 
@@ -273,11 +274,18 @@ function TableTrackingCard({
   const itemSummary = itemNames.join(' · ')
     + (order.items && order.items.length > 3 ? ` · +${order.items.length - 3}` : '')
 
+  const cardLabel = isTakeaway
+    ? `Para llevar #${order.id.slice(-4).toUpperCase()}`
+    : `Mesa ${table!.code}`
+
+  const Wrapper = onClick ? 'button' : 'div'
+
   return (
-    <button
-      onClick={onClick}
+    <Wrapper
+      {...(onClick ? { onClick } : {})}
       className={cn(
-        'w-full text-left rounded-2xl border px-4 py-4 transition-all press-scale mb-3',
+        'w-full text-left rounded-2xl border px-4 py-4 transition-all mb-3',
+        onClick ? 'press-scale' : 'cursor-default',
         isExiting && 'card-exit',
         isListo
           ? 'border-[#EAD9B1]/30 bg-[#EAD9B1]/8'
@@ -287,7 +295,7 @@ function TableTrackingCard({
       {/* Card header */}
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-2">
-          <p className="text-white font-bold text-sm">Mesa {table.code}</p>
+          <p className="text-white font-bold text-sm">{cardLabel}</p>
           <span className="text-white/30 text-xs">·</span>
           <p className="text-white/45 text-xs">{item.itemCount} ítem{item.itemCount !== 1 ? 's' : ''}</p>
         </div>
@@ -337,7 +345,7 @@ function TableTrackingCard({
       <div className="mt-3">
         <TrackingProgressBar stages={stages} />
       </div>
-    </button>
+    </Wrapper>
   )
 }
 
@@ -386,7 +394,7 @@ function TrackingSection({
           key={item.order.id}
           item={item}
           isExiting={exiting.has(item.order.id)}
-          onClick={() => onTablePress(item.table)}
+          onClick={item.isTakeaway ? undefined : () => onTablePress(item.table!)}
         />
       ))}
     </div>
@@ -414,7 +422,7 @@ function OrderItemRow({ item }: { item: OrderItem }) {
           <p className="text-[#C46F4E] text-xs italic mt-0.5">"{item.notes}"</p>
         )}
       </div>
-      <span className="text-[#1E3541] text-sm font-semibold shrink-0">{formatPrice(lineTotal)}</span>
+      <span className="text-[#1B3428] text-sm font-semibold shrink-0">{formatPrice(lineTotal)}</span>
     </div>
   )
 }
@@ -461,7 +469,7 @@ function TableModal({
         body: JSON.stringify({ status: 'closed' }),
       })
       if (!res.ok) { toast.error('Error al cerrar la mesa'); return }
-      toast.success(`Mesa ${table.code} cerrada`)
+      toast.success(`Mesa ${table.code} cobrada`)
       setClosed(true)
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['tables'] })
@@ -472,6 +480,27 @@ function TableModal({
       }, 700)
     } catch {
       toast.error('Error al cerrar la mesa')
+    } finally {
+      setClosing(false)
+    }
+  }
+
+  async function handleReleaseTable() {
+    setClosing(true)
+    try {
+      const res = await fetch(`/api/tables/${table.id}/release`, { method: 'POST' })
+      if (!res.ok) { toast.error('Error al liberar la mesa'); return }
+      toast.success(`Mesa ${table.code} liberada`)
+      setClosed(true)
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['tables'] })
+        queryClient.invalidateQueries({ queryKey: ['orders', 'open'] })
+        queryClient.invalidateQueries({ queryKey: ['table-order', table.id] })
+        queryClient.invalidateQueries({ queryKey: ['cards-all-active'] })
+        onClose()
+      }, 700)
+    } catch {
+      toast.error('Error al liberar la mesa')
     } finally {
       setClosing(false)
     }
@@ -495,7 +524,7 @@ function TableModal({
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <h2 className="text-[#1E3541] text-2xl font-bold leading-none">Mesa {table.code}</h2>
+                  <h2 className="text-[#1B3428] text-2xl font-bold leading-none">Mesa {table.code}</h2>
                   <span
                     className="text-[11px] font-bold px-2.5 py-1 rounded-full"
                     style={{ background: stateCfg.bg, color: stateCfg.dot, border: `1px solid ${stateCfg.border}` }}
@@ -530,7 +559,7 @@ function TableModal({
           <div className="flex-1 overflow-y-auto px-5 py-3 min-h-0">
             {isLoading && !order ? (
               <div className="h-24 flex items-center justify-center">
-                <div className="w-5 h-5 rounded-full border-2 border-[#1E3541]/20 border-t-[#1E3541] animate-spin" />
+                <div className="w-5 h-5 rounded-full border-2 border-[#1B3428]/20 border-t-[#1B3428] animate-spin" />
               </div>
             ) : !order ? (
               <div className="h-24 flex flex-col items-center justify-center gap-2">
@@ -554,7 +583,7 @@ function TableModal({
                 {items.length > 0 && (
                   <div className="flex items-center justify-between pt-2 border-t border-[#F2EFE9]">
                     <span className="text-[#7A756D] text-sm font-medium">Total</span>
-                    <span className="text-[#1E3541] text-xl font-bold">{formatPrice(total)}</span>
+                    <span className="text-[#1B3428] text-xl font-bold">{formatPrice(total)}</span>
                   </div>
                 )}
 
@@ -615,18 +644,18 @@ function TableModal({
               <>
                 <button
                   onClick={() => { onClose(); router.push(`/order/${table.id}`) }}
-                  className="w-full flex items-center justify-center gap-2 bg-[#1E3A2F] text-[#EAD9B1] font-bold py-4 rounded-2xl text-sm press-scale"
+                  className="w-full flex items-center justify-center gap-2 bg-[#1B3428] text-[#EAD9B1] font-bold py-4 rounded-2xl text-sm press-scale"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   Agregar pedido
                 </button>
                 {order && (
                   <div className="flex gap-2.5">
-                    <button onClick={handleCloseOrder} disabled={closing || !items.length}
-                      className="flex-1 bg-[#F5F1E8] text-[#1E3541] font-bold py-4 rounded-2xl text-sm press-scale disabled:opacity-40">
+                    <button onClick={handleCloseOrder} disabled={closing || !order}
+                      className="flex-1 bg-[#F5F1E8] text-[#1B3428] font-bold py-4 rounded-2xl text-sm press-scale disabled:opacity-40">
                       {closing ? 'Cerrando…' : '💳 Cobrar'}
                     </button>
-                    <button onClick={handleCloseOrder} disabled={closing}
+                    <button onClick={handleReleaseTable} disabled={closing}
                       className="flex-1 border border-[#FDDEDE] bg-[#FFF5F5] text-[#B8574E] font-semibold py-4 rounded-2xl text-sm press-scale disabled:opacity-40">
                       Cliente se fue
                     </button>
@@ -761,7 +790,6 @@ function DashboardView({
   trackingItems,
   stats,
   todayReservations,
-  tomorrowReservations,
   stockOut,
   stockLow,
   totalActiveTables,
@@ -770,16 +798,11 @@ function DashboardView({
   trackingItems: TrackingItem[]
   stats: { occupied: number; free: number; ready: number; reserved: number }
   todayReservations: Reservation[]
-  tomorrowReservations: Reservation[]
   stockOut: string[]
   stockLow: string[]
   totalActiveTables: number
   onTablePress: (table: Table) => void
 }) {
-  const tomorrowLabel = new Date(Date.now() + 86_400_000)
-    .toLocaleDateString('es-PE', { weekday: 'long' })
-    .replace(/^\w/, c => c.toUpperCase())
-
   return (
     <div className="px-4 pt-5 space-y-6 pb-8">
 
@@ -796,51 +819,18 @@ function DashboardView({
         <TrackingSection items={trackingItems} onTablePress={onTablePress} />
       </section>
 
-      {/* ── Reservas ── */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-[#A7C4A0] text-[10px] font-bold uppercase tracking-[0.18em]">Reservas</p>
-          <Link href="/admin/reservations" className="text-[#EAD9B1] text-[11px] font-semibold press-scale opacity-70">
-            Ver todas →
-          </Link>
-        </div>
-
-        {todayReservations.length === 0 && tomorrowReservations.length === 0 ? (
-          <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white/5 border border-white/8">
-            <span className="text-xl opacity-40">📅</span>
-            <p className="text-white/40 text-sm">Sin reservas pendientes</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {todayReservations.length > 0 && (
-              <div>
-                <p className="text-white/35 text-[11px] font-semibold px-1 mb-2">
-                  Hoy · {todayReservations.length} reserva{todayReservations.length !== 1 ? 's' : ''}
-                </p>
-                <div className="space-y-2">
-                  {todayReservations.slice(0, 4).map(r => <ReservCard key={r.id} r={r} isToday />)}
-                  {todayReservations.length > 4 && (
-                    <p className="text-white/25 text-xs text-center py-1">+{todayReservations.length - 4} más</p>
-                  )}
-                </div>
-              </div>
-            )}
-            {tomorrowReservations.length > 0 && (
-              <div>
-                <p className="text-white/35 text-[11px] font-semibold px-1 mb-2">
-                  {tomorrowLabel} · {tomorrowReservations.length} reserva{tomorrowReservations.length !== 1 ? 's' : ''}
-                </p>
-                <div className="space-y-2">
-                  {tomorrowReservations.slice(0, 3).map(r => <ReservCard key={r.id} r={r} isToday={false} />)}
-                  {tomorrowReservations.length > 3 && (
-                    <p className="text-white/25 text-xs text-center py-1">+{tomorrowReservations.length - 3} más</p>
-                  )}
-                </div>
-              </div>
+      {/* ── Reservas hoy ── */}
+      {todayReservations.length > 0 && (
+        <section>
+          <p className="text-[#A7C4A0] text-[10px] font-bold uppercase tracking-[0.18em] mb-3">Reservas hoy</p>
+          <div className="space-y-2">
+            {todayReservations.slice(0, 4).map(r => <ReservCard key={r.id} r={r} isToday />)}
+            {todayReservations.length > 4 && (
+              <p className="text-white/25 text-xs text-center py-1">+{todayReservations.length - 4} más</p>
             )}
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
       {/* ── Stock ── */}
       <section>
@@ -1064,16 +1054,6 @@ export default function SalonPage() {
     refetchInterval: 60_000,
   })
 
-  const { data: tomorrowReservations = [] } = useQuery<Reservation[]>({
-    queryKey: ['reservations', 'tomorrow'],
-    queryFn: async () => {
-      const res = await fetch(`/api/reservations?date=${localDate(1)}&status=pending,confirmed`)
-      if (!res.ok) return []
-      return res.json()
-    },
-    refetchInterval: 120_000,
-  })
-
   // ── Realtime ───────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -1161,7 +1141,7 @@ export default function SalonPage() {
   }, [activeTables, childTableIds, tableStateMap])
 
   // Tracking items: tables with open orders (occupied / preparando / listo)
-  const trackingItems = useMemo((): TrackingItem[] => {
+  const tableTrackingItems = useMemo((): TrackingItem[] => {
     return activeTables
       .filter(t => !childTableIds.has(t.id))
       .map(t => {
@@ -1175,18 +1155,41 @@ export default function SalonPage() {
           itemCount: sd.itemCount,
         }
       })
-      .filter((x): x is TrackingItem => x !== null)
+      .filter((x): x is NonNullable<typeof x> => x !== null)
       .sort((a, b) => {
-        // Listo tables go last (about to disappear)
         if (a.state === 'listo' && b.state !== 'listo') return 1
         if (b.state === 'listo' && a.state !== 'listo') return -1
-        // Preparando before ocupada
         if (a.state === 'preparando' && b.state !== 'preparando') return -1
         if (b.state === 'preparando' && a.state !== 'preparando') return 1
-        // Oldest first
         return new Date(a.order.created_at).getTime() - new Date(b.order.created_at).getTime()
       })
   }, [activeTables, childTableIds, tableStateMap])
+
+  // Tracking items: takeaway orders — derive state from their area cards
+  const takeawayTrackingItems = useMemo((): TrackingItem[] => {
+    return takeawayOrders.map(order => {
+      const cards = cardsByOrder.get(order.id) ?? []
+      const itemCount = order.items?.reduce((s, i) => s + i.quantity, 0) ?? 0
+      let state: FloorState = 'ocupada'
+      if (cards.length > 0) {
+        if (cards.every(c => c.status === 'delivered')) state = 'listo'
+        else if (cards.some(c => c.status === 'received' || c.status === 'delivered')) state = 'preparando'
+      }
+      return { order, state, cards, itemCount, isTakeaway: true as const }
+    }).sort((a, b) => {
+      if (a.state === 'listo' && b.state !== 'listo') return 1
+      if (b.state === 'listo' && a.state !== 'listo') return -1
+      if (a.state === 'preparando' && b.state !== 'preparando') return -1
+      if (b.state === 'preparando' && a.state !== 'preparando') return 1
+      return new Date(a.order.created_at).getTime() - new Date(b.order.created_at).getTime()
+    })
+  }, [takeawayOrders, cardsByOrder])
+
+  // Unified tracking: takeaway at the top (customer waiting at counter), tables below
+  const trackingItems = useMemo(
+    () => [...takeawayTrackingItems, ...tableTrackingItems],
+    [takeawayTrackingItems, tableTrackingItems],
+  )
 
   // Stock alerts
   const stockOut = useMemo(
@@ -1229,7 +1232,7 @@ export default function SalonPage() {
   // ── Colors ────────────────────────────────────────────────────────────────
 
   // The page is always dark green; only the floor plan canvas changes to light
-  const PAGE_BG = '#1B3D2B'
+  const PAGE_BG = '#1B3428'
 
   return (
     <div className="min-h-screen" style={{ background: PAGE_BG, paddingTop: 'env(safe-area-inset-top)' }}>
@@ -1316,7 +1319,6 @@ export default function SalonPage() {
             trackingItems={trackingItems}
             stats={stats}
             todayReservations={todayReservations}
-            tomorrowReservations={tomorrowReservations}
             stockOut={stockOut}
             stockLow={stockLow}
             totalActiveTables={stats.total}
@@ -1339,7 +1341,7 @@ export default function SalonPage() {
                 className={cn(
                   'flex-1 py-2.5 text-xs font-semibold transition-all border-b-2 press-scale',
                   activeZone === key
-                    ? 'text-[#1E3A2F] border-[#1E3A2F]'
+                    ? 'text-[#1B3428] border-[#1B3428]'
                     : 'text-[#8AAE8F] border-transparent',
                 )}
               >

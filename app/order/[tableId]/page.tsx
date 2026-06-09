@@ -56,7 +56,7 @@ export default function OrderPage() {
       }
       toast.success(`Pedido Mesa ${tableCode ?? ''} enviado`)
       clearCart()
-      router.push('/tables')
+      router.push('/salon')
     } catch {
       toast.error('Error de conexión')
     } finally {
@@ -74,10 +74,10 @@ export default function OrderPage() {
   }
 
   return (
-    <div className="flex flex-col h-dvh bg-[#0A1928]">
+    <div className="flex flex-col h-dvh bg-[#0F2018]">
 
       {/* Header */}
-      <div className="px-4 pt-4 pb-3 shrink-0" style={{ background: 'linear-gradient(to bottom, #0E2F33, #0A1928)' }}>
+      <div className="px-4 pt-4 pb-3 shrink-0" style={{ background: 'linear-gradient(to bottom, #0F2018, #0F2018)' }}>
         <div className="flex items-center justify-between">
           {/* Back */}
           <button
@@ -124,7 +124,7 @@ export default function OrderPage() {
               className={cn(
                 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-all press-scale border',
                 activeGuest === null
-                  ? 'bg-[#F5F1E8] text-[#0E2F33] border-transparent'
+                  ? 'bg-[#F5F1E8] text-[#0F2018] border-transparent'
                   : 'bg-white/6 text-white/40 border-white/8 hover:bg-white/10'
               )}
             >
@@ -140,7 +140,7 @@ export default function OrderPage() {
               className={cn(
                 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-all press-scale border',
                 activeGuest === g
-                  ? 'bg-[#F5F1E8] text-[#0E2F33] border-transparent'
+                  ? 'bg-[#F5F1E8] text-[#0F2018] border-transparent'
                   : 'bg-white/6 text-white/45 border-white/8 hover:bg-white/10'
               )}
             >

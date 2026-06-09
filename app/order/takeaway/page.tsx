@@ -57,8 +57,8 @@ export default function TakeawayOrderPage() {
         <p className="text-white text-6xl font-bold tracking-tight mb-1">#{ticketNumber}</p>
         <p className="text-white/30 text-sm mb-10">Número de retiro del cliente</p>
         <button
-          onClick={() => { setTicketNumber(null); router.push('/tables') }}
-          className="bg-[#F5F1E8] text-[#0E2F33] font-bold py-4 px-8 rounded-2xl text-sm btn-primary"
+          onClick={() => { setTicketNumber(null); router.push('/salon') }}
+          className="bg-[#F5F1E8] text-[#0F2018] font-bold py-4 px-8 rounded-2xl text-sm btn-primary"
         >
           Listo
         </button>
@@ -73,10 +73,10 @@ export default function TakeawayOrderPage() {
   }
 
   return (
-    <div className="flex flex-col h-dvh bg-[#0A1928]">
+    <div className="flex flex-col h-dvh bg-[#0F2018]">
 
       {/* Header */}
-      <div className="px-4 pt-4 pb-4 shrink-0" style={{ background: 'linear-gradient(to bottom, #0E2F33, #0A1928)' }}>
+      <div className="px-4 pt-4 pb-4 shrink-0" style={{ background: 'linear-gradient(to bottom, #0F2018, #0F2018)' }}>
         <div className="flex items-center justify-between">
           <button
             onClick={() => router.back()}

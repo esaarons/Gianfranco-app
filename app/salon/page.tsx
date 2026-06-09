@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
-import { useTables } from '@/hooks/useTables'
+import { useTables, useJoinTables, useSplitTable, useUpdateTableStatus } from '@/hooks/useTables'
 import { useProducts } from '@/hooks/useProducts'
 import { useTableOrder } from '@/hooks/useProducts'
 import { useSound } from '@/hooks/useSound'
@@ -431,11 +431,17 @@ function OrderItemRow({ item }: { item: OrderItem }) {
 
 function TableModal({
   table, stateData, onClose,
+  children, onStartJoin, onSplit, onMarkFree,
 }: {
   table: Table
   stateData: TableStateData
   onClose: () => void
+  children: Table[]
+  onStartJoin: () => void
+  onSplit: () => void
+  onMarkFree: () => void
 }) {
+  const hasChildren = children.length > 0
   const router = useRouter()
   const queryClient = useQueryClient()
   const { data: liveOrder, isLoading } = useTableOrder(table.id)
@@ -640,6 +646,11 @@ function TableModal({
           <div className="shrink-0 px-5 pt-3 border-t border-[#F2EFE9] space-y-2.5 pb-safe-6">
             {closed ? (
               <div className="w-full bg-[#EFF7EF] text-[#2E7D32] font-bold py-4 rounded-2xl text-sm text-center success-pop">Mesa cerrada ✓</div>
+            ) : stateData.state === 'limpieza' ? (
+              <button onClick={onMarkFree}
+                className="w-full bg-[#4EA055] text-white font-bold py-4 rounded-2xl text-sm press-scale">
+                ✓ Lista para usar
+              </button>
             ) : (
               <>
                 <button
@@ -661,6 +672,16 @@ function TableModal({
                     </button>
                   </div>
                 )}
+                {hasChildren && (
+                  <button onClick={onSplit}
+                    className="w-full border border-[#E7E1D8] bg-[#F7F5F0] text-[#7A756D] font-medium py-3 rounded-2xl text-sm press-scale">
+                    Separar mesas
+                  </button>
+                )}
+                <button onClick={onStartJoin}
+                  className="w-full border border-[#E7E1D8] bg-[#F7F5F0] text-[#7A756D] font-medium py-3 rounded-2xl text-sm press-scale">
+                  {hasChildren ? 'Añadir otra mesa al grupo' : 'Unir con otra mesa'}
+                </button>
               </>
             )}
           </div>
@@ -1005,11 +1026,16 @@ const ZONE_TABS: { key: ZoneFilter; label: string }[] = [
 export default function SalonPage() {
   useSound()
 
-  const queryClient = useQueryClient()
-  const [mainTab,   setMainTab]   = useState<'dashboard' | 'plano'>('dashboard')
+  const queryClient  = useQueryClient()
+  const [mainTab,    setMainTab]    = useState<'dashboard' | 'plano'>('dashboard')
   const [activeZone, setActiveZone] = useState<ZoneFilter>('all')
   const [selectedTable, setSelectedTable] = useState<Table | null>(null)
+  const [joinSource, setJoinSource] = useState<Table | null>(null)
   const [time, setTime] = useState('')
+
+  const joinTables   = useJoinTables()
+  const splitTable   = useSplitTable()
+  const updateStatus = useUpdateTableStatus()
 
   useEffect(() => {
     const update = () => setTime(new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }))
@@ -1216,12 +1242,56 @@ export default function SalonPage() {
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   const handleTablePress = useCallback((table: Table) => {
+    if (joinSource) {
+      if (joinSource.id === table.id) { setJoinSource(null); return }
+      const src = joinSource
+      setJoinSource(null)
+      joinTables.mutate(
+        { childId: src.id, parentId: table.id },
+        {
+          onSuccess: () => toast.success(`Mesa ${src.code} unida a Mesa ${table.code}`),
+          onError:   () => toast.error('Error al unir mesas'),
+        }
+      )
+      return
+    }
     setSelectedTable(table)
-  }, [])
+  }, [joinSource, joinTables])
 
   const handleCloseModal = useCallback(() => {
     setSelectedTable(null)
   }, [])
+
+  const handleStartJoin = useCallback(() => {
+    if (!selectedTable) return
+    const src = selectedTable
+    setSelectedTable(null)
+    setJoinSource(src)
+    setMainTab('plano')
+  }, [selectedTable])
+
+  const handleSplitTable = useCallback(async () => {
+    if (!selectedTable) return
+    const children = activeTables.filter(t => t.parent_table_id === selectedTable.id)
+    try {
+      await Promise.all(children.map(c => splitTable.mutateAsync(c.id)))
+      toast.success('Mesas separadas')
+      setSelectedTable(null)
+    } catch {
+      toast.error('Error al separar mesas')
+    }
+  }, [selectedTable, activeTables, splitTable])
+
+  const handleMarkFree = useCallback(() => {
+    if (!selectedTable) return
+    updateStatus.mutate(
+      { id: selectedTable.id, status: 'free' },
+      {
+        onSuccess: () => { toast.success(`Mesa ${selectedTable.code} lista`); setSelectedTable(null) },
+        onError:   () => toast.error('Error al liberar mesa'),
+      }
+    )
+  }, [selectedTable, updateStatus])
 
   const zoneSharedProps = {
     childTableIds, activeTables, tableStateMap,
@@ -1350,6 +1420,23 @@ export default function SalonPage() {
             ))}
           </div>
 
+          {/* Join mode banner */}
+          {joinSource && (
+            <div className="mx-4 mt-3 fade-in">
+              <div className="rounded-2xl border border-[#D79A57]/40 bg-[#FEF3E8] px-4 py-3 flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-[#D79A57] shrink-0 dot-pulse-amber" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[#7C5010] text-sm font-semibold">Mesa {joinSource.code} seleccionada</p>
+                  <p className="text-[#7C5010]/60 text-xs mt-0.5">Toca la mesa con la que deseas unirla</p>
+                </div>
+                <button onClick={() => setJoinSource(null)}
+                  className="shrink-0 text-[#7C5010]/60 text-sm font-medium press-scale transition-colors">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Tables */}
           <div style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 120px)', paddingTop: '24px' }}>
             {activeZone === 'all' ? (
@@ -1391,6 +1478,10 @@ export default function SalonPage() {
           table={selectedTable}
           stateData={tableStateMap.get(selectedTable.id) ?? { state: 'libre', cards: [], itemCount: 0, personCount: 0 }}
           onClose={handleCloseModal}
+          children={activeTables.filter(t => t.parent_table_id === selectedTable.id)}
+          onStartJoin={handleStartJoin}
+          onSplit={handleSplitTable}
+          onMarkFree={handleMarkFree}
         />
       )}
     </div>

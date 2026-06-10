@@ -5,8 +5,7 @@ import { useState, useEffect } from 'react'
 import { useTables } from '@/hooks/useTables'
 import { useAreaCardsByType } from '@/hooks/useCards'
 import { ZONE_LABELS } from '@/lib/constants'
-import { cn } from '@/lib/utils'
-import { formatPrice } from '@/lib/utils'
+import { cn, formatPrice } from '@/lib/utils'
 import Link from 'next/link'
 import { ReservationBanner } from '@/components/notifications/ReservationBanner'
 import type { Table, Order } from '@/types'
@@ -33,128 +32,121 @@ function getOperationStatus(
   barCards: { status: string; created_at: string }[],
   kitchenCards: { status: string; created_at: string }[],
 ): { type: StatusType; msg: string; accent: string } {
-  const WARN_MIN = 8
-  const CRIT_MIN = 15
   const maxWait = (cards: { status: string; created_at: string }[]) =>
     Math.max(0, ...cards.filter(c => c.status === 'pending').map(c =>
       (Date.now() - new Date(c.created_at).getTime()) / 60000))
-  const bar = maxWait(barCards)
-  const kit = maxWait(kitchenCards)
-  const top = Math.max(bar, kit)
-  if (top >= CRIT_MIN) return { type: 'critical', msg: bar >= kit ? 'Barra presenta demora crítica' : 'Cocina presenta demora crítica', accent: '#B8574E' }
-  if (top >= WARN_MIN) return { type: 'warning',  msg: bar >= kit ? 'Barra requiere atención' : 'Cocina requiere atención', accent: '#C98933' }
-  return { type: 'ok', msg: 'Todo funcionando correctamente', accent: '#6D8A5C' }
+  const top = Math.max(maxWait(barCards), maxWait(kitchenCards))
+  if (top >= 15) return { type: 'critical', msg: 'Demora crítica en estaciones', accent: '#B8574E' }
+  if (top >= 8)  return { type: 'warning',  msg: 'Atención requerida',           accent: '#C98933' }
+  return { type: 'ok', msg: 'Todo operando correctamente', accent: '#4EA055' }
 }
 
 function computeAlerts(
-  barCards: { status: string; created_at: string; area?: unknown }[],
+  barCards: { status: string; created_at: string }[],
   kitchenCards: { status: string; created_at: string }[],
   openOrders: Order[],
 ): string[] {
-  const CARD_ALERT = 8
-  const TABLE_ALERT = 90
   const alerts: string[] = []
-
-  const barLate = barCards.filter(c => c.status === 'pending' && (Date.now() - new Date(c.created_at).getTime()) / 60000 >= CARD_ALERT)
-  const kitLate = kitchenCards.filter(c => c.status === 'pending' && (Date.now() - new Date(c.created_at).getTime()) / 60000 >= CARD_ALERT)
-  if (barLate.length > 0) alerts.push(`Barra: ${barLate.length} comanda${barLate.length > 1 ? 's' : ''} sin recibir (${Math.round((Date.now() - new Date(barLate[0].created_at).getTime()) / 60000)} min)`)
-  if (kitLate.length > 0) alerts.push(`Cocina: ${kitLate.length} comanda${kitLate.length > 1 ? 's' : ''} sin recibir (${Math.round((Date.now() - new Date(kitLate[0].created_at).getTime()) / 60000)} min)`)
-
-  const longTables = openOrders.filter(o => o.table && (Date.now() - new Date(o.created_at).getTime()) / 60000 >= TABLE_ALERT)
-  for (const o of longTables.slice(0, 2)) {
-    if (o.table) alerts.push(`Mesa ${o.table.code} abierta hace ${Math.round((Date.now() - new Date(o.created_at).getTime()) / 60000)} min`)
+  const late = (cards: { status: string; created_at: string }[], name: string) => {
+    const n = cards.filter(c => c.status === 'pending' && (Date.now() - new Date(c.created_at).getTime()) / 60000 >= 8)
+    if (n.length) alerts.push(`${name}: ${n.length} comanda${n.length > 1 ? 's' : ''} sin recibir (${Math.round((Date.now() - new Date(n[0].created_at).getTime()) / 60000)} min)`)
   }
+  late(barCards, 'Barra')
+  late(kitchenCards, 'Cocina')
+  openOrders.filter(o => o.table && (Date.now() - new Date(o.created_at).getTime()) / 60000 >= 90)
+    .slice(0, 2).forEach(o => o.table && alerts.push(`Mesa ${o.table.code} abierta hace ${Math.round((Date.now() - new Date(o.created_at).getTime()) / 60000)} min`))
   return alerts
 }
 
-// ── Area card ─────────────────────────────────────────────────────────────────
+// ── Station carousel card ─────────────────────────────────────────────────────
 
-function AreaCard({
-  label, href, emoji, pending, received, avgWait, accent, bg, statusOk,
+function StationCard({
+  label, href, emoji, accent, bg,
+  pending, received, avgWait,
 }: {
-  label: string; href: string; emoji: string
+  label: string; href: string; emoji: string; accent: string; bg: string
   pending: number; received: number; avgWait: number | null
-  accent: string; bg: string; statusOk: boolean
 }) {
   const alerting = pending > 0 && (avgWait ?? 0) >= 8
   return (
     <Link
       href={href}
-      className="relative flex flex-col gap-3 rounded-2xl border bg-white p-4 press-scale card-shadow transition-all hover:border-[#D4CFC5] block"
-      style={{ borderColor: alerting ? accent + '40' : '#E7E1D8' }}
+      className="shrink-0 flex flex-col gap-3.5 rounded-2xl border p-4 press-scale w-[148px]"
+      style={{
+        background: alerting ? accent + '08' : bg,
+        borderColor: alerting ? accent + '45' : '#E7E1D8',
+      }}
     >
       {/* Top row */}
       <div className="flex items-start justify-between">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: bg }}>
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
+          style={{ background: alerting ? accent + '18' : accent + '12' }}
+        >
           {emoji}
         </div>
         {pending > 0 && (
-          <span className="flex items-center gap-1.5 text-[11px] font-bold px-2 py-1 rounded-full"
-            style={{ background: accent + '15', color: accent }}>
-            <span className="w-1.5 h-1.5 rounded-full dot-pulse-amber" style={{ background: accent }} />
+          <div
+            className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+            style={{ background: accent, boxShadow: `0 2px 8px ${accent}50` }}
+          >
             {pending}
-          </span>
+          </div>
         )}
       </div>
 
-      {/* Label */}
+      {/* Label + status */}
       <div>
         <p className="font-bold text-[#1F1F1F] text-sm leading-none">{label}</p>
-
-        {/* Metrics */}
-        <div className="flex items-center gap-3 mt-1.5">
-          {pending > 0 && (
-            <span className="text-[11px]" style={{ color: accent }}>
-              <strong>{pending}</strong> pend.
-            </span>
-          )}
-          {received > 0 && (
-            <span className="text-[11px] text-[#6D9EEB]">
-              <strong>{received}</strong> prep.
-            </span>
-          )}
-          {pending === 0 && received === 0 && (
-            <span className="text-[11px] text-[#A9A39C]">Lista</span>
+        <div className="flex items-center gap-1.5 mt-1.5">
+          {pending === 0 && received === 0 ? (
+            <span className="text-[11px] text-[#A9A39C] font-medium">Lista</span>
+          ) : (
+            <>
+              {pending > 0 && <span className="text-[11px] font-semibold" style={{ color: accent }}>{pending} pend.</span>}
+              {received > 0 && <span className="text-[11px] text-[#4A87C7] font-semibold">{received} prep.</span>}
+            </>
           )}
         </div>
-
-        {/* Avg wait */}
         {avgWait != null && avgWait > 0 && (
           <p className="text-[10px] mt-1 font-medium" style={{ color: alerting ? accent : '#A9A39C' }}>
-            Ø {avgWait.toFixed(1)} min espera
+            Ø {avgWait.toFixed(1)} min
           </p>
         )}
       </div>
 
-      {/* Status bar */}
-      <div className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full overflow-hidden">
-        <div className="h-full w-full rounded-full"
-          style={{ background: pending === 0 ? '#E7E1D8' : accent + '50' }} />
-      </div>
+      {/* Bottom accent bar */}
+      <div className="h-0.5 rounded-full w-full" style={{ background: pending > 0 ? accent + '50' : '#E7E1D8' }} />
     </Link>
   )
 }
 
 // ── Shortcut tile ─────────────────────────────────────────────────────────────
 
-function ShortcutTile({ href, icon, label }: { href: string; icon: string; label: string }) {
+function ShortcutTile({ href, icon, label, accent }: { href: string; icon: string; label: string; accent?: string }) {
   return (
     <Link
       href={href}
-      className="flex flex-col items-center gap-1.5 bg-white border border-[#E7E1D8] rounded-xl px-2 py-3.5 press-scale hover:border-[#D4CFC5] hover:bg-[#F9F7F4] transition-all card-shadow text-center"
+      className="flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3.5 press-scale transition-all text-center border"
+      style={{
+        background: accent ? accent + '08' : 'white',
+        borderColor: accent ? accent + '25' : '#E7E1D8',
+      }}
     >
       <span className="text-xl leading-none">{icon}</span>
-      <span className="text-[10px] text-[#7A756D] font-semibold leading-tight">{label}</span>
+      <span className="text-[10px] font-semibold leading-tight" style={{ color: accent ? accent : '#7A756D' }}>
+        {label}
+      </span>
     </Link>
   )
 }
 
-// ── Table dot ─────────────────────────────────────────────────────────────────
+// ── Table chip ────────────────────────────────────────────────────────────────
 
-const TABLE_DOT: Record<string, { dot: string; chip: string }> = {
-  free:     { dot: 'bg-[#9DAA7D]',      chip: 'bg-[#C9D4C2]/50 text-[#4A6B4E] border-[#C9D4C2]' },
-  occupied: { dot: 'bg-[#6D8A5C] dot-pulse', chip: 'bg-[#6D8A5C]/12 text-[#3D5E30] border-[#6D8A5C]/30' },
-  cleaning: { dot: 'bg-[#C8B8AA]',      chip: 'bg-[#C8B8AA]/30 text-[#7C5640] border-[#C8B8AA]/40' },
+const TABLE_DOT: Record<string, { dot: string; chip: string; dotClass: string }> = {
+  free:     { dot: '#9DAA7D',  chip: 'bg-[#C9D4C2]/50 text-[#4A6B4E] border-[#C9D4C2]',         dotClass: ''            },
+  occupied: { dot: '#4EA055',  chip: 'bg-[#4EA055]/10 text-[#2B6130] border-[#4EA055]/30',       dotClass: 'dot-pulse'   },
+  cleaning: { dot: '#C8B8AA',  chip: 'bg-[#C8B8AA]/25 text-[#7C5640] border-[#C8B8AA]/35',      dotClass: ''            },
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -185,7 +177,6 @@ export default function AdminPage() {
     staleTime: 20_000,
   })
 
-  // Live clock — set client-side only to avoid hydration mismatch
   const [now, setNow] = useState<Date | null>(null)
   useEffect(() => {
     setNow(new Date())
@@ -193,7 +184,6 @@ export default function AdminPage() {
     return () => clearInterval(id)
   }, [])
 
-  // Metrics
   const occupiedTables  = tables.filter(t => t.status === 'occupied').length
   const freeTables      = tables.filter(t => t.status === 'free').length
   const cleaningTables  = tables.filter(t => t.status === 'cleaning').length
@@ -204,306 +194,271 @@ export default function AdminPage() {
   const kitchenReceived = kitchenCards.filter(c => c.status === 'received').length
   const barAvgWait      = avgWaitMin(barCards)
   const kitAvgWait      = avgWaitMin(kitchenCards)
-
-  const activeStaff = staffActivity?.active ?? 0
-  const totalStaff  = staffActivity?.total  ?? 0
+  const activeStaff     = staffActivity?.active ?? 0
+  const totalStaff      = staffActivity?.total  ?? 0
 
   const status  = getOperationStatus(barCards, kitchenCards)
   const alerts  = computeAlerts(barCards, kitchenCards, openOrders)
 
   const recentOrders = [...openOrders]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 8)
+    .slice(0, 6)
 
   const tablesByZone: Record<string, Table[]> = {}
-  tables.forEach(t => {
-    if (!tablesByZone[t.zone]) tablesByZone[t.zone] = []
-    tablesByZone[t.zone].push(t)
-  })
+  tables.forEach(t => { tablesByZone[t.zone] = [...(tablesByZone[t.zone] ?? []), t] })
 
-  const dateStr = now?.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' })
   const timeStr = now?.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
+  const dateStr = now?.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
-    <div className="min-h-screen bg-[#F7F5F0]">
+    <div className="min-h-screen bg-[#F5F2EC]">
 
-      {/* ── HERO ────────────────────────────────────────────────────────────── */}
-      <div className="bg-[#1E3541] px-5 pt-10 pb-6 md:px-8 md:pt-14">
+      {/* ── HERO ── */}
+      <div style={{ background: '#1B3428' }}>
+        <div className="px-5 pt-10 pb-5">
 
-        {/* Brand + title */}
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <p className="text-white/35 text-[10px] font-bold uppercase tracking-[0.28em] mb-1">Gianfranco</p>
-            <h1 className="text-white text-2xl md:text-3xl font-bold tracking-tight leading-none">
-              Centro Operativo
-            </h1>
-            {now && (
-              <p className="text-white/45 text-sm mt-1.5 capitalize">{dateStr} · {timeStr}</p>
-            )}
-          </div>
-          {/* Mesas libres indicator */}
-          <div className="text-right mt-1">
-            <p className="text-white/35 text-[10px] font-medium uppercase tracking-widest">Libres</p>
-            <p className="text-white text-2xl font-bold leading-none mt-0.5">{freeTables}</p>
-            <p className="text-white/35 text-[10px]">de {tables.length}</p>
-          </div>
-        </div>
-
-        {/* Key metrics */}
-        <div className="grid grid-cols-3 gap-2.5 mb-4">
-          <div className="bg-white/8 rounded-2xl px-3.5 py-3 text-center">
-            <p className="text-white text-2xl font-bold leading-none">{occupiedTables}</p>
-            <p className="text-white/45 text-[11px] mt-1 leading-none">Mesas activas</p>
-          </div>
-          <div className="bg-white/8 rounded-2xl px-3.5 py-3 text-center">
-            <p className="text-white text-2xl font-bold leading-none">{openOrders.length}</p>
-            <p className="text-white/45 text-[11px] mt-1 leading-none">Pedidos abiertos</p>
-          </div>
-          <div className="bg-white/8 rounded-2xl px-3.5 py-3 text-center">
-            <div className="flex items-center justify-center gap-1.5 leading-none">
-              <p className="text-white text-2xl font-bold leading-none">{activeStaff}</p>
-              {(staffActivity?.absent ?? 0) > 0 && (
-                <span className="text-white/40 text-sm font-medium">+{staffActivity!.absent}</span>
+          {/* Brand row */}
+          <div className="flex items-start justify-between mb-5">
+            <div>
+              <p className="text-white/30 text-[10px] font-bold uppercase tracking-[0.28em] mb-1">
+                Gianfranco Coffee Roasters
+              </p>
+              <h1 className="text-white text-2xl font-bold tracking-tight leading-none">
+                Centro Operativo
+              </h1>
+              {now && (
+                <p className="text-white/35 text-sm mt-1.5 capitalize">{dateStr} · {timeStr}</p>
               )}
             </div>
-            <p className="text-white/45 text-[11px] mt-1 leading-none">Equipo activo</p>
-          </div>
-        </div>
 
-        {/* Status */}
-        <div
-          className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl"
-          style={{ background: 'rgba(255,255,255,0.07)' }}
-        >
+            {/* Free tables indicator */}
+            <div
+              className="flex flex-col items-center justify-center w-16 h-16 rounded-2xl"
+              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              <p className="text-white text-2xl font-bold leading-none">{freeTables}</p>
+              <p className="text-white/35 text-[9px] uppercase tracking-wide mt-0.5">libres</p>
+            </div>
+          </div>
+
+          {/* 3 key metrics */}
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            {[
+              { value: occupiedTables, label: 'Mesas activas' },
+              { value: openOrders.length, label: 'Pedidos abiertos' },
+              { value: activeStaff, sub: totalStaff > 0 ? `de ${totalStaff}` : undefined, label: 'Equipo activo' },
+            ].map(({ value, label, sub }) => (
+              <div
+                key={label}
+                className="rounded-2xl px-3 py-3 text-center"
+                style={{ background: 'rgba(255,255,255,0.07)' }}
+              >
+                <div className="flex items-baseline justify-center gap-1">
+                  <p className="text-white text-2xl font-bold leading-none">{value}</p>
+                  {sub && <span className="text-white/30 text-xs">{sub}</span>}
+                </div>
+                <p className="text-white/40 text-[10px] mt-1 leading-tight">{label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Operational status */}
           <div
-            className="w-2 h-2 rounded-full shrink-0"
-            style={{ background: status.accent, boxShadow: `0 0 6px ${status.accent}80` }}
-          />
-          <p className="text-white text-sm font-medium">{status.msg}</p>
-          <div className="ml-auto flex items-center gap-3">
-            {totalStaff > 0 && (
-              <span className="text-white/30 text-[11px]">{activeStaff}/{totalStaff} equipo</span>
-            )}
+            className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl"
+            style={{ background: 'rgba(255,255,255,0.06)' }}
+          >
+            <div
+              className="w-2 h-2 rounded-full shrink-0"
+              style={{ background: status.accent, boxShadow: `0 0 6px ${status.accent}80` }}
+            />
+            <p className="text-white/80 text-sm font-medium flex-1">{status.msg}</p>
             {cleaningTables > 0 && (
-              <span className="text-white/30 text-[11px]">{cleaningTables} limpieza</span>
+              <span className="text-white/25 text-[11px]">{cleaningTables} limpieza</span>
             )}
           </div>
         </div>
       </div>
 
-      {/* ── MAIN CONTENT ────────────────────────────────────────────────────── */}
-      <div className="px-4 md:px-8 pt-5 pb-10 md:grid md:grid-cols-[1fr_360px] md:gap-6 md:items-start space-y-5 md:space-y-0">
+      {/* ── BODY ── */}
+      <div className="px-4 pt-5 pb-12 space-y-6">
 
-        {/* ── LEFT ──────────────────────────────────────────────────────────── */}
-        <div className="space-y-5">
-
-          {/* Area cards */}
-          <section>
-            <p className="section-label px-0.5 mb-2.5">Estaciones</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-              <AreaCard
-                label="Salón" href="/tables" emoji="🗺️"
-                pending={salonPending} received={occupiedTables} avgWait={null}
-                accent="#6D8A5C" bg="#EEF3EA" statusOk={salonPending === 0}
-              />
-              <AreaCard
-                label="Barra" href="/bar" emoji="☕"
-                pending={barPending} received={barReceived} avgWait={barAvgWait}
-                accent="#C98933" bg="#FEF4E6" statusOk={barPending === 0}
-              />
-              <AreaCard
-                label="Cocina" href="/kitchen" emoji="🍳"
-                pending={kitchenPending} received={kitchenReceived} avgWait={kitAvgWait}
-                accent="#B8574E" bg="#FEF0EE" statusOk={kitchenPending === 0}
-              />
-              <AreaCard
-                label="Delivery" href="/delivery" emoji="📦"
-                pending={0} received={0} avgWait={null}
-                accent="#1E3541" bg="#EDF1F3" statusOk
-              />
+        {/* Alerts */}
+        {alerts.length > 0 && (
+          <section
+            className="rounded-2xl border p-4"
+            style={{ background: '#FFFBF0', borderColor: '#C98933' + '30' }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2 h-2 rounded-full bg-[#C98933] dot-pulse-amber" />
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C98933]">
+                Alertas
+              </p>
+            </div>
+            <div className="space-y-2">
+              {alerts.map((a, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span className="text-[#C98933] text-xs mt-0.5 shrink-0">›</span>
+                  <p className="text-[#5C4E2E] text-sm leading-snug">{a}</p>
+                </div>
+              ))}
             </div>
           </section>
+        )}
 
-          {/* Upcoming reservations */}
-          <ReservationBanner />
+        {/* ── Stations carousel ── */}
+        <section>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#A9A39C] mb-3 px-0.5">
+            Estaciones
+          </p>
+          <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4">
+            <StationCard
+              label="Salón"    href="/salon"    emoji="🗺️"
+              accent="#4EA055" bg="#EEF6EF"
+              pending={salonPending} received={occupiedTables} avgWait={null}
+            />
+            <StationCard
+              label="Barra"   href="/bar"     emoji="☕"
+              accent="#C8913A" bg="#FEF4E6"
+              pending={barPending} received={barReceived} avgWait={barAvgWait}
+            />
+            <StationCard
+              label="Cocina"  href="/kitchen" emoji="🍳"
+              accent="#C46F4E" bg="#FEF0EE"
+              pending={kitchenPending} received={kitchenReceived} avgWait={kitAvgWait}
+            />
+            <StationCard
+              label="Delivery" href="/delivery" emoji="📦"
+              accent="#4A87C7" bg="#EDF3FC"
+              pending={0} received={0} avgWait={null}
+            />
+          </div>
+        </section>
 
-          {/* Alerts */}
-          {alerts.length > 0 && (
-            <section className="rounded-2xl border border-[#C98933]/30 bg-[#FFFAF0] p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 rounded-full bg-[#C98933]" />
-                <p className="section-label text-[#C98933]">Alertas operacionales</p>
-              </div>
-              <div className="space-y-2">
-                {alerts.map((a, i) => (
-                  <div key={i} className="flex items-start gap-2.5">
-                    <span className="text-[#C98933] text-xs mt-0.5 shrink-0">›</span>
-                    <p className="text-[#5C4E2E] text-sm leading-snug">{a}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+        <ReservationBanner />
 
-          {/* Active orders */}
-          {recentOrders.length > 0 && (
-            <section>
-              <div className="flex items-center justify-between px-0.5 mb-2.5">
-                <p className="section-label">Pedidos activos</p>
-                <Link href="/admin/orders" className="text-[#1E3541] text-xs font-semibold hover:underline">
-                  Ver todos →
-                </Link>
-              </div>
-              <div className="bg-white border border-[#E7E1D8] rounded-2xl overflow-hidden card-shadow">
-                {recentOrders.map((order, idx) => {
-                  const orderTotal = order.items?.reduce((s, item) => {
-                    const m = item.modifiers?.reduce((ms, mod) => ms + mod.price, 0) ?? 0
-                    return s + (item.unit_price + m) * item.quantity
-                  }, 0) ?? 0
-                  const isLast = idx === recentOrders.length - 1
-                  return (
-                    <div key={order.id}
-                      className={cn('px-4 py-3 flex items-center justify-between', !isLast && 'border-b border-[#F2EFE9]')}>
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-[#F7F5F0] flex items-center justify-center shrink-0 text-sm">
-                          {order.type === 'takeaway' ? '🥡' : order.table ? '🪑' : '📦'}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-semibold text-[#1F1F1F] text-sm leading-none truncate">
-                            {order.type === 'takeaway' ? 'Para llevar' : order.table ? `Mesa ${order.table.code}` : 'Delivery'}
-                          </p>
-                          <p className="text-[#A9A39C] text-[11px] mt-0.5">
-                            {elapsed(order.created_at)} · {order.items?.length ?? 0} ítem{(order.items?.length ?? 0) !== 1 ? 's' : ''}
-                          </p>
-                        </div>
+        {/* ── Active orders ── */}
+        {recentOrders.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between px-0.5 mb-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#A9A39C]">
+                Pedidos activos
+              </p>
+              <Link href="/admin/orders" className="text-[#1B3428] text-xs font-semibold">
+                Ver todos →
+              </Link>
+            </div>
+            <div className="bg-white border border-[#E7E1D8] rounded-2xl overflow-hidden">
+              {recentOrders.map((order, idx) => {
+                const orderTotal = order.items?.reduce((s, item) => {
+                  const m = item.modifiers?.reduce((ms, mod) => ms + mod.price, 0) ?? 0
+                  return s + (item.unit_price + m) * item.quantity
+                }, 0) ?? 0
+                const isLast = idx === recentOrders.length - 1
+                return (
+                  <div
+                    key={order.id}
+                    className={cn('px-4 py-3 flex items-center justify-between', !isLast && 'border-b border-[#F2EFE9]')}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-[#F7F5F0] flex items-center justify-center shrink-0 text-sm">
+                        {order.type === 'takeaway' ? '🥡' : order.table ? '🪑' : '📦'}
                       </div>
-                      {orderTotal > 0 && (
-                        <span className="text-[#3D5E30] text-sm font-bold shrink-0 ml-2">{formatPrice(orderTotal)}</span>
-                      )}
+                      <div className="min-w-0">
+                        <p className="font-semibold text-[#1F1F1F] text-sm leading-none truncate">
+                          {order.type === 'takeaway' ? 'Para llevar' : order.table ? `Mesa ${order.table.code}` : 'Delivery'}
+                        </p>
+                        <p className="text-[#A9A39C] text-[11px] mt-0.5">
+                          {elapsed(order.created_at)} · {order.items?.length ?? 0} ítem{(order.items?.length ?? 0) !== 1 ? 's' : ''}
+                        </p>
+                      </div>
                     </div>
-                  )
-                })}
-              </div>
-            </section>
-          )}
-
-          {/* No active orders empty state */}
-          {openOrders.length === 0 && tables.length > 0 && (
-            <div className="rounded-2xl border border-dashed border-[#E7E1D8] py-10 text-center">
-              <p className="text-3xl mb-2">🪑</p>
-              <p className="text-[#7A756D] text-sm font-medium">Sin pedidos activos</p>
-              <p className="text-[#A9A39C] text-xs mt-1">El salón está listo para recibir</p>
+                    {orderTotal > 0 && (
+                      <span className="text-[#1B3428] text-sm font-bold shrink-0 ml-2">
+                        {formatPrice(orderTotal)}
+                      </span>
+                    )}
+                  </div>
+                )
+              })}
             </div>
-          )}
-
-          {/* ── Shortcuts ─────────────────────────────────────────────────── */}
-          <section className="space-y-3">
-
-            <div>
-              <p className="section-label px-0.5 mb-2.5">Operaciones</p>
-              <div className="grid grid-cols-4 gap-2">
-                <ShortcutTile href="/tables"           icon="🗺️"  label="Salón"    />
-                <ShortcutTile href="/admin/orders"     icon="📋"  label="Pedidos"  />
-                <ShortcutTile href="/admin/reservations" icon="📅" label="Reservas" />
-                <ShortcutTile href="/admin/operations" icon="🎛" label="Turnos"   />
-              </div>
-            </div>
-
-            <div>
-              <p className="section-label px-0.5 mb-2.5">Inteligencia</p>
-              <div className="grid grid-cols-4 gap-2">
-                <ShortcutTile href="/admin/reports"    icon="📊"  label="Métricas"  />
-                <ShortcutTile href="/admin/operations" icon="⏱"  label="Turnos"    />
-                <ShortcutTile href="/admin/logs"       icon="🗂️"  label="Actividad" />
-                <ShortcutTile href="/admin/operations/history" icon="📈" label="Historial" />
-              </div>
-            </div>
-
-            <div>
-              <p className="section-label px-0.5 mb-2.5">Gestión</p>
-              <div className="grid grid-cols-4 gap-2">
-                <ShortcutTile href="/admin/products"   icon="🍽"  label="Productos"  />
-                <ShortcutTile href="/admin/modifiers"  icon="🧩"  label="Modif."     />
-                <ShortcutTile href="/staff"            icon="👥"  label="Personal"   />
-                <ShortcutTile href="/settings"         icon="⚙️"  label="Ajustes"    />
-              </div>
-            </div>
-
           </section>
-        </div>
+        )}
 
-        {/* ── RIGHT — table map (desktop sidebar) ─────────────────────────── */}
-        <div className="space-y-5">
+        {openOrders.length === 0 && tables.length > 0 && (
+          <div className="rounded-2xl border border-dashed border-[#E7E1D8] py-10 text-center">
+            <p className="text-3xl mb-2">🪑</p>
+            <p className="text-[#7A756D] text-sm font-medium">Sin pedidos activos</p>
+            <p className="text-[#A9A39C] text-xs mt-1">El salón está listo para recibir</p>
+          </div>
+        )}
 
-          {/* Quick table map */}
+        {/* ── Shortcuts ── */}
+        <section className="space-y-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#A9A39C] mb-3 px-0.5">
+              Operaciones
+            </p>
+            <div className="grid grid-cols-4 gap-2">
+              <ShortcutTile href="/salon"              icon="🗺️" label="Salón"    accent="#4EA055" />
+              <ShortcutTile href="/admin/orders"       icon="📋" label="Pedidos"  accent="#1B3428" />
+              <ShortcutTile href="/admin/reservations" icon="📅" label="Reservas" accent="#C8913A" />
+              <ShortcutTile href="/admin/operations"   icon="🎛" label="Turnos"   accent="#4A87C7" />
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#A9A39C] mb-3 px-0.5">
+              Gestión
+            </p>
+            <div className="grid grid-cols-4 gap-2">
+              <ShortcutTile href="/admin/products"  icon="🍽" label="Productos"  />
+              <ShortcutTile href="/admin/modifiers" icon="🧩" label="Modif."     />
+              <ShortcutTile href="/staff"           icon="👥" label="Personal"   />
+              <ShortcutTile href="/settings"        icon="⚙️" label="Ajustes"    />
+            </div>
+          </div>
+        </section>
+
+        {/* ── Quick table map ── */}
+        {Object.keys(tablesByZone).length > 0 && (
           <section>
-            <div className="flex items-center justify-between px-0.5 mb-2.5">
-              <p className="section-label">Mapa de mesas</p>
-              <Link href="/tables" className="text-[#1E3541] text-xs font-semibold hover:underline">
+            <div className="flex items-center justify-between px-0.5 mb-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#A9A39C]">
+                Mapa de mesas
+              </p>
+              <Link href="/salon" className="text-[#1B3428] text-xs font-semibold">
                 Ir al salón →
               </Link>
             </div>
-            <div className="bg-white border border-[#E7E1D8] rounded-2xl overflow-hidden card-shadow">
-              {Object.keys(tablesByZone).length === 0 ? (
-                <div className="py-10 text-center">
-                  <p className="text-[#A9A39C] text-sm">Sin mesas configuradas</p>
-                </div>
-              ) : (
-                Object.entries(tablesByZone).map(([zone, zoneTables], idx, arr) => (
-                  <div key={zone} className={idx < arr.length - 1 ? 'border-b border-[#F2EFE9]' : ''}>
-                    <div className="px-4 pt-3 pb-1">
-                      <p className="text-[10px] font-bold text-[#A9A39C] uppercase tracking-widest">{ZONE_LABELS[zone]}</p>
-                    </div>
-                    <div className="px-4 pb-3 flex flex-wrap gap-1.5">
-                      {zoneTables.map(table => {
-                        const cfg = TABLE_DOT[table.status] ?? TABLE_DOT.free
-                        return (
-                          <Link key={table.id} href="/tables"
-                            className={cn('flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold press-scale', cfg.chip)}>
-                            <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', cfg.dot)} />
-                            {table.code}
-                          </Link>
-                        )
-                      })}
-                    </div>
+            <div className="bg-white border border-[#E7E1D8] rounded-2xl overflow-hidden">
+              {Object.entries(tablesByZone).map(([zone, zoneTables], idx, arr) => (
+                <div key={zone} className={idx < arr.length - 1 ? 'border-b border-[#F2EFE9]' : ''}>
+                  <div className="px-4 pt-3 pb-1">
+                    <p className="text-[10px] font-bold text-[#A9A39C] uppercase tracking-widest">
+                      {ZONE_LABELS[zone]}
+                    </p>
                   </div>
-                ))
-              )}
+                  <div className="px-4 pb-3 flex flex-wrap gap-1.5">
+                    {zoneTables.map(table => {
+                      const cfg = TABLE_DOT[table.status] ?? TABLE_DOT.free
+                      return (
+                        <Link
+                          key={table.id}
+                          href="/salon"
+                          className={cn('flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold press-scale', cfg.chip)}
+                        >
+                          <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', cfg.dotClass)} style={{ background: cfg.dot }} />
+                          {table.code}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
+        )}
 
-          {/* Active queues (desktop) */}
-          {(barPending > 0 || kitchenPending > 0) && (
-            <section className="hidden md:block">
-              <p className="section-label px-0.5 mb-2.5">Colas activas</p>
-              <div className="space-y-2">
-                {barPending > 0 && (
-                  <Link href="/bar"
-                    className="bg-white border rounded-2xl px-4 py-3 flex items-center justify-between card-shadow hover:opacity-80 transition-opacity press-scale block"
-                    style={{ borderColor: '#C98933' + '35' }}>
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-2 h-2 rounded-full bg-[#C98933] dot-pulse-amber" />
-                      <p className="font-semibold text-[#1F1F1F] text-sm">Barra</p>
-                    </div>
-                    <span className="text-[#C98933] font-bold text-sm">{barPending} pendiente{barPending !== 1 ? 's' : ''}</span>
-                  </Link>
-                )}
-                {kitchenPending > 0 && (
-                  <Link href="/kitchen"
-                    className="bg-white border rounded-2xl px-4 py-3 flex items-center justify-between card-shadow hover:opacity-80 transition-opacity press-scale block"
-                    style={{ borderColor: '#B8574E' + '35' }}>
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-2 h-2 rounded-full bg-[#B8574E] dot-pulse-rust" />
-                      <p className="font-semibold text-[#1F1F1F] text-sm">Cocina</p>
-                    </div>
-                    <span className="text-[#B8574E] font-bold text-sm">{kitchenPending} pendiente{kitchenPending !== 1 ? 's' : ''}</span>
-                  </Link>
-                )}
-              </div>
-            </section>
-          )}
-
-        </div>
       </div>
     </div>
   )

@@ -13,88 +13,118 @@ import { cn } from '@/lib/utils'
 
 type Tab = 'pending' | 'received' | 'delivered'
 
-const TABS: { key: Tab; label: string; emptyMsg: string }[] = [
-  { key: 'pending',   label: 'Pendientes',  emptyMsg: 'Sin pedidos nuevos' },
-  { key: 'received',  label: 'Preparando',  emptyMsg: 'Nada en preparación' },
-  { key: 'delivered', label: 'Listos',      emptyMsg: 'Nada listo aún' },
+const TABS: { key: Tab; label: string; emptyMsg: string; emptyIcon: string }[] = [
+  { key: 'pending',   label: 'Nuevos',      emptyMsg: 'Sin pedidos nuevos',    emptyIcon: '☕' },
+  { key: 'received',  label: 'Preparando',  emptyMsg: 'Nada en preparación',   emptyIcon: '⏳' },
+  { key: 'delivered', label: 'Listos',      emptyMsg: 'Nada listo aún',        emptyIcon: '✓'  },
 ]
+
+const ACCENT = '#C8913A'
 
 export default function BarPage() {
   const { data: cards = [], isLoading } = useAreaCardsByType('bar')
   const { data: products = [] }         = useProducts()
   const { mode, setMode, enabled, onShift } = useSound()
   useUnattendedAlerts(cards, 'Barra')
-  useWakeLock(enabled && onShift)  // keep screen on while on shift
+  useWakeLock(enabled && onShift)
 
-  const [tab, setTab]           = useState<Tab>('pending')
+  const [tab, setTab]             = useState<Tab>('pending')
   const [stockOpen, setStockOpen] = useState(false)
   const isRush = mode === 'cocina_ruidosa'
 
-  const barProducts     = products.filter((p) => p.active && p.primary_area?.type === 'bar')
-  const stockAlertCount = barProducts.filter((p) => p.stock_status === 'out' || p.stock_status === 'low').length
+  const barProducts     = products.filter(p => p.active && p.primary_area?.type === 'bar')
+  const stockAlertCount = barProducts.filter(p => p.stock_status === 'out' || p.stock_status === 'low').length
 
-  const pending   = cards.filter((c) => c.status === 'pending')
-  const received  = cards.filter((c) => c.status === 'received')
-  const delivered = cards.filter((c) => c.status === 'delivered')
+  const pending   = cards.filter(c => c.status === 'pending')
+  const received  = cards.filter(c => c.status === 'received')
+  const delivered = cards.filter(c => c.status === 'delivered')
 
   const counts: Record<Tab, number> = { pending: pending.length, received: received.length, delivered: delivered.length }
   const visible = tab === 'pending' ? pending : tab === 'received' ? received : delivered.slice(0, 8)
 
-  function toggleRush() {
-    setMode(isRush ? 'normal' : 'cocina_ruidosa')
-  }
-
   return (
-    <div className={cn('min-h-screen pt-safe', isRush ? 'bg-[#2D1810]' : 'bg-[#F7F5F0]')}>
+    <div
+      className="min-h-screen pt-safe"
+      style={{ background: isRush ? '#1A0E06' : '#1B3428', paddingTop: 'env(safe-area-inset-top)' }}
+    >
       <SoundEnabler />
 
-      {/* Header */}
-      <div className="px-5 pt-8 pb-3">
-        <p className={cn('section-label mb-1', isRush && 'text-[#EAD9B1]/50')}>Estación</p>
-        <div className="flex items-center justify-between">
-          <h1 className={cn('text-2xl font-bold tracking-tight', isRush ? 'text-[#EAD9B1]' : 'text-[#1F1F1F]')}>
-            Barra {isRush && <span className="text-lg ml-1">🔥</span>}
-          </h1>
+      {/* Rush stripe */}
+      {isRush && (
+        <div className="h-0.5 w-full" style={{ background: ACCENT }} />
+      )}
+
+      {/* ── Header ── */}
+      <div className="px-5 pt-6 pb-4">
+        <div className="flex items-start justify-between">
+
+          {/* Left: role label + title */}
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <div
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: ACCENT, boxShadow: `0 0 5px ${ACCENT}` }}
+              />
+              <p className="text-white/35 text-[10px] font-bold uppercase tracking-[0.22em]">
+                Estación · Barra
+              </p>
+              {isRush && (
+                <span
+                  className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide"
+                  style={{ background: `${ACCENT}25`, color: ACCENT }}
+                >
+                  Rush 🔥
+                </span>
+              )}
+            </div>
+            <h1 className="text-white text-2xl font-bold tracking-tight leading-none">
+              Comandas
+            </h1>
+          </div>
+
+          {/* Right: pending badge + controls */}
           <div className="flex items-center gap-2">
             {pending.length > 0 && (
-              <span className={cn(
-                'flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border',
-                isRush
-                  ? 'bg-[#C98933]/30 text-[#EAD9B1] border-[#C98933]/40'
-                  : 'bg-[#C98933]/10 text-[#9A6520] border-[#C98933]/20'
-              )}>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#C98933] dot-pulse-amber" />
-                {pending.length} nuevo{pending.length !== 1 ? 's' : ''}
-              </span>
+              <div
+                className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl"
+                style={{ background: `${ACCENT}18`, border: `1px solid ${ACCENT}35` }}
+              >
+                <span className="text-white text-xl font-bold leading-none">{pending.length}</span>
+                <span className="text-white/45 text-[9px] uppercase tracking-wide mt-0.5">
+                  nuevo{pending.length !== 1 ? 's' : ''}
+                </span>
+              </div>
             )}
+
             <button
               onClick={() => setStockOpen(true)}
               className={cn(
-                'flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border transition-all press-scale',
+                'flex items-center gap-1 px-3 py-2 rounded-xl border text-xs font-bold press-scale transition-all',
                 stockAlertCount > 0
-                  ? 'bg-amber-50 text-amber-700 border-amber-200'
-                  : isRush
-                    ? 'bg-white/10 text-[#EAD9B1]/60 border-white/10'
-                    : 'bg-white text-[#7A756D] border-[#E7E1D8]'
+                  ? 'border-[#C8913A]/40 text-[#C8913A]'
+                  : 'border-white/12 text-white/40'
               )}
+              style={{ background: stockAlertCount > 0 ? `${ACCENT}12` : 'rgba(255,255,255,0.05)' }}
             >
               Stock
               {stockAlertCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-amber-400 text-white text-[9px] font-bold flex items-center justify-center">{stockAlertCount}</span>
+                <span className="w-4 h-4 rounded-full bg-[#C8913A] text-white text-[9px] font-bold flex items-center justify-center">
+                  {stockAlertCount}
+                </span>
               )}
             </button>
 
-            {/* Rush mode toggle */}
             {enabled && (
               <button
-                onClick={toggleRush}
-                title={isRush ? `Rush activo — ${MODE_CFG.cocina_ruidosa.label}` : 'Activar modo Rush'}
+                onClick={() => setMode(isRush ? 'normal' : 'cocina_ruidosa')}
+                title={isRush ? MODE_CFG.cocina_ruidosa.label : 'Activar modo Rush'}
                 className={cn(
-                  'flex items-center justify-center w-9 h-9 rounded-xl border text-base transition-all press-scale',
+                  'w-9 h-9 rounded-xl flex items-center justify-center text-base press-scale border transition-all',
                   isRush
-                    ? 'bg-[#C98933] border-[#C98933] text-white'
-                    : 'bg-white border-[#E7E1D8] text-[#7A756D]'
+                    ? 'border-[#C8913A]'
+                    : 'border-white/12'
                 )}
+                style={{ background: isRush ? ACCENT : 'rgba(255,255,255,0.06)' }}
               >
                 🔥
               </button>
@@ -103,37 +133,32 @@ export default function BarPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="px-5 pb-3">
-        <div className={cn(
-          'flex rounded-xl p-1 gap-1',
-          isRush ? 'bg-white/10 border border-white/10' : 'bg-white border border-[#E7E1D8]'
-        )}>
-          {TABS.map((t) => (
+      {/* ── Tab selector ── */}
+      <div className="px-5 pb-5">
+        <div
+          className="flex rounded-2xl p-1 gap-1 border"
+          style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.08)' }}
+        >
+          {TABS.map(t => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
               className={cn(
-                'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all duration-150 press-scale',
-                tab === t.key
-                  ? isRush
-                    ? 'bg-[#C98933] text-white shadow-sm'
-                    : 'bg-[#1E3541] text-white shadow-sm'
-                  : isRush
-                    ? 'text-[#EAD9B1]/60 hover:text-[#EAD9B1] hover:bg-white/5'
-                    : 'text-[#7A756D] hover:text-[#1F1F1F] hover:bg-[#F7F5F0]'
+                'flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 press-scale',
+                tab === t.key ? 'text-[#1B3428]' : 'text-white/35',
               )}
+              style={tab === t.key ? { background: ACCENT, boxShadow: `0 2px 12px ${ACCENT}40` } : {}}
             >
               {t.label}
               {counts[t.key] > 0 && (
-                <span className={cn(
-                  'min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center leading-none',
-                  tab === t.key
-                    ? t.key === 'pending' ? 'bg-[#C98933] text-white' : 'bg-white/20 text-white'
-                    : isRush
-                      ? 'bg-[#C98933]/30 text-[#EAD9B1]'
-                      : 'bg-[#C98933]/15 text-[#9A6520]'
-                )}>
+                <span
+                  className={cn(
+                    'min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center leading-none',
+                    tab === t.key
+                      ? 'bg-black/15 text-[#1B3428]'
+                      : 'bg-white/10 text-white/50',
+                  )}
+                >
                   {counts[t.key]}
                 </span>
               )}
@@ -142,21 +167,24 @@ export default function BarPage() {
         </div>
       </div>
 
-      {/* Content */}
+      {/* ── Content ── */}
       {isLoading ? (
         <div className="flex items-center justify-center h-48">
-          <div className={cn('w-8 h-8 border-2 rounded-full animate-spin', isRush ? 'border-white/20 border-t-[#C98933]' : 'border-[#E7E1D8] border-t-[#1E3541]')} />
+          <div className="w-8 h-8 border-2 border-white/10 rounded-full animate-spin" style={{ borderTopColor: ACCENT }} />
         </div>
       ) : visible.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-40">
-          <p className="text-3xl mb-2 opacity-40">☕</p>
-          <p className={cn('text-sm font-medium', isRush ? 'text-[#EAD9B1]/50' : 'text-[#7A756D]')}>
-            {TABS.find((t) => t.key === tab)?.emptyMsg}
-          </p>
+        <div className="flex flex-col items-center justify-center h-48 gap-3">
+          <div
+            className="w-16 h-16 rounded-3xl flex items-center justify-center text-2xl"
+            style={{ background: `${ACCENT}12`, border: `1px solid ${ACCENT}20` }}
+          >
+            {TABS.find(t => t.key === tab)?.emptyIcon}
+          </div>
+          <p className="text-white/35 text-sm font-medium">{TABS.find(t => t.key === tab)?.emptyMsg}</p>
         </div>
       ) : (
-        <div className="px-4 pb-nav space-y-2.5">
-          {visible.map((card) => (
+        <div className="px-4 pb-nav space-y-3">
+          {visible.map(card => (
             <AreaCardComponent key={card.id} card={card} myAreaType="bar" />
           ))}
         </div>

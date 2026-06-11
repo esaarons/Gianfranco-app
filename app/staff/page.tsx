@@ -159,7 +159,7 @@ function UserSheet({
               className="w-full bg-white/6 border border-white/10 focus:border-white/25 rounded-xl px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 transition-all tracking-widest" />
           </div>
           <button type="submit" disabled={saving}
-            className="w-full bg-[#F5F1E8] text-[#0E2F33] font-bold py-4 rounded-2xl text-sm btn-primary disabled:opacity-50 mt-2">
+            className="w-full bg-[#F5F1E8] text-[#0F2018] font-bold py-4 rounded-2xl text-sm btn-primary disabled:opacity-50 mt-2">
             {saving ? 'Guardando…' : initial ? 'Guardar cambios' : 'Crear colaborador'}
           </button>
         </form>
@@ -221,7 +221,7 @@ function UserCard({
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={onEdit}
-            className="w-8 h-8 flex items-center justify-center rounded-xl bg-[#F7F5F0] border border-[#E7E1D8] text-[#7A756D] hover:text-[#1E3541] hover:border-[#D4CFC5] press-scale transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-xl bg-[#F7F5F0] border border-[#E7E1D8] text-[#7A756D] hover:text-[#1B3428] hover:border-[#D4CFC5] press-scale transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -365,7 +365,7 @@ export default function StaffPage() {
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-1.5 bg-[#1E3541] text-white font-bold px-4 py-2.5 rounded-xl text-sm btn-primary mt-1"
+            className="flex items-center gap-1.5 bg-[#1B3428] text-white font-bold px-4 py-2.5 rounded-xl text-sm btn-primary mt-1"
           >
             <span className="text-base leading-none">+</span> Nuevo
           </button>
@@ -412,7 +412,7 @@ export default function StaffPage() {
             <p className="text-[#A9A39C] text-xs mt-1">Agrega a tu equipo para comenzar</p>
             <button
               onClick={() => setShowCreate(true)}
-              className="mt-4 bg-[#1E3541] text-white font-semibold px-5 py-2.5 rounded-xl text-sm btn-primary"
+              className="mt-4 bg-[#1B3428] text-white font-semibold px-5 py-2.5 rounded-xl text-sm btn-primary"
             >
               Agregar colaborador
             </button>

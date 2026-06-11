@@ -131,7 +131,7 @@ export function StockPanel({ areaType, onClose }: StockPanelProps) {
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Buscar producto..."
-            className="w-full bg-white border border-[#E7E1D8] rounded-xl px-4 py-2.5 text-sm text-[#1F1F1F] outline-none focus:border-[#1E3541] placeholder:text-[#7A756D]"
+            className="w-full bg-white border border-[#E7E1D8] rounded-xl px-4 py-2.5 text-sm text-[#1F1F1F] outline-none focus:border-[#1B3428] placeholder:text-[#7A756D]"
           />
         </div>
 
@@ -139,7 +139,7 @@ export function StockPanel({ areaType, onClose }: StockPanelProps) {
         <div className="overflow-y-auto flex-1 px-4 pt-3 pb-safe-4 space-y-2">
           {isLoading ? (
             <div className="flex justify-center py-10">
-              <div className="w-6 h-6 border-2 border-[#E7E1D8] border-t-[#1E3541] rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-[#E7E1D8] border-t-[#1B3428] rounded-full animate-spin" />
             </div>
           ) : filtered.length === 0 ? (
             <p className="text-center text-[#7A756D] text-sm py-8">

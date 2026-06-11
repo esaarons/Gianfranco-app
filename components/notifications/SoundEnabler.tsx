@@ -43,7 +43,7 @@ export function SoundEnabler() {
       <div className="mx-4 mb-3 fade-in">
         <button
           onClick={handleActivate}
-          className="w-full flex items-center gap-3 bg-[#0F3A43] border border-[#EAD9B1]/20 text-[#EAD9B1] font-semibold text-sm px-4 py-3.5 rounded-2xl press-scale"
+          className="w-full flex items-center gap-3 bg-[#1B3428] border border-[#EAD9B1]/20 text-[#EAD9B1] font-semibold text-sm px-4 py-3.5 rounded-2xl press-scale"
           style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}
         >
           <span className="text-xl">🔔</span>
@@ -62,8 +62,8 @@ export function SoundEnabler() {
   // ── Activating spinner ───────────────────────────────────────────────────────
   if (step === 'activating') {
     return (
-      <div className="mx-4 mb-3 flex items-center gap-3 bg-[#0F3A43]/10 border border-[#0F3A43]/15 rounded-2xl px-4 py-3">
-        <div className="w-4 h-4 border-2 border-[#0F3A43]/20 border-t-[#0F3A43] rounded-full animate-spin" />
+      <div className="mx-4 mb-3 flex items-center gap-3 bg-[#1B3428]/10 border border-[#1B3428]/15 rounded-2xl px-4 py-3">
+        <div className="w-4 h-4 border-2 border-[#1B3428]/20 border-t-[#1B3428] rounded-full animate-spin" />
         <p className="text-sm text-[#1F1F1F]/60">Configurando notificaciones…</p>
       </div>
     )

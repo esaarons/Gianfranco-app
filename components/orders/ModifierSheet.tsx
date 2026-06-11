@@ -154,7 +154,7 @@ export function ModifierSheet({ product, onAdd, onClose }: ModifierSheetProps) {
               <span className="w-6 text-center font-bold text-xl text-white tabular-nums">{quantity}</span>
               <button
                 onClick={() => setQuantity((q) => q + 1)}
-                className="w-9 h-9 rounded-full bg-[#F5F1E8] text-[#0E2F33] font-bold text-xl flex items-center justify-center press-scale"
+                className="w-9 h-9 rounded-full bg-[#F5F1E8] text-[#0F2018] font-bold text-xl flex items-center justify-center press-scale"
               >+</button>
             </div>
           </div>
@@ -188,7 +188,7 @@ export function ModifierSheet({ product, onAdd, onClose }: ModifierSheetProps) {
                         className={cn(
                           'px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 border press-scale',
                           on
-                            ? 'bg-[#F5F1E8] border-[#F5F1E8] text-[#0E2F33]'
+                            ? 'bg-[#F5F1E8] border-[#F5F1E8] text-[#0F2018]'
                             : 'bg-white/6 border-white/10 text-white/55 hover:border-white/20 hover:text-white/80'
                         )}
                         style={on ? { boxShadow: '0 0 16px rgba(245,241,232,0.2)' } : undefined}
@@ -227,7 +227,7 @@ export function ModifierSheet({ product, onAdd, onClose }: ModifierSheetProps) {
         >
           <button
             onClick={handleAdd}
-            className="w-full bg-[#F5F1E8] text-[#0E2F33] font-bold py-4 rounded-2xl text-base flex items-center justify-between px-5 btn-primary"
+            className="w-full bg-[#F5F1E8] text-[#0F2018] font-bold py-4 rounded-2xl text-base flex items-center justify-between px-5 btn-primary"
           >
             <span>
               Agregar{quantity > 1 ? ` ×${quantity}` : ''}

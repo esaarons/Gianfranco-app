@@ -116,7 +116,7 @@ export default function DevicesPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-40">
-          <div className="w-7 h-7 border-2 border-[#E7E1D8] border-t-[#1E3541] rounded-full animate-spin" />
+          <div className="w-7 h-7 border-2 border-[#E7E1D8] border-t-[#1B3428] rounded-full animate-spin" />
         </div>
       ) : (
         <div className="px-4 pb-nav space-y-4">

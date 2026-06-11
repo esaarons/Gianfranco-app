@@ -33,54 +33,59 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#0E2F33] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-dvh bg-[#0F2018] flex flex-col items-center justify-center px-6 py-10 relative overflow-hidden">
 
-      {/* Decorative blobs */}
-      <div className="absolute top-0 right-0 w-72 h-72 rounded-full bg-[#A7B897]/10 -translate-y-1/3 translate-x-1/3 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full bg-[#C8B8AA]/8 translate-y-1/3 -translate-x-1/3 blur-3xl pointer-events-none" />
+      {/* Ambient glow */}
+      <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-[#4EA055]/8 -translate-y-1/3 translate-x-1/3 blur-[80px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full bg-[#C8913A]/6 translate-y-1/3 -translate-x-1/3 blur-[80px] pointer-events-none" />
 
-      <div className="w-full max-w-xs relative z-10 fade-in">
+      <div className="w-full max-w-[320px] relative z-10 fade-in">
 
-        {/* Brand mark */}
+        {/* Brand */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#F5F1E8]/10 mb-5 border border-[#F5F1E8]/15">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <ellipse cx="12" cy="16" rx="8" ry="11" stroke="#F5F1E8" strokeWidth="1.5" fill="none"/>
-              <ellipse cx="20" cy="16" rx="8" ry="11" stroke="#F5F1E8" strokeWidth="1.5" fill="none"/>
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5"
+            style={{ background: 'rgba(234,217,177,0.10)', border: '1px solid rgba(234,217,177,0.15)' }}>
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+              <ellipse cx="12" cy="16" rx="8" ry="11" stroke="#EAD9B1" strokeWidth="1.5" fill="none"/>
+              <ellipse cx="20" cy="16" rx="8" ry="11" stroke="#EAD9B1" strokeWidth="1.5" fill="none"/>
             </svg>
           </div>
-          <h1 className="text-[#F5F1E8] text-2xl font-semibold tracking-[-0.03em]">GIANFRANCO</h1>
-          <p className="text-[#A7B897] text-xs tracking-[0.18em] uppercase mt-1 font-medium">Coffee Roasters</p>
+          <h1 className="text-[#EAD9B1] text-xl font-bold tracking-[0.06em]">GIANFRANCO</h1>
+          <p className="text-white/30 text-[11px] tracking-[0.22em] uppercase mt-1.5">Coffee Roasters & Brunch</p>
         </div>
 
-        {/* Card */}
-        <div className="bg-[#F5F1E8] rounded-3xl p-6 card-shadow-lg">
-          <h2 className="text-[#0E2F33] font-semibold text-lg mb-5 tracking-tight">Acceso al sistema</h2>
+        {/* Form card */}
+        <div className="rounded-2xl p-6" style={{ background: '#F5F2EC', boxShadow: '0 24px 64px rgba(0,0,0,0.35)' }}>
+          <p className="text-[#1B3428] font-semibold text-base mb-5 tracking-tight">Acceso al sistema</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[#6B7C85] text-xs font-medium uppercase tracking-wider mb-2">Email</label>
+              <label className="block text-[#6E6860] text-[11px] font-semibold uppercase tracking-[0.12em] mb-1.5">
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="colaborador@gianfranco.com"
-                className="w-full bg-white rounded-xl px-4 py-3 text-sm text-[#222222] outline-none border border-[#E6E3DD] focus:border-[#0E2F33] focus:ring-2 focus:ring-[#0E2F33]/10 transition-all placeholder:text-[#C8B8AA]"
+                placeholder="nombre@gianfranco.com"
+                className="w-full bg-white rounded-xl px-4 py-3 text-sm text-[#1A1A1A] outline-none border border-[#E8E2D8] focus:border-[#1B3428] focus:ring-2 focus:ring-[#1B3428]/8 transition-all placeholder:text-[#C8C0B8]"
                 required
                 autoComplete="email"
               />
             </div>
 
             <div>
-              <label className="block text-[#6B7C85] text-xs font-medium uppercase tracking-wider mb-2">PIN</label>
+              <label className="block text-[#6E6860] text-[11px] font-semibold uppercase tracking-[0.12em] mb-1.5">
+                PIN
+              </label>
               <input
                 type="password"
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
-                placeholder="• • • •"
+                placeholder="· · · ·"
                 maxLength={6}
                 inputMode="numeric"
-                className="w-full bg-white rounded-xl px-4 py-3 text-[#222222] outline-none border border-[#E6E3DD] focus:border-[#0E2F33] focus:ring-2 focus:ring-[#0E2F33]/10 transition-all tracking-[0.4em] text-center text-xl font-medium placeholder:text-[#C8B8AA] placeholder:tracking-widest placeholder:text-sm"
+                className="w-full bg-white rounded-xl px-4 py-3.5 text-[#1A1A1A] outline-none border border-[#E8E2D8] focus:border-[#1B3428] focus:ring-2 focus:ring-[#1B3428]/8 transition-all tracking-[0.5em] text-center text-2xl font-bold placeholder:text-[#C8C0B8] placeholder:tracking-widest placeholder:text-sm placeholder:font-normal"
                 required
               />
             </div>
@@ -88,34 +93,36 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#0E2F33] hover:bg-[#0a2326] disabled:opacity-50 text-[#F5F1E8] font-semibold py-3.5 rounded-xl transition-all duration-150 text-sm tracking-wide press-scale mt-1"
+              className="w-full bg-[#1B3428] disabled:opacity-50 text-[#EAD9B1] font-bold py-4 rounded-xl text-sm tracking-wide press-scale mt-1"
             >
-              {loading ? 'Verificando...' : 'Entrar'}
+              {loading ? 'Verificando…' : 'Entrar'}
             </button>
           </form>
         </div>
 
-        {/* Demo hints — development only */}
-        {process.env.NODE_ENV !== 'production' && <div className="mt-4 p-4 rounded-2xl border border-[#F5F1E8]/10">
-          <p className="text-[#A7B897] text-xs font-medium mb-2 tracking-wider uppercase">Accesos demo</p>
-          <div className="space-y-1">
-            {[
-              ['Admin', 'admin@gianfranco.com', '1234'],
-              ['Barra', 'bar@gianfranco.com', '2222'],
-              ['Cocina', 'kitchen@gianfranco.com', '3333'],
-              ['Salón', 'salon@gianfranco.com', '4444'],
-            ].map(([role, mail, p]) => (
-              <button
-                key={mail}
-                onClick={() => { setEmail(mail); setPin(p) }}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-[#F5F1E8]/8 transition-colors group"
-              >
-                <span className="text-[#F5F1E8]/50 text-xs">{role}</span>
-                <span className="text-[#F5F1E8]/30 text-xs font-mono">{mail}</span>
-              </button>
-            ))}
+        {/* Demo accesses — dev only */}
+        {process.env.NODE_ENV !== 'production' && (
+          <div className="mt-4 px-4 py-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <p className="text-white/25 text-[10px] font-bold uppercase tracking-[0.18em] mb-2">Demo</p>
+            <div className="space-y-0.5">
+              {[
+                ['Admin', 'admin@gianfranco.com', '1234'],
+                ['Barra', 'bar@gianfranco.com', '2222'],
+                ['Cocina', 'kitchen@gianfranco.com', '3333'],
+                ['Salón', 'salon@gianfranco.com', '4444'],
+              ].map(([role, mail, p]) => (
+                <button
+                  key={mail}
+                  onClick={() => { setEmail(mail); setPin(p) }}
+                  className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/5"
+                >
+                  <span className="text-white/40 text-xs font-medium">{role}</span>
+                  <span className="text-white/20 text-[11px] font-mono">{mail}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>}
+        )}
       </div>
     </div>
   )

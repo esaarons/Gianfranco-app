@@ -10,6 +10,7 @@ import { useProducts } from '@/hooks/useProducts'
 import { useTableOrder } from '@/hooks/useProducts'
 import { useSound } from '@/hooks/useSound'
 import { SoundEnabler } from '@/components/notifications/SoundEnabler'
+import { useOrderStore } from '@/store/orderStore'
 import { PickupBanner } from '@/components/notifications/PickupBanner'
 import { FloorTable, FloorGroupTable, FLOOR_STATE } from '@/components/tables/FloorTable'
 import type { FloorState } from '@/components/tables/FloorTable'
@@ -204,6 +205,8 @@ function TableTrackingCard({
   onClick?: () => void
 }) {
   const { table, order, state, cards, isTakeaway } = item
+  const queryClient = useQueryClient()
+  const [delivering, setDelivering] = useState(false)
   const barCard = cards.find(c => c.area_id === AREA_IDS.BAR)
   const kitCard = cards.find(c => c.area_id === AREA_IDS.KITCHEN)
 
@@ -345,6 +348,34 @@ function TableTrackingCard({
       <div className="mt-3">
         <TrackingProgressBar stages={stages} />
       </div>
+
+      {/* Deliver button — takeaway only, shown when ready */}
+      {isTakeaway && isListo && (
+        <button
+          onClick={async e => {
+            e.stopPropagation()
+            setDelivering(true)
+            try {
+              await fetch(`/api/orders/${order.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'closed' }),
+              })
+              toast.success('Pedido entregado')
+              queryClient.invalidateQueries({ queryKey: ['orders', 'open'] })
+            } catch {
+              toast.error('Error al entregar')
+            } finally {
+              setDelivering(false)
+            }
+          }}
+          disabled={delivering}
+          className="mt-3 w-full font-bold py-3 rounded-xl text-sm press-scale disabled:opacity-40 text-white"
+          style={{ background: '#4EA055' }}
+        >
+          {delivering ? 'Entregando…' : '✓ Entregar pedido'}
+        </button>
+      )}
     </Wrapper>
   )
 }
@@ -364,6 +395,7 @@ function TrackingSection({
 
   useEffect(() => {
     items.forEach(item => {
+      if (item.isTakeaway) return  // takeaway needs explicit "Entregar" button
       if (item.state !== 'listo') return
       const id = item.order.id
       if (scheduledRef.current.has(id)) return
@@ -432,6 +464,7 @@ function OrderItemRow({ item }: { item: OrderItem }) {
 function TableModal({
   table, stateData, onClose,
   children, onStartJoin, onSplit, onMarkFree,
+  reservation,
 }: {
   table: Table
   stateData: TableStateData
@@ -440,10 +473,13 @@ function TableModal({
   onStartJoin: () => void
   onSplit: () => void
   onMarkFree: () => void
+  reservation?: Reservation
 }) {
   const hasChildren = children.length > 0
   const router = useRouter()
   const queryClient = useQueryClient()
+  const setOrderTable = useOrderStore(s => s.setTable)
+  const addOrderGuest = useOrderStore(s => s.addGuest)
   const { data: liveOrder, isLoading } = useTableOrder(table.id)
   const [closing, setClosing] = useState(false)
   const [closed,  setClosed]  = useState(false)
@@ -642,6 +678,29 @@ function TableModal({
             )}
           </div>
 
+          {/* Reservation info banner — shown when table is reserved */}
+          {reservation && (stateData.state === 'reservada' || stateData.state === 'libre') && (
+            <div
+              className="mx-5 mb-0 mt-2 rounded-2xl px-4 py-3 border"
+              style={{ background: '#FDFBEE', borderColor: '#D8C050' + '40' }}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#C8A818]" />
+                <p className="text-[#7C5010] text-[10px] font-bold uppercase tracking-wider">Reserva hoy</p>
+              </div>
+              <p className="text-[#1F1F1F] text-sm font-semibold">{reservation.customer_name}</p>
+              <p className="text-[#7A756D] text-xs mt-0.5">
+                {reservation.party_size} personas · {reservation.start_time.slice(0, 5)}
+                {reservation.menu_type === 'brunch' && (
+                  <span className="ml-1 font-semibold text-[#C8A818]">· Brunch</span>
+                )}
+              </p>
+              {reservation.notes && (
+                <p className="text-[#A9A39C] text-[11px] italic mt-1">"{reservation.notes}"</p>
+              )}
+            </div>
+          )}
+
           {/* Actions */}
           <div className="shrink-0 px-5 pt-3 border-t border-[#F2EFE9] space-y-2.5 pb-safe-6">
             {closed ? (
@@ -654,11 +713,20 @@ function TableModal({
             ) : (
               <>
                 <button
-                  onClick={() => { onClose(); router.push(`/order/${table.id}`) }}
+                  onClick={() => {
+                    // Pre-populate guest chips when there's a reservation (for per-person brunch ordering)
+                    if (reservation && !order) {
+                      setOrderTable(table.id, table.code)
+                      const n = Math.min(reservation.party_size, 12)
+                      for (let i = 1; i <= n; i++) addOrderGuest(`P${i}`)
+                    }
+                    onClose()
+                    router.push(`/order/${table.id}`)
+                  }}
                   className="w-full flex items-center justify-center gap-2 bg-[#1B3428] text-[#EAD9B1] font-bold py-4 rounded-2xl text-sm press-scale"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  Agregar pedido
+                  {reservation && !order ? `Tomar pedido · ${reservation.party_size} pax` : 'Agregar pedido'}
                 </button>
                 {order && (
                   <div className="flex gap-2.5">
@@ -909,7 +977,7 @@ function DashboardView({
 // ── Floor plan zone section ───────────────────────────────────────────────────
 
 function ZoneSection({
-  label, tables, childTableIds, activeTables, tableStateMap, selectedTableId, onTablePress,
+  label, tables, childTableIds, activeTables, tableStateMap, selectedTableId, onTablePress, reservations,
 }: {
   label?: string
   tables: Table[]
@@ -918,6 +986,7 @@ function ZoneSection({
   tableStateMap: Map<string, TableStateData>
   selectedTableId: string | null
   onTablePress: (table: Table) => void
+  reservations?: Reservation[]
 }) {
   if (tables.length === 0) return null
   return (
@@ -933,6 +1002,17 @@ function ZoneSection({
 
           if (children.length > 0) {
             const all = [table, ...children]
+            let reservationLabel: string | undefined
+            if (state === 'reservada' && reservations) {
+              const res = reservations.find(r =>
+                r.zone === table.zone &&
+                ['confirmed', 'pending', 'in_progress'].includes(r.status)
+              )
+              if (res) {
+                const brunchSummary = res.menu_type === 'brunch' ? ' · Brunch' : ''
+                reservationLabel = `${res.customer_name} · ${res.party_size}p${brunchSummary}`
+              }
+            }
             return (
               <FloorGroupTable
                 key={table.id}
@@ -943,6 +1023,7 @@ function ZoneSection({
                 items={sd?.itemCount}
                 persons={sd?.personCount}
                 selected={selectedTableId === table.id}
+                reservationLabel={reservationLabel}
                 onClick={() => onTablePress(table)}
               />
             )
@@ -1217,6 +1298,17 @@ export default function SalonPage() {
     [takeawayTrackingItems, tableTrackingItems],
   )
 
+  // Reservation by zone (for table modal context)
+  const reservationByZone = useMemo(() => {
+    const map = new Map<string, Reservation>()
+    for (const r of todayReservations) {
+      if (r.zone && ['confirmed', 'pending', 'in_progress'].includes(r.status)) {
+        map.set(r.zone, r)
+      }
+    }
+    return map
+  }, [todayReservations])
+
   // Stock alerts
   const stockOut = useMemo(
     () => products.filter(p => p.active && p.stock_status === 'out').map(p => p.name),
@@ -1297,6 +1389,7 @@ export default function SalonPage() {
     childTableIds, activeTables, tableStateMap,
     selectedTableId: selectedTable?.id ?? null,
     onTablePress: handleTablePress,
+    reservations: todayReservations,
   }
 
   // ── Colors ────────────────────────────────────────────────────────────────
@@ -1482,6 +1575,7 @@ export default function SalonPage() {
           onStartJoin={handleStartJoin}
           onSplit={handleSplitTable}
           onMarkFree={handleMarkFree}
+          reservation={reservationByZone.get(selectedTable.zone)}
         />
       )}
     </div>

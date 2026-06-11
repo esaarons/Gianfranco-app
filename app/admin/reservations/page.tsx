@@ -210,7 +210,7 @@ function ReservationSheet({
           </div>
 
           <button type="submit" disabled={saving}
-            className="w-full bg-[#F5F1E8] text-[#0E2F33] font-bold py-4 rounded-2xl text-sm btn-primary disabled:opacity-50 mt-2">
+            className="w-full bg-[#F5F1E8] text-[#0F2018] font-bold py-4 rounded-2xl text-sm btn-primary disabled:opacity-50 mt-2">
             {saving ? 'Guardando…' : initial ? 'Guardar cambios' : 'Crear reserva'}
           </button>
         </form>
@@ -391,7 +391,7 @@ export default function ReservationsPage() {
             </div>
           </div>
           <button onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 bg-[#1E3541] text-white font-bold px-4 py-2.5 rounded-xl text-sm btn-primary mt-1 shrink-0">
+            className="flex items-center gap-2 bg-[#1B3428] text-white font-bold px-4 py-2.5 rounded-xl text-sm btn-primary mt-1 shrink-0">
             <span className="text-base leading-none">+</span> Nueva
           </button>
         </div>
@@ -445,7 +445,7 @@ export default function ReservationsPage() {
             <p className="text-5xl mb-4 opacity-30">📅</p>
             <p className="text-[#7A756D] text-sm font-medium">Sin reservas para este día</p>
             <button onClick={() => setShowCreate(true)}
-              className="mt-4 text-[#1E3541] text-sm font-semibold underline underline-offset-2">
+              className="mt-4 text-[#1B3428] text-sm font-semibold underline underline-offset-2">
               Crear una reserva
             </button>
           </div>

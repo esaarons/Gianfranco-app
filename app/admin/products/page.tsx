@@ -157,7 +157,7 @@ function ProductSheet({
                   className={cn(
                     'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all press-scale',
                     form.category_id === cat.id
-                      ? 'bg-[#F5F1E8] text-[#0E2F33]'
+                      ? 'bg-[#F5F1E8] text-[#0F2018]'
                       : 'bg-white/8 text-white/45 hover:bg-white/12'
                   )}
                 >
@@ -268,7 +268,7 @@ function ProductSheet({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full bg-[#F5F1E8] text-[#0E2F33] font-bold py-4 rounded-2xl text-sm btn-primary disabled:opacity-50"
+            className="w-full bg-[#F5F1E8] text-[#0F2018] font-bold py-4 rounded-2xl text-sm btn-primary disabled:opacity-50"
           >
             {saving ? 'Guardando…' : initial ? 'Guardar cambios' : 'Crear producto'}
           </button>
@@ -390,7 +390,7 @@ export default function AdminProductsPage() {
           </div>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 bg-[#1E3541] text-white font-bold px-4 py-2.5 rounded-2xl text-sm btn-primary mt-1"
+            className="flex items-center gap-2 bg-[#1B3428] text-white font-bold px-4 py-2.5 rounded-2xl text-sm btn-primary mt-1"
           >
             + Nuevo
           </button>
@@ -409,7 +409,7 @@ export default function AdminProductsPage() {
               className={cn(
                 'flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 press-scale border',
                 active
-                  ? 'bg-[#1E3541] text-white border-transparent'
+                  ? 'bg-[#1B3428] text-white border-transparent'
                   : 'bg-white text-[#7A756D] border-[#E7E1D8] hover:border-[#C8C4BC]'
               )}
             >
@@ -530,7 +530,7 @@ function ProductRow({
 
       {/* Name — tap to edit */}
       <button onClick={() => onEdit(product)} className="flex-1 text-left min-w-0 group">
-        <p className={cn('text-sm font-semibold leading-snug truncate group-hover:text-[#1E3541] transition-colors',
+        <p className={cn('text-sm font-semibold leading-snug truncate group-hover:text-[#1B3428] transition-colors',
           product.active ? 'text-[#1F1F1F]' : 'text-[#A9A39C]')}>
           {product.name}
         </p>
@@ -538,7 +538,7 @@ function ProductRow({
       </button>
 
       {/* Price */}
-      <span className="shrink-0 text-sm font-bold text-[#1E3541]">{formatPrice(product.price)}</span>
+      <span className="shrink-0 text-sm font-bold text-[#1B3428]">{formatPrice(product.price)}</span>
 
       {/* Active toggle */}
       <button
@@ -598,13 +598,13 @@ function BreakfastSettings() {
             type="time"
             value={value}
             onChange={(e) => setDraft(e.target.value)}
-            className="border border-[#E7E1D8] rounded-xl px-3 py-2 text-sm font-bold text-[#1F1F1F] focus:border-[#1E3541] outline-none bg-[#F7F5F0]"
+            className="border border-[#E7E1D8] rounded-xl px-3 py-2 text-sm font-bold text-[#1F1F1F] focus:border-[#1B3428] outline-none bg-[#F7F5F0]"
           />
           {draft && draft !== cutoff && (
             <button
               onClick={save}
               disabled={saving}
-              className="bg-[#1E3541] text-white font-bold px-4 py-2 rounded-xl text-xs btn-primary disabled:opacity-50"
+              className="bg-[#1B3428] text-white font-bold px-4 py-2 rounded-xl text-xs btn-primary disabled:opacity-50"
             >
               {saving ? '…' : 'Guardar'}
             </button>

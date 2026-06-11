@@ -93,7 +93,7 @@ function OrderCard({ order, showDate }: { order: Order; showDate: boolean }) {
 
         {/* Total */}
         <div className="shrink-0 text-right">
-          <p className="text-[#1E3541] font-bold text-sm">{formatPrice(itemTotal)}</p>
+          <p className="text-[#1B3428] font-bold text-sm">{formatPrice(itemTotal)}</p>
           <p className="text-[10px] mt-0.5 text-[#A9A39C]">
             {open ? '▲ cerrar' : '▼ ver'}
           </p>
@@ -126,7 +126,7 @@ function OrderCard({ order, showDate }: { order: Order; showDate: boolean }) {
           })}
           <div className="flex justify-between pt-2 border-t border-[#EDE9E2] mt-1">
             <span className="text-[#7A756D] text-xs">Total</span>
-            <span className="text-[#1E3541] text-sm font-bold">{formatPrice(itemTotal)}</span>
+            <span className="text-[#1B3428] text-sm font-bold">{formatPrice(itemTotal)}</span>
           </div>
         </div>
       )}
@@ -207,7 +207,7 @@ export default function OrderHistoryPage() {
             className={cn(
               'flex-1 py-2.5 rounded-xl text-sm font-bold transition-all press-scale',
               period === p
-                ? 'bg-[#1E3541] text-white'
+                ? 'bg-[#1B3428] text-white'
                 : 'bg-white border border-[#E7E1D8] text-[#7A756D]'
             )}
           >
@@ -225,7 +225,7 @@ export default function OrderHistoryPage() {
             className={cn(
               'px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all press-scale',
               typeFilter === f.value
-                ? 'bg-[#1E3541] text-white'
+                ? 'bg-[#1B3428] text-white'
                 : 'bg-white border border-[#E7E1D8] text-[#7A756D]'
             )}
           >
@@ -241,7 +241,7 @@ export default function OrderHistoryPage() {
             <p className="section-label mb-1">
               {filtered.length} pedido{filtered.length !== 1 ? 's' : ''}
             </p>
-            <p className="text-[#1E3541] text-2xl font-bold tracking-tight">{formatPrice(totalRevenue)}</p>
+            <p className="text-[#1B3428] text-2xl font-bold tracking-tight">{formatPrice(totalRevenue)}</p>
           </div>
           <div className="text-4xl opacity-15">📋</div>
         </div>

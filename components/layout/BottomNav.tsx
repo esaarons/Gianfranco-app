@@ -125,7 +125,7 @@ interface DrawerItem {
 function Drawer({ items, onClose }: { items: DrawerItem[]; onClose: () => void }) {
   return (
     <>
-      <div className="fixed inset-0 z-[45] bg-[#1E3541]/20 overlay-fade" onClick={onClose} />
+      <div className="fixed inset-0 z-[45] bg-[#1B3428]/20 overlay-fade" onClick={onClose} />
       <div className="fixed bottom-0 left-0 right-0 z-[50] spring-up">
         <div className="bg-[#F7F5F0] rounded-t-3xl border-t border-x border-[#E7E1D8] pb-safe">
           <div className="w-9 h-1 bg-[#D4CFC5] rounded-full mx-auto mt-3 mb-4" />
@@ -140,7 +140,7 @@ function Drawer({ items, onClose }: { items: DrawerItem[]; onClose: () => void }
                   ? { background: item.color + '18', borderColor: item.color + '30' }
                   : { background: 'white', borderColor: '#E7E1D8' }}
               >
-                <span style={{ color: item.color ?? '#1E3541' }}>{item.icon}</span>
+                <span style={{ color: item.color ?? '#1B3428' }}>{item.icon}</span>
                 <span className="font-semibold text-sm text-[#1F1F1F]">{item.label}</span>
                 {(item.badge ?? 0) > 0 && (
                   <span className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-[#C98933] text-white text-[10px] font-bold flex items-center justify-center">
@@ -163,7 +163,7 @@ interface NavSection { label: string; items: DrawerItem[] }
 function GroupedDrawer({ sections, onClose }: { sections: NavSection[]; onClose: () => void }) {
   return (
     <>
-      <div className="fixed inset-0 z-[45] bg-[#1E3541]/20 overlay-fade" onClick={onClose} />
+      <div className="fixed inset-0 z-[45] bg-[#1B3428]/20 overlay-fade" onClick={onClose} />
       <div className="fixed bottom-0 left-0 right-0 z-[50] spring-up">
         <div
           className="bg-[#F7F5F0] rounded-t-3xl border-t border-x border-[#E7E1D8]"
@@ -187,7 +187,7 @@ function GroupedDrawer({ sections, onClose }: { sections: NavSection[]; onClose:
                         ? { background: item.color + '15', borderColor: item.color + '25' }
                         : { background: 'white', borderColor: '#E7E1D8' }}
                     >
-                      <span className="text-base leading-none" style={{ color: item.color ?? '#1E3541' }}>
+                      <span className="text-base leading-none" style={{ color: item.color ?? '#1B3428' }}>
                         {item.icon}
                       </span>
                       <span className="font-semibold text-sm text-[#1F1F1F] leading-none">{item.label}</span>
@@ -212,9 +212,9 @@ function GroupedDrawer({ sections, onClose }: { sections: NavSection[]; onClose:
 
 // NAV_BG — the collar ring around the floating circle uses this exact color
 // so the circle appears embedded in the bar.
-const NAV_BG   = '#1E3541'
+const NAV_BG   = '#1B3428'
 const CIRCLE_BG = '#EAD9B1'   // warm gold — active indicator
-const ACTIVE_ICON_COLOR  = '#1E3541'
+const ACTIVE_ICON_COLOR  = '#1B3428'
 const INACTIVE_ICON_COLOR = 'rgba(245,241,232,0.45)'
 const ACTIVE_LABEL_COLOR  = '#EAD9B1'
 const INACTIVE_LABEL_COLOR = 'rgba(245,241,232,0.38)'
@@ -235,7 +235,7 @@ export function BottomNav() {
 
   // ── Ops drawer items ──────────────────────────────────────────────────────────
   const opsItems: DrawerItem[] = [
-    { href: '/salon',    label: 'Salón',    icon: <IconMap />,    color: '#1E3541' },
+    { href: '/salon',    label: 'Salón',    icon: <IconMap />,    color: '#1B3428' },
     { href: '/bar',      label: 'Barra',    icon: <IconCoffee />, color: '#C98933', badge: barPending },
     { href: '/kitchen',  label: 'Cocina',   icon: <IconPot />,    color: '#B8574E', badge: kitchenPending },
     { href: '/delivery', label: 'Delivery', icon: <IconTruck />,  color: '#6D9EEB' },

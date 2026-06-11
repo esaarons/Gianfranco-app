@@ -25,7 +25,7 @@ export default function AppError({
       )}
       <button
         onClick={reset}
-        style={{ marginTop: 8, padding: '8px 20px', background: '#0F3A43', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer' }}
+        style={{ marginTop: 8, padding: '8px 20px', background: '#1B3428', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer' }}
       >
         Intentar de nuevo
       </button>

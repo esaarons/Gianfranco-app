@@ -67,7 +67,7 @@ export function FreeItemSheet({ onAdd, onClose }: FreeItemSheetProps) {
                 onClick={() => handleQuick(item)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all press-scale
                   ${name === item
-                    ? 'bg-[#F5F1E8] text-[#0E2F33] border-transparent'
+                    ? 'bg-[#F5F1E8] text-[#0F2018] border-transparent'
                     : 'bg-white/6 text-white/50 border-white/10 hover:bg-white/10'}`}
               >
                 {item}
@@ -113,7 +113,7 @@ export function FreeItemSheet({ onAdd, onClose }: FreeItemSheetProps) {
           <button
             onClick={handleSubmit}
             disabled={!name.trim()}
-            className="w-full bg-[#F5F1E8] text-[#0E2F33] font-bold py-4 rounded-2xl text-sm btn-primary disabled:opacity-40"
+            className="w-full bg-[#F5F1E8] text-[#0F2018] font-bold py-4 rounded-2xl text-sm btn-primary disabled:opacity-40"
           >
             Agregar al pedido
           </button>

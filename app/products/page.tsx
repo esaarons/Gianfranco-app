@@ -101,7 +101,7 @@ export default function ProductsPage() {
               onClick={() => setFilter(f.value)}
               className={cn(
                 'flex-1 py-2 rounded-xl text-xs font-bold transition-all press-scale',
-                filter === f.value ? 'bg-[#F5F1E8] text-[#0E2F33]' : 'glass text-white/45'
+                filter === f.value ? 'bg-[#F5F1E8] text-[#0F2018]' : 'glass text-white/45'
               )}
             >
               {f.label}
@@ -147,7 +147,7 @@ export default function ProductsPage() {
                           {product.is_favorite && <span className="text-xs shrink-0">⭐</span>}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[#0F3A43] font-bold text-sm">{formatPrice(product.price)}</span>
+                          <span className="text-[#1B3428] font-bold text-sm">{formatPrice(product.price)}</span>
                           <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border', area.bg, area.color)}>
                             {area.label}
                           </span>

@@ -199,7 +199,7 @@ function KpiCard({ label, value, sub, accent, icon }: {
     <div className="bg-white rounded-2xl px-4 py-4 border border-[#E7E1D8] card-shadow">
       {icon && <p className="text-xl mb-2">{icon}</p>}
       <p className="section-label mb-1.5">{label}</p>
-      <p className="text-[28px] font-bold tracking-tight leading-none" style={{ color: accent ?? '#1E3541' }}>{value}</p>
+      <p className="text-[28px] font-bold tracking-tight leading-none" style={{ color: accent ?? '#1B3428' }}>{value}</p>
       {sub && <p className="text-[#A9A39C] text-[11px] mt-1.5 leading-snug">{sub}</p>}
     </div>
   )
@@ -258,7 +258,7 @@ export default function ReportsPage() {
     <div className="min-h-screen bg-[#F7F5F0]">
 
       {/* Dark hero header */}
-      <div className="bg-[#1E3541] px-5 pt-8 pb-6">
+      <div className="bg-[#1B3428] px-5 pt-8 pb-6">
         <p className="section-label text-[#6D9EAA] mb-2">Inteligencia Operacional</p>
         <h1 className="text-white text-2xl font-bold tracking-tight">Métricas</h1>
         <p className="text-[#9BBAC4] text-xs mt-1">Flujo de trabajo · Rendimiento · Cuellos de botella</p>
@@ -272,7 +272,7 @@ export default function ReportsPage() {
               className={cn(
                 'px-4 py-2 rounded-xl text-xs font-bold transition-all press-scale',
                 period === p.value
-                  ? 'bg-white text-[#1E3541]'
+                  ? 'bg-white text-[#1B3428]'
                   : 'bg-white/10 text-white/70 border border-white/15'
               )}
             >
@@ -284,7 +284,7 @@ export default function ReportsPage() {
 
       {isLoading ? (
         <div className="flex flex-col items-center py-20 gap-3">
-          <div className="w-8 h-8 border-2 border-[#E7E1D8] border-t-[#1E3541] rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-[#E7E1D8] border-t-[#1B3428] rounded-full animate-spin" />
           <p className="text-[#7A756D] text-sm">Calculando métricas…</p>
         </div>
       ) : !data ? null : (
@@ -297,7 +297,7 @@ export default function ReportsPage() {
               label="Pedidos totales"
               value={String(data.totalOrders)}
               sub={`en los últimos ${data.period} días`}
-              accent="#1E3541"
+              accent="#1B3428"
             />
             <KpiCard
               icon="⏱"

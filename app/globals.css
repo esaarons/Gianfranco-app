@@ -2,63 +2,54 @@
 
 /* ─── Brand Design Tokens ──────────────────────────────────────────────────── */
 @theme inline {
-  /* ── Redesign 2025 palette ── */
-  --color-primary:       #1E3541;
-  --color-op-green:      #6D8A5C;
-  --color-alert-amber:   #C98933;
-  --color-alert-red:     #B8574E;
-  --color-bg:            #F7F5F0;
-  --color-text-secondary:#7A756D;
-  --color-border-soft:   #E7E1D8;
+  /* ── Core palette ── */
+  --color-primary:       #1B3428;   /* forest green — único primario del sistema */
+  --color-primary-deep:  #0F2018;   /* casi negro forestal — fondos de pantalla oscura */
+  --color-gold:          #C8913A;   /* oro cálido — acento activo */
+  --color-gold-light:    #EAD9B1;   /* crema dorada — texto sobre oscuro */
 
-  /* Legacy / compat */
-  --color-cream:    #F7F5F0;
-  --color-teal:     #1E3541;
-  --color-teal-mid: #1A5260;
-  --color-coffee:   #7C5640;
-  --color-matcha:   #9DAA7D;
-  --color-charcoal: #1F1F1F;
-  --color-ink:      #3A3630;
+  /* Operacional */
+  --color-op-green:      #4EA055;   /* verde confirmación */
+  --color-alert-amber:   #C98933;   /* ámbar advertencia */
+  --color-alert-red:     #B8574E;   /* rojo urgente */
+  --color-alert-blue:    #4A87C7;   /* azul en progreso */
 
   /* Surfaces */
-  --color-surface:   #F7F5F0;
-  --color-card:      #FFFFFF;
-  --color-card-soft: #F9F7F3;
-  --color-border:    #E7E1D8;
-  --color-border-mid:#D4CFC5;
+  --color-bg:            #F5F2EC;   /* fondo general app */
+  --color-surface:       #F5F2EC;
+  --color-card:          #FFFFFF;
+  --color-card-soft:     #F9F7F3;
+  --color-border:        #E8E2D8;
+  --color-border-mid:    #D4CEC4;
+  --color-border-soft:   #EDE8E0;
 
   /* Text */
-  --color-text:       #1F1F1F;
-  --color-text-muted: #7A756D;
-  --color-text-faint: #A9A39C;
+  --color-text:          #1A1A1A;
+  --color-text-secondary:#6E6860;
+  --color-text-muted:    #6E6860;
+  --color-text-faint:    #A8A298;
 
-  /* Table states */
-  --color-state-libre:     #C9D4C2;
-  --color-state-ocupada:   #7A9E7E;
-  --color-state-pendiente: #D79A57;
-  --color-state-prep:      #C76868;
-  --color-state-listo:     #6D9EEB;
-  --color-state-cuenta:    #9D7CC2;
-  --color-state-pagado:    #B8B8B8;
-  --color-state-cleaning:  #C8B8AA;
+  /* Table states — paleta más sobria */
+  --color-state-libre:     #4EA055;
+  --color-state-ocupada:   #4A87C7;
+  --color-state-preparando:#D98535;
+  --color-state-listo:     #9058C2;
+  --color-state-limpieza:  #9E9690;
+  --color-state-reservada: #C8A818;
 
-  /* Card status (bar/kitchen) */
+  /* Card status (barra/cocina) */
   --color-pending:   #E08A50;
-  --color-received:  #6D9EEB;
-  --color-delivered: #9DAA7D;
+  --color-received:  #4A87C7;
+  --color-delivered: #4EA055;
 
-  /* Legacy compat */
-  --color-gf-deep:    #1E3541;
-  --color-gf-crema:   #F7F5F0;
-  --color-gf-taupe:   #C8B8AA;
-  --color-gf-stone:   #E8E4DC;
-  --color-gf-sage:    #9DAA7D;
-  --color-gf-charcoal:#252525;
-  --color-gf-slate:   #8A8278;
-  --color-gf-rust:    #C76868;
-  --color-gf-wheat:   #E8C87A;
-  --color-gf-espresso:#7C5640;
-  --color-brand:      var(--color-teal);
+  /* Compat */
+  --color-cream:     #F5F2EC;
+  --color-teal:      #1B3428;
+  --color-coffee:    #7C5640;
+  --color-matcha:    #9DAA7D;
+  --color-charcoal:  #1A1A1A;
+  --color-ink:       #3A3630;
+  --color-brand:     var(--color-primary);
 
   --font-sans: var(--font-space-grotesk), 'Space Grotesk', system-ui, -apple-system, sans-serif;
 
@@ -83,7 +74,7 @@
   }
 
   body {
-    background-color: #F7F5F0;
+    background-color: #F5F2EC;
     color: #1F1F1F;
     font-family: var(--font-sans);
     font-feature-settings: "ss01" on, "ss02" on;
@@ -124,8 +115,8 @@
 .pt-header  { padding-top: calc(2rem + env(safe-area-inset-top)); }
 
 /* Page content bottom: clears BottomNav (64px) + home indicator */
-/* Nav bar = 60px bar + 27px for floating circle = ~87px total visual height */
-.pb-nav     { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+/* Nav bar ~64px + 27px floating circle + 4px gap = 95px → 6rem clears safely */
+.pb-nav     { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
 
 /* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
 .scrollbar-hide {
@@ -136,15 +127,15 @@
 
 /* ─── Surface utilities ──────────────────────────────────────────────────────── */
 .surface {
-  background-color: #F7F5F0;
+  background-color: #F5F2EC;
 }
 .card {
   background-color: #FFFFFF;
-  border: 1px solid #E7E1D8;
+  border: 1px solid #E8E2D8;
 }
 .card-soft {
-  background-color: #F9F7F4;
-  border: 1px solid #EDE9E2;
+  background-color: #F9F7F3;
+  border: 1px solid #EDE8E0;
 }
 
 /* ─── Glassmorphism ─────────────────────────────────────────────────────────── */

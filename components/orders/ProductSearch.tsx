@@ -127,7 +127,7 @@ export function ProductSearch({ onSelect }: ProductSearchProps) {
   const isSearching = query.trim().length > 0
 
   return (
-    <div className="flex flex-col h-full bg-[#0A1928]">
+    <div className="flex flex-col h-full bg-[#0F2018]">
 
       {/* Search bar */}
       <div className="px-4 pt-3.5 pb-3 shrink-0">
@@ -183,7 +183,7 @@ export function ProductSearch({ onSelect }: ProductSearchProps) {
                 className={cn(
                   'flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all press-scale',
                   active
-                    ? 'bg-[#F5F1E8] text-[#0E2F33]'
+                    ? 'bg-[#F5F1E8] text-[#0F2018]'
                     : 'bg-white/8 text-white/45 hover:bg-white/12 border border-white/6'
                 )}
               >

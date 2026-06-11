@@ -142,7 +142,7 @@ function FilterPill({
       className={cn(
         'px-3 py-1.5 rounded-full text-xs font-bold border transition-all press-scale shrink-0',
         active
-          ? 'bg-[#1E3541] text-white border-[#1E3541]'
+          ? 'bg-[#1B3428] text-white border-[#1B3428]'
           : 'bg-white text-[#7A756D] border-[#E7E1D8]'
       )}
     >
@@ -237,7 +237,7 @@ export default function LogsPage() {
             placeholder="Buscar por usuario o acción…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white border border-[#E7E1D8] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#1F1F1F] outline-none focus:border-[#1E3541]/30 placeholder:text-[#A9A39C]"
+            className="w-full bg-white border border-[#E7E1D8] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#1F1F1F] outline-none focus:border-[#1B3428]/30 placeholder:text-[#A9A39C]"
           />
           {search && (
             <button onClick={() => setSearch('')}

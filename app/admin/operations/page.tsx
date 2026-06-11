@@ -163,7 +163,7 @@ function ShiftKpi({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-[#F7F5F0] rounded-xl px-3 py-3 text-center">
       <p className="section-label mb-1.5">{label}</p>
-      <p className="text-[#1E3541] text-base font-bold leading-none">{value}</p>
+      <p className="text-[#1B3428] text-base font-bold leading-none">{value}</p>
     </div>
   )
 }
@@ -227,7 +227,7 @@ export default function OperationsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#F7F5F0]">
-        <div className="w-8 h-8 border-2 border-[#E7E1D8] border-t-[#1E3541] rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#E7E1D8] border-t-[#1B3428] rounded-full animate-spin" />
       </div>
     )
   }
@@ -236,7 +236,7 @@ export default function OperationsPage() {
     <div className="min-h-screen bg-[#F7F5F0]">
 
       {/* ── Dark hero ── */}
-      <div className="bg-[#1E3541] px-5 pt-8 pb-6">
+      <div className="bg-[#1B3428] px-5 pt-8 pb-6">
         <p className="section-label text-[#6D9EAA] mb-2">Centro Operativo</p>
 
         <div className="flex items-start justify-between gap-3">
@@ -327,14 +327,14 @@ export default function OperationsPage() {
               <button
                 onClick={() => handleStartNamed('Turno AM · Manual')}
                 disabled={startShift.isPending}
-                className="bg-[#1E3541]/8 text-[#1E3541] border border-[#1E3541]/15 font-bold px-5 py-3 rounded-xl text-xs btn-primary disabled:opacity-50"
+                className="bg-[#1B3428]/8 text-[#1B3428] border border-[#1B3428]/15 font-bold px-5 py-3 rounded-xl text-xs btn-primary disabled:opacity-50"
               >
                 Abrir AM
               </button>
               <button
                 onClick={() => handleStartNamed('Turno PM · Manual')}
                 disabled={startShift.isPending}
-                className="bg-[#1E3541] text-white font-bold px-5 py-3 rounded-xl text-xs btn-primary disabled:opacity-50"
+                className="bg-[#1B3428] text-white font-bold px-5 py-3 rounded-xl text-xs btn-primary disabled:opacity-50"
               >
                 {startShift.isPending ? 'Abriendo…' : 'Abrir PM'}
               </button>
@@ -428,7 +428,7 @@ export default function OperationsPage() {
                         ].map(({ l, v }) => (
                           <div key={l} className="bg-[#F7F5F0] rounded-lg px-2 py-2 text-center">
                             <p className="section-label mb-1">{l}</p>
-                            <p className="text-[#1E3541] text-xs font-bold">{v}</p>
+                            <p className="text-[#1B3428] text-xs font-bold">{v}</p>
                           </div>
                         ))}
                       </div>
@@ -455,12 +455,12 @@ export default function OperationsPage() {
                 {shiftAnalytics.by_staff.map((s: { user_id: string; name: string; cards_handled: number; avg_reaction_min: number | null }, i: number) => (
                   <div key={s.user_id} className="flex items-center gap-3 px-4 py-3 border-t border-[#F0EDE8]">
                     <span className="text-[#A9A39C] text-xs font-bold w-5 shrink-0 text-center">{i + 1}</span>
-                    <div className="w-8 h-8 rounded-xl bg-[#1E3541]/8 flex items-center justify-center shrink-0">
-                      <span className="text-[#1E3541] text-xs font-bold">{s.name[0]?.toUpperCase()}</span>
+                    <div className="w-8 h-8 rounded-xl bg-[#1B3428]/8 flex items-center justify-center shrink-0">
+                      <span className="text-[#1B3428] text-xs font-bold">{s.name[0]?.toUpperCase()}</span>
                     </div>
                     <span className="flex-1 text-[#1F1F1F] text-sm font-medium truncate">{s.name}</span>
                     <span className="text-[#A9A39C] text-xs shrink-0">{s.cards_handled} cmd.</span>
-                    <span className="text-[#1E3541] text-sm font-bold shrink-0">{fmt(s.avg_reaction_min)}</span>
+                    <span className="text-[#1B3428] text-sm font-bold shrink-0">{fmt(s.avg_reaction_min)}</span>
                   </div>
                 ))}
               </div>

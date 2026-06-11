@@ -1,14 +1,14 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTables } from '@/hooks/useTables'
 import { useAreaCardsByType } from '@/hooks/useCards'
 import { ZONE_LABELS } from '@/lib/constants'
 import { cn, formatPrice } from '@/lib/utils'
 import Link from 'next/link'
 import { ReservationBanner } from '@/components/notifications/ReservationBanner'
-import type { Table, Order } from '@/types'
+import type { Table, Order, AreaCard } from '@/types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -121,6 +121,101 @@ function StationCard({
   )
 }
 
+// ── Unified order card for admin ──────────────────────────────────────────────
+
+function AdminOrderCard({
+  order, barCard, kitchenCard,
+}: {
+  order: Order
+  barCard?:     AreaCard
+  kitchenCard?: AreaCard
+}) {
+  const barItems     = order.items?.filter(i => i.area?.type === 'bar')     ?? []
+  const kitItems     = order.items?.filter(i => i.area?.type === 'kitchen') ?? []
+  const otherItems   = order.items?.filter(i => i.area?.type !== 'bar' && i.area?.type !== 'kitchen') ?? []
+  const total        = order.items?.reduce((s, item) => {
+    const m = item.modifiers?.reduce((ms, mod) => ms + mod.price, 0) ?? 0
+    return s + (item.unit_price + m) * item.quantity
+  }, 0) ?? 0
+
+  const cardBadge = (card?: AreaCard) => {
+    if (!card) return null
+    const label = card.status === 'delivered' ? '✓ Listo' : card.status === 'received' ? 'Preparando' : 'Pendiente'
+    const color = card.status === 'delivered' ? '#4EA055' : card.status === 'received' ? '#C8913A' : '#F5A623'
+    return (
+      <span
+        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+        style={{ background: color + '18', color }}
+      >
+        {label}
+      </span>
+    )
+  }
+
+  return (
+    <div className="bg-white border border-[#E7E1D8] rounded-2xl overflow-hidden">
+      {/* Header */}
+      <div className="px-4 py-3 flex items-center justify-between border-b border-[#F2EFE9]">
+        <div className="flex items-center gap-2">
+          <span className="text-base leading-none">
+            {order.type === 'takeaway' ? '🥡' : order.table ? '🪑' : '📦'}
+          </span>
+          <p className="font-bold text-[#1F1F1F] text-sm">
+            {order.type === 'takeaway' ? `Para llevar ·${order.id.slice(-4).toUpperCase()}` : order.table ? `Mesa ${order.table.code}` : 'Delivery'}
+          </p>
+          <span className="text-[#A9A39C] text-[11px]">{elapsed(order.created_at)}</span>
+        </div>
+        {total > 0 && (
+          <span className="text-[#1B3428] text-sm font-bold">{formatPrice(total)}</span>
+        )}
+      </div>
+
+      {/* Area rows */}
+      <div className="divide-y divide-[#F2EFE9]">
+        {barItems.length > 0 && (
+          <div className="flex items-start gap-3 px-4 py-2.5">
+            <div className="w-0.5 self-stretch rounded-full bg-[#C8913A] shrink-0 my-0.5" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-[#C8913A] text-[10px] font-bold uppercase tracking-wide">Barra</span>
+                {cardBadge(barCard)}
+              </div>
+              <p className="text-[#5C4E2E] text-[11px] leading-relaxed">
+                {barItems.map(i => `${i.quantity}× ${i.product?.name ?? i.notes ?? '?'}`).join(' · ')}
+              </p>
+            </div>
+          </div>
+        )}
+        {kitItems.length > 0 && (
+          <div className="flex items-start gap-3 px-4 py-2.5">
+            <div className="w-0.5 self-stretch rounded-full bg-[#C46F4E] shrink-0 my-0.5" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-[#C46F4E] text-[10px] font-bold uppercase tracking-wide">Cocina</span>
+                {cardBadge(kitchenCard)}
+              </div>
+              <p className="text-[#5C4E2E] text-[11px] leading-relaxed">
+                {kitItems.map(i => `${i.quantity}× ${i.product?.name ?? i.notes ?? '?'}`).join(' · ')}
+              </p>
+            </div>
+          </div>
+        )}
+        {otherItems.length > 0 && (
+          <div className="flex items-start gap-3 px-4 py-2.5">
+            <div className="w-0.5 self-stretch rounded-full bg-[#A9A39C] shrink-0 my-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[#A9A39C] text-[10px] font-bold uppercase tracking-wide mb-0.5">Otros</p>
+              <p className="text-[#5C4E2E] text-[11px] leading-relaxed">
+                {otherItems.map(i => `${i.quantity}× ${i.product?.name ?? i.notes ?? '?'}`).join(' · ')}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Shortcut tile ─────────────────────────────────────────────────────────────
 
 function ShortcutTile({ href, icon, label, accent }: { href: string; icon: string; label: string; accent?: string }) {
@@ -203,6 +298,18 @@ export default function AdminPage() {
   const recentOrders = [...openOrders]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 6)
+
+  const orderCards = useMemo(() => {
+    const byOrderBar: Record<string, AreaCard> = {}
+    const byOrderKit: Record<string, AreaCard> = {}
+    barCards.forEach(c => { if (c.order_id) byOrderBar[c.order_id] = c })
+    kitchenCards.forEach(c => { if (c.order_id) byOrderKit[c.order_id] = c })
+    return recentOrders.map(o => ({
+      order:       o,
+      barCard:     byOrderBar[o.id],
+      kitchenCard: byOrderKit[o.id],
+    }))
+  }, [recentOrders, barCards, kitchenCards])
 
   const tablesByZone: Record<string, Table[]> = {}
   tables.forEach(t => { tablesByZone[t.zone] = [...(tablesByZone[t.zone] ?? []), t] })
@@ -337,7 +444,7 @@ export default function AdminPage() {
         <ReservationBanner />
 
         {/* ── Active orders ── */}
-        {recentOrders.length > 0 && (
+        {orderCards.length > 0 && (
           <section>
             <div className="flex items-center justify-between px-0.5 mb-3">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#A9A39C]">
@@ -347,39 +454,10 @@ export default function AdminPage() {
                 Ver todos →
               </Link>
             </div>
-            <div className="bg-white border border-[#E7E1D8] rounded-2xl overflow-hidden">
-              {recentOrders.map((order, idx) => {
-                const orderTotal = order.items?.reduce((s, item) => {
-                  const m = item.modifiers?.reduce((ms, mod) => ms + mod.price, 0) ?? 0
-                  return s + (item.unit_price + m) * item.quantity
-                }, 0) ?? 0
-                const isLast = idx === recentOrders.length - 1
-                return (
-                  <div
-                    key={order.id}
-                    className={cn('px-4 py-3 flex items-center justify-between', !isLast && 'border-b border-[#F2EFE9]')}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-xl bg-[#F7F5F0] flex items-center justify-center shrink-0 text-sm">
-                        {order.type === 'takeaway' ? '🥡' : order.table ? '🪑' : '📦'}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-[#1F1F1F] text-sm leading-none truncate">
-                          {order.type === 'takeaway' ? 'Para llevar' : order.table ? `Mesa ${order.table.code}` : 'Delivery'}
-                        </p>
-                        <p className="text-[#A9A39C] text-[11px] mt-0.5">
-                          {elapsed(order.created_at)} · {order.items?.length ?? 0} ítem{(order.items?.length ?? 0) !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                    </div>
-                    {orderTotal > 0 && (
-                      <span className="text-[#1B3428] text-sm font-bold shrink-0 ml-2">
-                        {formatPrice(orderTotal)}
-                      </span>
-                    )}
-                  </div>
-                )
-              })}
+            <div className="space-y-2.5">
+              {orderCards.map(({ order, barCard, kitchenCard }) => (
+                <AdminOrderCard key={order.id} order={order} barCard={barCard} kitchenCard={kitchenCard} />
+              ))}
             </div>
           </section>
         )}

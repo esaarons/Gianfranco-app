@@ -221,7 +221,7 @@ export function TableOrderSheet({ table, onClose, onAddMore }: TableOrderSheetPr
                   <button
                     onClick={handleClose}
                     disabled={closing || !hasItems}
-                    className="flex-[2] bg-[#F5F1E8] text-[#0E2F33] font-bold py-3.5 rounded-2xl text-sm btn-primary disabled:opacity-40"
+                    className="flex-[2] bg-[#F5F1E8] text-[#0F2018] font-bold py-3.5 rounded-2xl text-sm btn-primary disabled:opacity-40"
                   >
                     {closing ? 'Cerrando…' : 'Cobrar y cerrar mesa'}
                   </button>

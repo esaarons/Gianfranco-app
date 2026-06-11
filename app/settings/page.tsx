@@ -83,7 +83,7 @@ export default function SettingsPage() {
 
       {/* Profile card */}
       <div className="mx-5 mb-5 bg-white border border-[#E8E4DC] rounded-2xl px-5 py-4 flex items-center gap-4 card-shadow">
-        <div className="w-14 h-14 rounded-2xl bg-[#0F3A43] flex items-center justify-center text-2xl font-bold shrink-0">
+        <div className="w-14 h-14 rounded-2xl bg-[#1B3428] flex items-center justify-center text-2xl font-bold shrink-0">
           <span className="text-white">{user.name[0]?.toUpperCase()}</span>
         </div>
         <div className="flex-1 min-w-0">
@@ -110,7 +110,7 @@ export default function SettingsPage() {
             onClick={() => setSection(s)}
             className={cn(
               'flex-1 py-2.5 rounded-xl text-sm font-bold transition-all press-scale',
-              section === s ? 'bg-[#0F3A43] text-white' : 'bg-white border border-[#E8E4DC] text-[#8A8278]'
+              section === s ? 'bg-[#1B3428] text-white' : 'bg-white border border-[#E8E4DC] text-[#8A8278]'
             )}
           >
             {s === 'profile' ? 'Perfil' : 'Cambiar PIN'}
@@ -128,7 +128,7 @@ export default function SettingsPage() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-white border border-[#E8E4DC] focus:border-[#0F3A43]/30 rounded-xl px-4 py-3 text-sm text-[#252525] outline-none transition-all"
+                className="w-full bg-white border border-[#E8E4DC] focus:border-[#1B3428]/30 rounded-xl px-4 py-3 text-sm text-[#252525] outline-none transition-all"
               />
             </div>
             <div className="space-y-1.5">
@@ -141,7 +141,7 @@ export default function SettingsPage() {
             <button
               onClick={saveProfile}
               disabled={saving || name.trim() === user.name}
-              className="w-full bg-[#0F3A43] text-white font-bold py-4 rounded-2xl text-sm btn-primary disabled:opacity-40"
+              className="w-full bg-[#1B3428] text-white font-bold py-4 rounded-2xl text-sm btn-primary disabled:opacity-40"
             >
               {saving ? 'Guardando…' : 'Guardar nombre'}
             </button>
@@ -156,7 +156,7 @@ export default function SettingsPage() {
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
                 placeholder="Mínimo 4 dígitos"
-                className="w-full bg-white border border-[#E8E4DC] focus:border-[#0F3A43]/30 rounded-xl px-4 py-3 text-sm text-[#252525] outline-none transition-all placeholder:text-[#B0AB9F] tracking-widest"
+                className="w-full bg-white border border-[#E8E4DC] focus:border-[#1B3428]/30 rounded-xl px-4 py-3 text-sm text-[#252525] outline-none transition-all placeholder:text-[#B0AB9F] tracking-widest"
               />
             </div>
             <div className="space-y-1.5">
@@ -171,7 +171,7 @@ export default function SettingsPage() {
                   'w-full bg-white border rounded-xl px-4 py-3 text-sm text-[#252525] outline-none transition-all placeholder:text-[#B0AB9F] tracking-widest',
                   pinConfirm && pin !== pinConfirm
                     ? 'border-[#C76868]/50'
-                    : 'border-[#E8E4DC] focus:border-[#0F3A43]/30'
+                    : 'border-[#E8E4DC] focus:border-[#1B3428]/30'
                 )}
               />
               {pinConfirm && pin !== pinConfirm && (
@@ -181,7 +181,7 @@ export default function SettingsPage() {
             <button
               onClick={savePin}
               disabled={saving || !pin || pin !== pinConfirm}
-              className="w-full bg-[#0F3A43] text-white font-bold py-4 rounded-2xl text-sm btn-primary disabled:opacity-40"
+              className="w-full bg-[#1B3428] text-white font-bold py-4 rounded-2xl text-sm btn-primary disabled:opacity-40"
             >
               {saving ? 'Guardando…' : 'Actualizar PIN'}
             </button>
@@ -209,7 +209,7 @@ export default function SettingsPage() {
           ) : (
             <button
               onClick={enableSound}
-              className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-[#0F3A43] text-white press-scale"
+              className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-[#1B3428] text-white press-scale"
             >
               Activar
             </button>
@@ -244,7 +244,7 @@ export default function SettingsPage() {
                   // permissionStatus updates via store
                   void perm
                 }}
-                className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-[#0F3A43] text-white press-scale shrink-0"
+                className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-[#1B3428] text-white press-scale shrink-0"
               >
                 Permitir
               </button>
@@ -269,7 +269,7 @@ export default function SettingsPage() {
                   className={cn(
                     'w-full text-left rounded-2xl px-4 py-3.5 border transition-all press-scale',
                     active
-                      ? 'bg-[#0F3A43] border-[#0F3A43] text-white'
+                      ? 'bg-[#1B3428] border-[#1B3428] text-white'
                       : 'bg-white border-[#E8E4DC] text-[#252525]'
                   )}
                 >

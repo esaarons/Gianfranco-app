@@ -162,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         </p>
         <button
           onClick={retryCheck}
-          className="bg-[#1E3541] text-white font-semibold px-6 py-3 rounded-xl text-sm press-scale mt-2"
+          className="bg-[#1B3428] text-white font-semibold px-6 py-3 rounded-xl text-sm press-scale mt-2"
         >
           Reintentar
         </button>
@@ -174,7 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   if (!checked) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#F7F5F0]">
-        <div className="w-8 h-8 border-2 border-[#E7E1D8] border-t-[#1E3541] rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#E7E1D8] border-t-[#1B3428] rounded-full animate-spin" />
       </div>
     )
   }

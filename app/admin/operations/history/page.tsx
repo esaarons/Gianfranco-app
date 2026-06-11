@@ -40,7 +40,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-[#F7F5F0] rounded-xl px-3 py-3 text-center">
       <p className="section-label mb-1.5">{label}</p>
-      <p className="text-[#1E3541] text-sm font-bold leading-none">{value}</p>
+      <p className="text-[#1B3428] text-sm font-bold leading-none">{value}</p>
     </div>
   )
 }
@@ -155,12 +155,12 @@ function ShiftCard({ shift }: { shift: Shift }) {
                 {s.by_staff.map((st: { user_id: string; name: string; cards_handled: number; avg_reaction_min: number | null }, i: number) => (
                   <div key={st.user_id} className="flex items-center gap-2.5">
                     <span className="text-[#A9A39C] text-[10px] font-bold w-4 text-center">{i + 1}</span>
-                    <div className="w-6 h-6 rounded-lg bg-[#1E3541]/8 flex items-center justify-center shrink-0">
-                      <span className="text-[#1E3541] text-[9px] font-bold">{st.name[0]?.toUpperCase()}</span>
+                    <div className="w-6 h-6 rounded-lg bg-[#1B3428]/8 flex items-center justify-center shrink-0">
+                      <span className="text-[#1B3428] text-[9px] font-bold">{st.name[0]?.toUpperCase()}</span>
                     </div>
                     <span className="flex-1 text-[#1F1F1F] text-xs truncate">{st.name}</span>
                     <span className="text-[#A9A39C] text-[10px]">{st.cards_handled} cmd.</span>
-                    <span className="text-[#1E3541] text-xs font-bold">{fmt(st.avg_reaction_min)}</span>
+                    <span className="text-[#1B3428] text-xs font-bold">{fmt(st.avg_reaction_min)}</span>
                   </div>
                 ))}
               </div>
@@ -195,7 +195,7 @@ export default function ShiftHistoryPage() {
     <div className="min-h-screen bg-[#F7F5F0]">
 
       {/* Header */}
-      <div className="bg-[#1E3541] px-5 pt-8 pb-6">
+      <div className="bg-[#1B3428] px-5 pt-8 pb-6">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}

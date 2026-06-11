@@ -74,7 +74,7 @@ export function TableCard({
           : joinSource
             ? 'bg-[#FEF3E8] border-[#D79A57]/70 glow-pendiente scale-[1.06] transition-all duration-200'
             : joinTarget
-              ? 'bg-white border-[#0F3A43]/20 opacity-75 hover:opacity-100 hover:border-[#0F3A43]/40 transition-all duration-200'
+              ? 'bg-white border-[#1B3428]/20 opacity-75 hover:opacity-100 hover:border-[#1B3428]/40 transition-all duration-200'
               : isReady
                 ? cn('bg-[#EEF7EE] border-[#5A9E60]/40 glow-occupied press-scale transition-all duration-200', selected && 'glow-selected scale-[1.06]')
                 : cn(cfg.card, cfg.glow, 'press-scale transition-all duration-200', selected && 'glow-selected scale-[1.06]'),
@@ -110,7 +110,7 @@ export function TableCard({
         joinSource
           ? 'bg-[#D79A57]/20 text-[#D79A57]'
           : joinTarget
-            ? 'bg-[#0F3A43]/8 text-[#0F3A43]/50'
+            ? 'bg-[#1B3428]/8 text-[#1B3428]/50'
             : isReady
               ? 'bg-[#5A9E60]/20 text-[#1E4D22]'
               : isPreparing
@@ -133,7 +133,7 @@ export function TableCard({
       </span>
 
       {table.parent_table_id && !joinSource && !joinTarget && (
-        <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#0F3A43]/20" title="Unida" />
+        <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#1B3428]/20" title="Unida" />
       )}
     </button>
   )

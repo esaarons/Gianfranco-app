@@ -298,7 +298,7 @@ export function TableMap() {
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-2 border-[#E8E4DC] border-t-[#0F3A43] rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-[#E8E4DC] border-t-[#1B3428] rounded-full animate-spin" />
             <p className="text-[#8A8278] text-sm">Cargando mesas…</p>
           </div>
         </div>
@@ -412,7 +412,7 @@ export function TableMap() {
 
               {selected.status === 'free' && (
                 <button onClick={handleOccupyAndOrder}
-                  className="w-full bg-[#F5F1E8] text-[#0E2F33] font-bold py-4 rounded-2xl text-sm btn-primary">
+                  className="w-full bg-[#F5F1E8] text-[#0F2018] font-bold py-4 rounded-2xl text-sm btn-primary">
                   Ocupar y tomar pedido
                 </button>
               )}
@@ -420,7 +420,7 @@ export function TableMap() {
               {selected.status === 'occupied' && (
                 <>
                   <button onClick={() => setViewOrder(true)}
-                    className="w-full bg-[#F5F1E8] text-[#0E2F33] font-bold py-4 rounded-2xl text-sm btn-primary flex items-center justify-center gap-2">
+                    className="w-full bg-[#F5F1E8] text-[#0F2018] font-bold py-4 rounded-2xl text-sm btn-primary flex items-center justify-center gap-2">
                     <span>🧾</span><span>Ver pedido y cobrar</span>
                   </button>
                   <button onClick={handleOccupyAndOrder}

@@ -238,7 +238,7 @@ export function BreakfastSheet({ product, onClose }: BreakfastSheetProps) {
           <button
             onClick={handleAdd}
             disabled={!canSubmit}
-            className="w-full bg-[#F5F1E8] disabled:opacity-35 text-[#0E2F33] font-bold py-4 rounded-2xl text-base flex items-center justify-between px-5 btn-primary"
+            className="w-full bg-[#F5F1E8] disabled:opacity-35 text-[#0F2018] font-bold py-4 rounded-2xl text-base flex items-center justify-between px-5 btn-primary"
           >
             <span>Agregar desayuno</span>
             <span className="text-[#C46F4E] font-bold">{formatPrice(total)}</span>
@@ -287,7 +287,7 @@ function OptionChip({ label, price, selected, onSelect }: {
       className={cn(
         'px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 border press-scale',
         selected
-          ? 'bg-[#F5F1E8] border-[#F5F1E8] text-[#0E2F33]'
+          ? 'bg-[#F5F1E8] border-[#F5F1E8] text-[#0F2018]'
           : 'bg-white/6 border-white/10 text-white/55 hover:border-white/20 hover:text-white/80'
       )}
       style={selected ? { boxShadow: '0 0 16px rgba(245,241,232,0.2)' } : undefined}

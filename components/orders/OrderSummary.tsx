@@ -203,7 +203,7 @@ export function OrderSummary({ onSubmit, submitting, label }: OrderSummaryProps)
         <button
           onClick={onSubmit}
           disabled={submitting}
-          className="bg-[#F5F1E8] disabled:opacity-50 text-[#0E2F33] font-bold py-3.5 px-6 rounded-2xl text-sm btn-primary shrink-0"
+          className="bg-[#F5F1E8] disabled:opacity-50 text-[#0F2018] font-bold py-3.5 px-6 rounded-2xl text-sm btn-primary shrink-0"
         >
           {submitting ? 'Enviando…' : (label ?? 'Enviar →')}
         </button>

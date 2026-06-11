@@ -8,6 +8,7 @@ import { BreakfastSheet } from '@/components/orders/BreakfastSheet'
 import { IceCreamSheet } from '@/components/orders/IceCreamSheet'
 import { OrderSummary } from '@/components/orders/OrderSummary'
 import { FreeItemSheet, buildFreeCartItem } from '@/components/orders/FreeItemSheet'
+import { BrunchSheet, type BrunchType } from '@/components/orders/BrunchSheet'
 import { useOrderStore } from '@/store/orderStore'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -16,11 +17,16 @@ import type { Product } from '@/types'
 export default function OrderPage() {
   const { tableId } = useParams<{ tableId: string }>()
   const router = useRouter()
-  const {
-    tableCode, tableId: storeTableId,
-    items, addItem, clearCart,
-    guests, activeGuest, addGuest, setActiveGuest,
-  } = useOrderStore()
+  const tableCode      = useOrderStore((s) => s.tableCode)
+  const storeTableId   = useOrderStore((s) => s.tableId)
+  const items          = useOrderStore((s) => s.items)
+  const addItem        = useOrderStore((s) => s.addItem)
+  const clearCart      = useOrderStore((s) => s.clearCart)
+  const guests         = useOrderStore((s) => s.guests)
+  const activeGuest    = useOrderStore((s) => s.activeGuest)
+  const addGuest       = useOrderStore((s) => s.addGuest)
+  const setActiveGuest = useOrderStore((s) => s.setActiveGuest)
+  const renameGuest    = useOrderStore((s) => s.renameGuest)
 
   const [selectedProduct,   setSelectedProduct]   = useState<Product | null>(null)
   const [selectedBreakfast, setSelectedBreakfast] = useState<Product | null>(null)
@@ -28,6 +34,8 @@ export default function OrderPage() {
   const [showFreeItem,      setShowFreeItem]       = useState(false)
   const [showGuestInput,  setShowGuestInput]  = useState(false)
   const [guestDraft,      setGuestDraft]      = useState('')
+  const [renamingGuest,   setRenamingGuest]   = useState<string | null>(null)
+  const [selectedBrunch,  setSelectedBrunch]  = useState<BrunchType | null>(null)
   const [submitting,      setSubmitting]      = useState(false)
   const submittingRef = useRef(false)
 
@@ -133,20 +141,59 @@ export default function OrderPage() {
           )}
 
           {/* Existing guest chips */}
-          {guests.map((g) => (
-            <button
-              key={g}
-              onClick={() => setActiveGuest(activeGuest === g ? null : g)}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-all press-scale border',
-                activeGuest === g
-                  ? 'bg-[#F5F1E8] text-[#0F2018] border-transparent'
-                  : 'bg-white/6 text-white/45 border-white/8 hover:bg-white/10'
-              )}
-            >
-              <span>{g}</span>
-            </button>
-          ))}
+          {guests.map((g) => {
+            const isActive   = activeGuest === g
+            const isRenaming = renamingGuest === g
+
+            if (isRenaming) {
+              return (
+                <input
+                  key={`rename-${g}`}
+                  type="text"
+                  defaultValue={g}
+                  autoFocus
+                  onBlur={(e) => {
+                    const v = e.target.value.trim()
+                    if (v && v !== g) renameGuest(g, v)
+                    setRenamingGuest(null)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const v = (e.target as HTMLInputElement).value.trim()
+                      if (v && v !== g) renameGuest(g, v)
+                      setRenamingGuest(null)
+                    }
+                    if (e.key === 'Escape') setRenamingGuest(null)
+                  }}
+                  className="w-24 bg-[#F5F1E8]/15 border border-[#F5F1E8]/25 rounded-xl px-2.5 py-1.5 text-xs text-white outline-none shrink-0"
+                />
+              )
+            }
+
+            return (
+              <button
+                key={g}
+                onClick={() => setActiveGuest(isActive ? null : g)}
+                className={cn(
+                  'flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-all press-scale border',
+                  isActive
+                    ? 'bg-[#F5F1E8] text-[#0F2018] border-transparent'
+                    : 'bg-white/6 text-white/45 border-white/8 hover:bg-white/10'
+                )}
+              >
+                <span>{g}</span>
+                {isActive && (
+                  <span
+                    role="button"
+                    onClick={(e) => { e.stopPropagation(); setRenamingGuest(g) }}
+                    className="w-4 h-4 flex items-center justify-center text-[#0F2018]/40 leading-none cursor-pointer text-[11px]"
+                  >
+                    ✎
+                  </span>
+                )}
+              </button>
+            )
+          })}
 
           {/* Add guest — inline input or button */}
           {showGuestInput ? (
@@ -178,6 +225,27 @@ export default function OrderPage() {
             </button>
           )}
         </div>
+
+        {/* Brunch shortcuts — shown when a guest is active */}
+        {activeGuest && (
+          <div className="flex items-center gap-2 mt-2 px-1">
+            <span className="text-white/20 text-[9px] font-bold uppercase tracking-widest shrink-0">Brunch</span>
+            {(['brunch_49', 'brunch_39'] as const).map((bt) => (
+              <button
+                key={bt}
+                onClick={() => setSelectedBrunch(bt)}
+                className="px-3 py-1 rounded-lg text-[11px] font-bold press-scale transition-all"
+                style={{
+                  background: 'rgba(200,145,58,0.12)',
+                  border: '1px solid rgba(200,145,58,0.22)',
+                  color: 'rgba(200,145,58,0.85)',
+                }}
+              >
+                {bt === 'brunch_49' ? 'S/49' : 'S/39'}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Product selector */}
@@ -279,6 +347,19 @@ export default function OrderPage() {
             onClose={() => setShowFreeItem(false)}
           />
         </div>
+      )}
+
+      {/* Brunch overlay */}
+      {selectedBrunch && (
+        <BrunchSheet
+          brunchType={selectedBrunch}
+          onClose={() => {
+            setBadgeKey(k => k + 1)
+            const label = selectedBrunch === 'brunch_49' ? 'Brunch S/49' : 'Brunch S/39'
+            toast.success(`${label} agregado${activeGuest ? ` — ${activeGuest}` : ''}`)
+            setSelectedBrunch(null)
+          }}
+        />
       )}
     </div>
   )

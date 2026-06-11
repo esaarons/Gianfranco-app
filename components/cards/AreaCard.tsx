@@ -204,7 +204,7 @@ export function AreaCardComponent({ card, myAreaType }: AreaCardProps) {
       { id: card.id, operator_note: noteText.trim() || undefined },
       {
         onSuccess: () => { toast.success('Nota enviada a Salón'); setNoteOpen(false) },
-        onError:   () => toast.error('Actualiza la BD (migración 013)'),
+        onError:   () => toast.error('Error al guardar la nota'),
       }
     )
   }
@@ -214,7 +214,7 @@ export function AreaCardComponent({ card, myAreaType }: AreaCardProps) {
       { id: card.id, delay_minutes: minutes, delay_reason: reason },
       {
         onSuccess: () => { toast.success(`Demora marcada: +${minutes} min`); setDelayOpen(false) },
-        onError:   () => toast.error('Actualiza la BD (migración 013)'),
+        onError:   () => toast.error('Error al marcar demora'),
       }
     )
   }
@@ -237,30 +237,28 @@ export function AreaCardComponent({ card, myAreaType }: AreaCardProps) {
       card.status === 'delivered' && 'opacity-55'
     )}>
 
-      {/* Colored left stripe — overridden by urgency color when warning/urgent */}
+      {/* Header: stripe + identidad + badge */}
       <div className="flex items-stretch">
-        <div className={cn('w-1 shrink-0', urg.stripe || st.stripe)} />
-        <div className="flex-1 px-3.5 py-2.5 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className={cn('w-2 h-2 rounded-full shrink-0',
+        <div className={cn('w-[3px] shrink-0', urg.stripe || st.stripe)} />
+        <div className="flex-1 px-4 py-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={cn('w-2.5 h-2.5 rounded-full shrink-0',
               urgency === 'urgent'  ? 'bg-[#B8574E] dot-pulse-rust' :
               urgency === 'warning' ? 'bg-[#C98933] dot-pulse-amber' :
               st.dot, st.dotAnim
             )} />
-            <div>
-              <h3 className={cn('font-bold text-[15px] leading-none tracking-tight', st.textTitle)}>
-                {isTakeaway ? '🥡 Para llevar' : isTask ? (card.title ?? 'Tarea') : `Mesa ${tableCode}`}
+            <div className="min-w-0">
+              <h3 className={cn('font-bold text-base leading-none tracking-tight truncate', st.textTitle)}>
+                {isTakeaway ? 'Para llevar' : isTask ? (card.title ?? 'Tarea') : `Mesa ${tableCode}`}
               </h3>
-              {/* Live elapsed time with urgency color */}
-              <p className={cn('text-[11px] mt-0.5 font-medium flex items-center gap-1', urg.timeText || 'text-[#8A8278]')}>
+              <p className={cn('text-[11px] mt-1 font-medium flex items-center gap-1', urg.timeText || 'text-[#8A8278]')}>
                 {isTask ? 'Delivery / Tarea' : elapsedFrom(card.created_at, now)}
-                {urg.showPulse && <span className="text-[#B8574E]">!</span>}
+                {urg.showPulse && <span className="text-[#B8574E] ml-0.5">!</span>}
               </p>
             </div>
           </div>
-          {/* Status badge — urgency overrides color for pending/received */}
           <span className={cn(
-            'text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wider',
+            'text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wider shrink-0',
             urgency !== 'onTime' && card.status !== 'delivered' ? urg.badge : st.labelBg
           )}>
             {st.label}
@@ -338,7 +336,7 @@ export function AreaCardComponent({ card, myAreaType }: AreaCardProps) {
             <button
               onClick={() => handleStatus('received')}
               disabled={updateStatus.isPending}
-              className="flex-1 bg-[#F9F7F3] border border-[#E8E4DC] text-[#3A3630] font-bold py-2.5 rounded-xl text-sm btn-primary hover:bg-[#F0EDE8] transition-colors"
+              className="flex-1 bg-[#F4F2EE] border border-[#E4DED8] text-[#3A3630] font-bold py-3 rounded-xl text-sm btn-primary hover:bg-[#EDEBE5] transition-colors"
             >
               Recibir
             </button>
@@ -347,10 +345,10 @@ export function AreaCardComponent({ card, myAreaType }: AreaCardProps) {
             onClick={() => handleStatus('delivered')}
             disabled={updateStatus.isPending || card.status === 'pending'}
             className={cn(
-              'flex-1 font-bold py-2.5 rounded-xl text-sm transition-all',
+              'flex-1 font-bold py-3 rounded-xl text-sm transition-all',
               card.status === 'received'
-                ? 'bg-[#0F3A43] text-white btn-primary'
-                : 'bg-[#F0EDE8] text-[#B0AB9F] cursor-not-allowed'
+                ? 'bg-[#1B3428] text-white btn-primary'
+                : 'bg-[#EDEBE5] text-[#C0BAB4] cursor-not-allowed'
             )}
           >
             Listo ✓

@@ -122,7 +122,7 @@ export function SplitBillSheet({ order, onClose, onCloseTable }: SplitBillSheetP
                 p.paid
                   ? 'bg-[#A7B897]/20 text-[#A7B897] opacity-60'
                   : activePerson === p.id
-                    ? 'bg-[#F5F1E8] text-[#0E2F33]'
+                    ? 'bg-[#F5F1E8] text-[#0F2018]'
                     : 'bg-white/8 text-white/50 hover:bg-white/12'
               )}
             >
@@ -130,7 +130,7 @@ export function SplitBillSheet({ order, onClose, onCloseTable }: SplitBillSheetP
               {!p.paid && (
                 <span className={cn(
                   'text-[10px] font-bold',
-                  activePerson === p.id ? 'text-[#0E2F33]/50' : 'text-white/30'
+                  activePerson === p.id ? 'text-[#0F2018]/50' : 'text-white/30'
                 )}>
                   {formatPrice(personTotal(p.id))}
                 </span>
@@ -254,7 +254,7 @@ export function SplitBillSheet({ order, onClose, onCloseTable }: SplitBillSheetP
               {onCloseTable && (
                 <button
                   onClick={onCloseTable}
-                  className="w-full bg-[#F5F1E8] text-[#0E2F33] font-bold py-4 rounded-2xl text-sm btn-primary"
+                  className="w-full bg-[#F5F1E8] text-[#0F2018] font-bold py-4 rounded-2xl text-sm btn-primary"
                 >
                   Cerrar mesa →
                 </button>
@@ -276,7 +276,7 @@ export function SplitBillSheet({ order, onClose, onCloseTable }: SplitBillSheetP
                     <button
                       onClick={() => markPaid(activePerson)}
                       disabled={pTotal === 0}
-                      className="bg-[#F5F1E8] text-[#0E2F33] font-bold py-3 px-6 rounded-2xl text-sm btn-primary disabled:opacity-40"
+                      className="bg-[#F5F1E8] text-[#0F2018] font-bold py-3 px-6 rounded-2xl text-sm btn-primary disabled:opacity-40"
                     >
                       Cobrar {person.label}
                     </button>

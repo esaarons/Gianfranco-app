@@ -8,12 +8,12 @@ import { useNow } from '@/hooks/useNow'
 export type FloorState = 'libre' | 'ocupada' | 'preparando' | 'listo' | 'limpieza' | 'reservada'
 
 export const FLOOR_STATE = {
-  libre:      { bg: '#EFF7EF', border: '#6DBF70', chair: '#C8E6C9', dot: '#4CAF50', label: 'Libre',      dotAnim: '' },
-  ocupada:    { bg: '#EBF3FD', border: '#5BA3E8', chair: '#BBDEFB', dot: '#2196F3', label: 'Ocupada',    dotAnim: '' },
-  preparando: { bg: '#FFF8F0', border: '#FFB347', chair: '#FFE0B2', dot: '#FF9800', label: 'Preparando', dotAnim: 'dot-pulse-amber' },
-  listo:      { bg: '#F5F0FA', border: '#BA68C8', chair: '#E1BEE7', dot: '#9C27B0', label: 'Listo ✓',   dotAnim: 'dot-pulse' },
-  limpieza:   { bg: '#F5F5F5', border: '#BDBDBD', chair: '#E0E0E0', dot: '#9E9E9E', label: 'Limpieza',   dotAnim: '' },
-  reservada:  { bg: '#FFFDF0', border: '#FFD740', chair: '#FFF9C4', dot: '#FFC107', label: 'Reservada',  dotAnim: '' },
+  libre:      { bg: '#EEF6EF', border: '#90C498', chair: '#C2DEC4', dot: '#4EA055', label: 'Libre',      dotAnim: '' },
+  ocupada:    { bg: '#EDF3FC', border: '#88AEE0', chair: '#BDD0F0', dot: '#4A87C7', label: 'Ocupada',    dotAnim: '' },
+  preparando: { bg: '#FEF6ED', border: '#E8A850', chair: '#F5D098', dot: '#D98535', label: 'Preparando', dotAnim: 'dot-pulse-amber' },
+  listo:      { bg: '#F4EFF9', border: '#B890D8', chair: '#D8B8EE', dot: '#9058C2', label: 'Listo ✓',   dotAnim: 'dot-pulse' },
+  limpieza:   { bg: '#F4F3F1', border: '#C0B8B0', chair: '#D8D2CB', dot: '#9E9690', label: 'Limpieza',   dotAnim: '' },
+  reservada:  { bg: '#FDFBEE', border: '#D8C050', chair: '#F0E490', dot: '#C8A818', label: 'Reservada',  dotAnim: '' },
 } as const
 
 function elapsedMin(iso: string, now: number): number {
@@ -124,7 +124,7 @@ export function FloorTable({
           {elapsed !== null && (
             <p className={cn(
               'text-[10px] font-semibold mt-1 leading-none',
-              elapsed >= 30 ? 'text-[#B8574E]' : elapsed >= 15 ? 'text-[#C98933]' : 'text-[#8A8278]'
+              elapsed >= 30 ? 'text-[#B8574E]' : elapsed >= 15 ? 'text-[#D98535]' : 'text-[#8A8278]'
             )}>
               {elapsedLabel(elapsed)}
             </p>
@@ -173,12 +173,13 @@ interface FloorGroupTableProps {
   persons?: number
   selected?: boolean
   isMergeNew?: boolean
+  reservationLabel?: string
   onClick?: () => void
 }
 
 export function FloorGroupTable({
   codes, totalCapacity, state, occupiedSince,
-  items, persons, selected, isMergeNew, onClick,
+  items, persons, selected, isMergeNew, reservationLabel, onClick,
 }: FloorGroupTableProps) {
   const now     = useNow(60_000)
   const cfg     = FLOOR_STATE[state]
@@ -217,18 +218,27 @@ export function FloorGroupTable({
           boxShadow: selected ? `0 0 0 3px ${cfg.dot}40, 0 4px 16px ${cfg.dot}25` : `0 2px 8px rgba(0,0,0,0.06)`,
         }}
       >
-        <div className="flex items-center gap-1">
-          {codes.map((c, i) => (
-            <span key={c} className="flex items-center gap-1">
-              {i > 0 && <span className="text-[10px] font-bold" style={{ color: cfg.dot + '80' }}>+</span>}
-              <span className="font-bold text-[13px] tracking-tight" style={{ color: '#1F1F1F' }}>{c}</span>
-            </span>
-          ))}
-        </div>
+        {state === 'reservada' ? (
+          <div className="flex flex-col items-center gap-0.5">
+            <span className="font-black text-[13px] tracking-widest uppercase" style={{ color: cfg.dot }}>RESERVA</span>
+            {reservationLabel && (
+              <span className="text-[9px] font-semibold text-center leading-tight" style={{ color: cfg.dot + 'bb' }}>{reservationLabel}</span>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-1">
+            {codes.map((c, i) => (
+              <span key={c} className="flex items-center gap-1">
+                {i > 0 && <span className="text-[10px] font-bold" style={{ color: cfg.dot + '80' }}>+</span>}
+                <span className="font-bold text-[13px] tracking-tight" style={{ color: '#1F1F1F' }}>{c}</span>
+              </span>
+            ))}
+          </div>
+        )}
         {elapsed !== null && (
           <p className={cn(
             'text-[10px] font-semibold mt-1',
-            elapsed >= 30 ? 'text-[#B8574E]' : elapsed >= 15 ? 'text-[#C98933]' : 'text-[#8A8278]'
+            elapsed >= 30 ? 'text-[#B8574E]' : elapsed >= 15 ? 'text-[#D98535]' : 'text-[#8A8278]'
           )}>
             {elapsedLabel(elapsed)}
           </p>

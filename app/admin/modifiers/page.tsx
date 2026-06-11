@@ -132,7 +132,7 @@ function ModifierFormSheet({
                   className={cn(
                     'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all press-scale',
                     group === g && !newGroup.trim()
-                      ? 'bg-[#F5F1E8] text-[#0E2F33]'
+                      ? 'bg-[#F5F1E8] text-[#0F2018]'
                       : 'bg-white/8 text-white/45 hover:bg-white/12'
                   )}
                 >
@@ -166,7 +166,7 @@ function ModifierFormSheet({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full bg-[#F5F1E8] text-[#0E2F33] font-bold py-4 rounded-2xl text-sm btn-primary disabled:opacity-50"
+            className="w-full bg-[#F5F1E8] text-[#0F2018] font-bold py-4 rounded-2xl text-sm btn-primary disabled:opacity-50"
           >
             {saving ? 'Guardando…' : initial ? 'Guardar cambios' : 'Crear modificador'}
           </button>
@@ -276,7 +276,7 @@ export default function AdminModifiersPage() {
           </div>
           <button
             onClick={() => { setEditMod(undefined); setShowSheet(true) }}
-            className="flex items-center gap-2 bg-[#1E3541] text-white font-bold px-4 py-2.5 rounded-2xl text-sm btn-primary mt-1"
+            className="flex items-center gap-2 bg-[#1B3428] text-white font-bold px-4 py-2.5 rounded-2xl text-sm btn-primary mt-1"
           >
             + Nuevo
           </button>
@@ -294,7 +294,7 @@ export default function AdminModifiersPage() {
               onClick={() => setActiveGroup(g)}
               className={cn(
                 'flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 press-scale border',
-                active ? 'bg-[#1E3541] text-white border-transparent' : 'bg-white text-[#7A756D] border-[#E7E1D8] hover:border-[#C8C4BC]'
+                active ? 'bg-[#1B3428] text-white border-transparent' : 'bg-white text-[#7A756D] border-[#E7E1D8] hover:border-[#C8C4BC]'
               )}
             >
               <span>{groupIcon(g)}</span>
@@ -339,7 +339,7 @@ export default function AdminModifiersPage() {
                 className="flex-1 text-left min-w-0 group"
               >
                 <p className={cn(
-                  'text-sm font-semibold truncate group-hover:text-[#1E3541] transition-colors',
+                  'text-sm font-semibold truncate group-hover:text-[#1B3428] transition-colors',
                   m.active ? 'text-[#1F1F1F]' : 'text-[#A9A39C]'
                 )}>
                   {m.name}

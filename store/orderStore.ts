@@ -29,6 +29,7 @@ interface OrderStore {
   addGuest:       (name: string) => void
   setActiveGuest: (name: string | null) => void
   removeGuest:    (name: string) => void
+  renameGuest:    (oldName: string, newName: string) => void
 }
 
 export const useOrderStore = create<OrderStore>()(
@@ -97,6 +98,17 @@ export const useOrderStore = create<OrderStore>()(
           // unlink items that belonged to this guest
           items: s.items.map((i) => i.guestName === name ? { ...i, guestName: undefined } : i),
         })),
+
+      renameGuest: (oldName, newName) => {
+        const trimmed = newName.trim()
+        if (!trimmed || trimmed === oldName) return
+        if (get().guests.includes(trimmed)) return
+        set((s) => ({
+          guests:      s.guests.map((g) => g === oldName ? trimmed : g),
+          activeGuest: s.activeGuest === oldName ? trimmed : s.activeGuest,
+          items:       s.items.map((i) => i.guestName === oldName ? { ...i, guestName: trimmed } : i),
+        }))
+      },
     }),
     {
       name: 'gf-order-cart',
